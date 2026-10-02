@@ -448,7 +448,7 @@ function DocumentoRevisarPage() {
         <div className="flex-1 w-full bg-white flex flex-col min-w-0">
           
           {/* Conteúdo Principal com Rolagem Natural */}
-          <main className="p-4 sm:p-6 lg:p-8 space-y-6 flex-1 pb-[calc(140px+env(safe-area-inset-bottom,16px))]">
+          <main className="p-4 sm:p-6 lg:p-8 space-y-6 flex-1 pb-6">
             
             {/* 1. CARD DE STATUS DA LEITURA */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-3 shadow-2xs">
@@ -633,30 +633,11 @@ function DocumentoRevisarPage() {
                 );
               })}
             </div>
-          </main>
 
-          {/* ========================================================================= */}
-          {/* 3. RODAPÉ DE AÇÕES (Fixo na parte inferior em todas as telas) */}
-          {/* ========================================================================= */}
-          <footer 
-            className="sticky bottom-0 bg-white border-t border-slate-200 px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] z-30 shrink-0"
-            style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom, 16px))" }}
-          >
-            <div className="max-w-7xl mx-auto flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-4">
-              {/* Botão Secundário: Preencher Manualmente */}
-              <Button
-                type="button"
-                id="btn-fill-manually"
-                variant="outline"
-                size="lg"
-                disabled={isSubmitting}
-                onClick={handleFillManually}
-                onPointerDown={() => (document.activeElement as HTMLElement)?.blur?.()}
-                className="w-full sm:w-auto min-h-[44px] px-5 py-3 text-xs sm:text-sm font-semibold rounded-xl border-slate-300 hover:bg-slate-50 text-slate-700 cursor-pointer shadow-2xs whitespace-normal text-center"
-              >
-                Preencher manualmente
-              </Button>
-
+            {/* ========================================================================= */}
+            {/* 3. AÇÕES DE REVISÃO (Fluxo Normal da Página - Sem Rodapé Fixo no Celular) */}
+            {/* ========================================================================= */}
+            <div className="pt-6 border-t border-slate-200 mt-8 space-y-3 pb-[max(32px,env(safe-area-inset-bottom,32px))]">
               {/* Botão Principal: Confirmar e Aplicar ao Cadastro */}
               <Button
                 type="button"
@@ -665,12 +646,12 @@ function DocumentoRevisarPage() {
                 disabled={isSubmitting}
                 onClick={handleConfirmAndApply}
                 onPointerDown={() => (document.activeElement as HTMLElement)?.blur?.()}
-                className="w-full sm:w-auto min-h-[46px] px-6 py-3 text-xs sm:text-sm font-bold rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white gap-2 shadow-sm cursor-pointer whitespace-normal text-center"
+                className="w-full bg-[#075BFF] hover:bg-blue-600 text-white font-extrabold text-xs sm:text-sm min-h-[48px] py-3.5 rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 whitespace-normal break-words text-center"
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin shrink-0" />
-                    <span>Aplicando ao cadastro...</span>
+                    <span>Aplicando dados ao cadastro...</span>
                   </>
                 ) : (
                   <>
@@ -679,8 +660,36 @@ function DocumentoRevisarPage() {
                   </>
                 )}
               </Button>
+
+              {/* Botões Secundários */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+                <Button
+                  type="button"
+                  id="btn-back-bottom"
+                  variant="outline"
+                  size="lg"
+                  onClick={handleBack}
+                  disabled={isSubmitting}
+                  className="w-full sm:w-auto border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs min-h-[44px] rounded-xl px-5 py-2.5 cursor-pointer whitespace-normal break-words text-center"
+                >
+                  Voltar ao cadastro
+                </Button>
+
+                <Button
+                  type="button"
+                  id="btn-fill-manually"
+                  variant="ghost"
+                  size="lg"
+                  disabled={isSubmitting}
+                  onClick={handleFillManually}
+                  onPointerDown={() => (document.activeElement as HTMLElement)?.blur?.()}
+                  className="w-full sm:w-auto text-slate-600 hover:text-slate-900 text-xs font-semibold hover:bg-slate-100 min-h-[44px] rounded-xl px-4 py-2.5 cursor-pointer whitespace-normal break-words text-center"
+                >
+                  Preencher manualmente
+                </Button>
+              </div>
             </div>
-          </footer>
+          </main>
         </div>
       </div>
 

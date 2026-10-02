@@ -291,7 +291,7 @@ function DocumentosAnexarPage() {
       </header>
 
       {/* 2. CONTEÚDO PRINCIPAL (ROLAGEM NATURAL) */}
-      <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 space-y-6 pb-32">
+      <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 space-y-6 pb-6">
         {/* Banner de Orientação */}
         <div className="bg-gradient-to-r from-blue-50/80 to-indigo-50/50 border border-blue-200/70 rounded-2xl p-4 sm:p-5 shadow-2xs">
           <div className="flex items-start gap-3">
@@ -490,18 +490,36 @@ function DocumentosAnexarPage() {
             </div>
           </div>
         )}
-      </main>
 
-      {/* 3. RODAPÉ DE AÇÕES FIXO (SAFE-AREA) */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-4 sm:px-6 py-3.5 z-20 shadow-lg">
-        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-2">
+        {/* 3. AÇÕES DA PÁGINA NO FLUXO NORMAL (SEM RODAPÉ FIXO NO CELULAR) */}
+        <div className="pt-6 border-t border-slate-200 mt-8 space-y-3 pb-[max(32px,env(safe-area-inset-bottom,32px))]">
+          <Button
+            type="button"
+            id="btn-iniciar-leitura"
+            onClick={handleStartOcr}
+            disabled={selectedFiles.length === 0 || isProcessing}
+            className="w-full bg-[#075BFF] hover:bg-blue-600 text-white font-extrabold text-xs sm:text-sm min-h-[48px] py-3.5 rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 whitespace-normal break-words text-center"
+          >
+            {isProcessing ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                <span>Processando leitura com IA...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4 shrink-0" />
+                <span>Iniciar leitura com IA ({selectedFiles.length})</span>
+              </>
+            )}
+          </Button>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
             <Button
               type="button"
               variant="outline"
               onClick={handleBack}
               disabled={isProcessing}
-              className="border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl px-4 py-2.5 cursor-pointer"
+              className="w-full sm:w-auto border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs min-h-[44px] rounded-xl px-5 py-2.5 cursor-pointer whitespace-normal break-words text-center"
             >
               Cancelar e voltar
             </Button>
@@ -511,35 +529,13 @@ function DocumentosAnexarPage() {
               variant="ghost"
               onClick={handleFillManually}
               disabled={isProcessing}
-              className="text-slate-600 hover:text-slate-900 text-xs font-semibold hover:bg-slate-100 rounded-xl px-3 py-2.5 cursor-pointer"
+              className="w-full sm:w-auto text-slate-600 hover:text-slate-900 text-xs font-semibold hover:bg-slate-100 min-h-[44px] rounded-xl px-4 py-2.5 cursor-pointer whitespace-normal break-words text-center"
             >
-              Preencher manualmente
-            </Button>
-          </div>
-
-          <div className="w-full sm:w-auto">
-            <Button
-              type="button"
-              id="btn-iniciar-leitura"
-              onClick={handleStartOcr}
-              disabled={selectedFiles.length === 0 || isProcessing}
-              className="w-full sm:w-auto bg-[#075BFF] hover:bg-blue-600 text-white font-extrabold text-xs sm:text-sm px-6 py-3 rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Processando leitura...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4" />
-                  <span>Iniciar leitura com IA ({selectedFiles.length})</span>
-                </>
-              )}
+              Preencher manualmente sem leitura
             </Button>
           </div>
         </div>
-      </footer>
+      </main>
 
       {/* Modal de Prévia Rápida de Imagem */}
       {activePreviewFile && (
