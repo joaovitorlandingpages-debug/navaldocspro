@@ -39,6 +39,12 @@ export async function processDocumentForReview(
   // 2. Upload seguro para o bucket de documentos com isolamento por empresa
   onProgress?.("Enviando arquivo com armazenamento isolado por empresa...");
   const fileExt = file.name.split(".").pop()?.toLowerCase() || "pdf";
+  const mimeType = file.type || (
+    fileExt === "png" ? "image/png" :
+    fileExt === "jpg" || fileExt === "jpeg" ? "image/jpeg" :
+    fileExt === "webp" ? "image/webp" :
+    fileExt === "pdf" ? "application/pdf" : "application/octet-stream"
+  );
   const randomId = crypto.randomUUID();
   const folder = targetEntity === "customer" ? "customer-docs" : "vessel-docs";
   let storagePath = `${companyId}/${folder}/${randomId}.${fileExt}`;
@@ -50,7 +56,7 @@ export async function processDocumentForReview(
   // Tenta upload no bucket principal do recurso
   let uploadResult = await supabase.storage
     .from(bucketUsed)
-    .upload(storagePath, file, { contentType: file.type, upsert: false });
+    .upload(storagePath, file, { contentType: mimeType, upsert: false });
 
   if (uploadResult.error) {
     console.warn(`[SmartDocumentService] Falha no bucket principal '${bucketUsed}':`, uploadResult.error.message);
@@ -59,7 +65,7 @@ export async function processDocumentForReview(
     const fallbackPath = `${companyId}/${folder}/${randomId}.${fileExt}`;
     const fallbackUp = await supabase.storage
       .from(fallbackBucket)
-      .upload(fallbackPath, file, { contentType: file.type, upsert: false });
+      .upload(fallbackPath, file, { contentType: mimeType, upsert: false });
 
     if (!fallbackUp.error) {
       bucketUsed = fallbackBucket;
@@ -68,12 +74,12 @@ export async function processDocumentForReview(
     } else {
       console.error("[SmartDocumentService] Falha de upload em ambos os buckets:", fallbackUp.error.message);
       throw new Error(
-        `Não foi possível salvar o arquivo para leitura automática (${uploadResult.error.message || fallbackUp.error.message}). Por favor, tente novamente ou prossiga com o cadastro manual.`
+        `Falha ao salvar o arquivo para leitura (${uploadResult.error.message || fallbackUp.error.message}). Por favor, tente novamente ou prossiga com o cadastro manual.`
       );
     }
   }
 
-  // Obter URL assinada com duração limitada (nunca URL pública de bucket privado)
+  // Obter URL assinada com duração limitada
   let authorizedSignedUrl = "";
   try {
     const { data: signedData, error: signErr } = await supabase.storage
@@ -99,72 +105,94 @@ export async function processDocumentForReview(
       file_name: file.name,
       file_url: storagePath,
       category: targetEntity === "customer" ? "customer_documents" : "vessel_documents",
-      file_type: file.type,
+      file_type: mimeType,
       file_size: file.size,
       uploaded_by: userId || null,
-      status: "pending",
+      status: "uploaded",
+      metadata: {
+        bucket: bucketUsed,
+        path: storagePath,
+        folder,
+        target_entity: targetEntity,
+      }
     })
     .select()
     .single();
 
-  if (fileInsertErr) {
-    console.warn("[SmartDocumentService] Erro ao registrar uploaded_files:", fileInsertErr);
+  if (fileInsertErr || !uploadedFileRecord) {
+    console.error("[SmartDocumentService] Erro ao registrar uploaded_files:", fileInsertErr);
+    throw new Error(`Falha técnica ao registrar documento: ${fileInsertErr?.message || "Registro não criado"}`);
   }
 
-  const fileRecordId = uploadedFileRecord?.id || randomId;
+  const fileRecordId = uploadedFileRecord.id;
 
-  // 4. Criar registro de job em ocr_jobs
+  // 4. Criar registro de job em ocr_jobs com a coluna correta uploaded_file_id
   const { data: ocrJob, error: jobInsertErr } = await supabase
     .from("ocr_jobs")
     .insert({
       company_id: companyId,
-      file_id: uploadedFileRecord?.id || null,
+      uploaded_file_id: fileRecordId,
+      document_type: targetEntity === "customer" ? "customer" : "vessel",
       status: "pending",
     })
     .select()
     .single();
 
-  if (jobInsertErr) {
-    console.warn("[SmartDocumentService] Erro ao criar ocr_jobs:", jobInsertErr);
+  if (jobInsertErr || !ocrJob) {
+    console.error("[SmartDocumentService] Erro ao criar ocr_jobs:", jobInsertErr);
+    throw new Error(`Falha técnica ao inicializar o processamento OCR: ${jobInsertErr?.message || "Job não criado"}`);
   }
 
-  const ocrJobId = ocrJob?.id;
+  const ocrJobId = ocrJob.id;
 
   // 5. Invocar Edge Function de OCR
   onProgress?.("Identificando tipo de documento e extraindo campos oficiais...");
   let rawText = "";
   let extractedFields: Record<string, any> = {};
 
-  try {
-    if (ocrJobId) {
-      const invokeRes = await supabase.functions.invoke("process-ocr-document", {
-        body: { jobId: ocrJobId },
-      });
+  const invokeRes = await supabase.functions.invoke("process-ocr-document", {
+    body: { 
+      jobId: ocrJobId,
+      targetEntity: targetEntity
+    },
+  });
 
-      if (invokeRes.error) {
-        console.warn("[SmartDocumentService] Edge function warning:", invokeRes.error);
-      } else if (invokeRes.data) {
-        extractedFields = invokeRes.data.result || invokeRes.data.fields || {};
-        rawText = invokeRes.data.raw_text || invokeRes.data.raw_text_preview || "";
-      }
+  if (invokeRes.error) {
+    console.error("[SmartDocumentService] Edge function invoke error:", invokeRes.error);
+    throw new Error(`Falha técnica na execução da leitura OCR (${invokeRes.error.message || "Erro na Edge Function"}).`);
+  }
 
-      // Consulta de confirmação do job
-      const { data: updatedJob } = await supabase
-        .from("ocr_jobs")
-        .select("*")
-        .eq("id", ocrJobId)
-        .single();
+  if (invokeRes.data?.error) {
+    console.error("[SmartDocumentService] Erro retornado pela Edge Function:", invokeRes.data.error);
+    throw new Error(invokeRes.data.error.message || invokeRes.data.error || "Falha técnica no motor de leitura.");
+  }
 
-      if (updatedJob?.extracted_data) {
-        extractedFields = {
-          ...extractedFields,
-          ...(updatedJob.extracted_data as Record<string, any>),
-        };
-        rawText = (updatedJob.extracted_data as any)?._raw_text || rawText;
-      }
+  if (invokeRes.data) {
+    extractedFields = invokeRes.data.fields || invokeRes.data.result || {};
+    rawText = invokeRes.data.raw_text || invokeRes.data.raw_text_preview || "";
+    if (invokeRes.data.docType) {
+      extractedFields._document_type = invokeRes.data.docType;
     }
-  } catch (err: any) {
-    console.warn("[SmartDocumentService] Execução do OCR com fallback seguro:", err);
+  }
+
+  // Consulta de confirmação do job
+  const { data: updatedJob } = await supabase
+    .from("ocr_jobs")
+    .select("*")
+    .eq("id", ocrJobId)
+    .single();
+
+  if (updatedJob?.status === "failed") {
+    const errorMsg = updatedJob.error_message || "O documento não pôde ser interpretado pelo motor de OCR.";
+    throw new Error(`Falha no processamento do documento: ${errorMsg}`);
+  }
+
+  if (updatedJob?.extracted_data) {
+    extractedFields = {
+      ...extractedFields,
+      ...(updatedJob.extracted_data as Record<string, any>),
+    };
+    rawText = (updatedJob.extracted_data as any)?._raw_text || rawText;
   }
 
   // 6. Construir objeto estruturado para conferência lado a lado

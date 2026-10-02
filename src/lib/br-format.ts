@@ -46,6 +46,11 @@ export function maskPhone(raw: string): string {
 }
 
 export function maskDate(raw: string): string {
+  if (!raw) return "";
+  const isoMatch = String(raw).trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    return `${isoMatch[3]}/${isoMatch[2]}/${isoMatch[1]}`;
+  }
   const d = (raw || "").replace(/\D/g, "").slice(0, 8);
   return d
     .replace(/^(\d{2})(\d)/, "$1/$2")

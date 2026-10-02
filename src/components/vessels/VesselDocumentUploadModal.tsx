@@ -131,12 +131,8 @@ export function VesselDocumentUploadModal({
     } catch (err: any) {
       setIsProcessing(false);
       console.error("[VesselUpload] Erro OCR:", err);
-      toast.error(
-        err.message?.includes("não suportado")
-          ? err.message
-          : "Não foi possível concluir a leitura automática do documento náutico. Prossiga com o preenchimento manual.",
-        { duration: 5000 }
-      );
+      const errorMsg = err?.message || "Não foi possível concluir a leitura automática do documento náutico.";
+      toast.error(`Falha na leitura automática: ${errorMsg}`, { duration: 7000 });
     }
   };
 

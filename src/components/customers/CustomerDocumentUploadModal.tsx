@@ -124,12 +124,8 @@ export function CustomerDocumentUploadModal({
     } catch (err: any) {
       setIsProcessing(false);
       console.error("[CustomerUpload] Erro OCR:", err);
-      toast.error(
-        err.message?.includes("não suportado")
-          ? err.message
-          : "Não foi possível concluir a extração automática. Você pode prosseguir com o preenchimento manual.",
-        { duration: 5000 }
-      );
+      const errorMsg = err?.message || "Erro desconhecido durante o processamento do documento.";
+      toast.error(`Falha na leitura automática: ${errorMsg}`, { duration: 7000 });
     }
   };
 

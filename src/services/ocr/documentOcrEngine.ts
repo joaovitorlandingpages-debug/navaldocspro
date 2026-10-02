@@ -54,13 +54,47 @@ export const VESSEL_EXPECTED_FIELDS = [
 ];
 
 /**
- * Identifica o tipo de documento a partir do texto bruto e metadados da IA
+ * Identifica o tipo de documento a partir do texto bruto, metadados da IA e entidade alvo
  */
-export function identifyDocumentType(rawText: string, aiDocType?: string): SupportedDocumentType {
-  const upper = (rawText || "").toUpperCase();
+export function identifyDocumentType(
+  rawText: any, 
+  aiDocType?: string,
+  targetEntity?: "customer" | "vessel"
+): SupportedDocumentType {
+  const upper = (typeof rawText === "string" ? rawText : String(rawText || "")).toUpperCase();
 
+  // 1. Verificação explícita do aiDocType se retornado e válido
+  if (aiDocType) {
+    const norm = aiDocType.toUpperCase().trim();
+    if (norm === "FICHA_CADASTRAL" || norm.includes("FICHA_CADASTRO") || norm.includes("CADASTRO_CLIENTE")) return "FICHA_CADASTRAL";
+    if (norm === "FICHA_EMBARCACAO" || norm.includes("FICHA_EMBARCAÇÃO") || norm.includes("DADOS_EMBARCACAO")) return "FICHA_EMBARCACAO";
+    if (norm.includes("CNH")) return "CNH";
+    if (norm.includes("RG") && !norm.includes("CARGA")) return "RG";
+    if (norm.includes("CPF")) return "CPF";
+    if (norm.includes("CNPJ") || norm.includes("CARTAO_CNPJ")) return "CARTAO_CNPJ";
+    if (norm.includes("TIEM")) return "VESSEL_TIEM";
+    if (norm.includes("TIE")) return "VESSEL_TIE";
+    if (norm.includes("PROVISORIO") || norm.includes("BSADE")) return "VESSEL_PROVISORIO";
+    if (norm.includes("RESIDENCIA") || norm.includes("ENDERECO") || norm.includes("ENDEREÇO")) return "COMPROVANTE_RESIDENCIA";
+    if (norm.includes("INVOICE") || norm.includes("NOTA")) return "VESSEL_INVOICE";
+    if (norm.includes("DECLARATION") || norm.includes("COMPRA_E_VENDA")) return "VESSEL_SALE_DECLARATION";
+  }
+
+  // 2. Reconhecimento por conteúdo textual do documento
   if (/CARTEIRA\s+NACIONAL\s+DE\s+HABILITA[ÇC][ÃA]O|HABILITA[ÇC][ÃA]O|CNH/i.test(upper)) {
     return "CNH";
+  }
+  if (/FICHA\s+CADASTRAL|CADASTRO\s+DE\s+CLIENTE|DADOS\s+DE\s+IDENTIFICA[ÇC][ÃA]O|DADOS\s+DO\s+CLIENTE/i.test(upper) && !/EMBARCA[ÇC][ÃA]O|CASCO|MOTOR|CAPITANIA/i.test(upper)) {
+    return "FICHA_CADASTRAL";
+  }
+  if (/T[ÍI]TULO\s+DE\s+INSCRI[ÇC][ÃA]O\s+DE\s+EMBARCA[ÇC][ÃA]O\s+MI[ÚU]DA|TIEM/i.test(upper)) {
+    return "VESSEL_TIEM";
+  }
+  if (/T[ÍI]TULO\s+DE\s+INSCRI[ÇC][ÃA]O\s+DE\s+EMBARCA[ÇC][ÃA]O|MARINHA\s+DO\s+BRASIL|CAPITANIA\s+DOS\s+PORTOS|TIE\b/i.test(upper)) {
+    return "VESSEL_TIE";
+  }
+  if (/FICHA\s+T[ÉE]CNICA|DADOS\s+DA\s+EMBARCA[ÇC][ÃA]O|NOME\s+DA\s+EMBARCA[ÇC][ÃA]O|INSCRI[ÇC][ÃA]O\s+N[ÁA]UTICA/i.test(upper)) {
+    return "FICHA_EMBARCACAO";
   }
   if (/REGISTRO\s+GERAL|CARTEIRA\s+DE\s+IDENTIDADE|SECRETARIA\s+DE\s+SEGURAN[ÇC]A/i.test(upper) && !/EMBARCA/i.test(upper)) {
     return "RG";
@@ -74,12 +108,6 @@ export function identifyDocumentType(rawText: string, aiDocType?: string): Suppo
   if (/CONTA\s+DE\s+ENERGIA|FATURA|ENERGIA\s+EL[ÉE]TRICA|COMPANHIA\s+DE\s+[ÁA]GUA|SANEAMENTO|TELEFONIA|INTERNET|COMPROVANTE\s+DE\s+RESID[ÊE]NCIA/i.test(upper)) {
     return "COMPROVANTE_RESIDENCIA";
   }
-  if (/T[ÍI]TULO\s+DE\s+INSCRI[ÇC][ÃA]O\s+DE\s+EMBARCA[ÇC][ÃA]O\s+MI[ÚU]DA|TIEM/i.test(upper)) {
-    return "VESSEL_TIEM";
-  }
-  if (/T[ÍI]TULO\s+DE\s+INSCRI[ÇC][ÃA]O\s+DE\s+EMBARCA[ÇC][ÃA]O|MARINHA\s+DO\s+BRASIL|CAPITANIA\s+DOS\s+PORTOS|TIE\b/i.test(upper)) {
-    return "VESSEL_TIE";
-  }
   if (/BOLETIM\s+DE\s+SIMPLIFICADA|BSADE|PROTOCOLO\s+PROVIS[ÓO]RIO/i.test(upper)) {
     return "VESSEL_PROVISORIO";
   }
@@ -90,15 +118,9 @@ export function identifyDocumentType(rawText: string, aiDocType?: string): Suppo
     return "VESSEL_INVOICE";
   }
 
-  // Fallback baseado no aiDocType retornado
-  if (aiDocType) {
-    const norm = aiDocType.toUpperCase();
-    if (norm.includes("CNH")) return "CNH";
-    if (norm.includes("RG")) return "RG";
-    if (norm.includes("TIEM")) return "VESSEL_TIEM";
-    if (norm.includes("TIE")) return "VESSEL_TIE";
-    if (norm.includes("RESIDENCIA") || norm.includes("ENDERECO")) return "COMPROVANTE_RESIDENCIA";
-  }
+  // 3. Fallback inteligente baseado no contexto do fluxo (evita exibir genericamente "Documento Geral")
+  if (targetEntity === "customer") return "FICHA_CADASTRAL";
+  if (targetEntity === "vessel") return "FICHA_EMBARCACAO";
 
   return "GENERIC";
 }
@@ -114,10 +136,45 @@ export function buildCustomerReview(
   existingCustomer?: Record<string, any> | null
 ): ExtractedDocumentReview {
   const safeFields = rawFields || {};
-  const docType = identifyDocumentType(rawText, safeFields.document_type);
-  const typeMeta = DOCUMENT_TYPE_LABELS[docType];
+  const docType = identifyDocumentType(
+    rawText, 
+    safeFields._document_type || safeFields.document_type,
+    "customer"
+  );
+  const typeMeta = DOCUMENT_TYPE_LABELS[docType] || DOCUMENT_TYPE_LABELS.FICHA_CADASTRAL;
   const fields: Record<string, ExtractedFieldDetail> = {};
   const discrepancies: DocumentDiscrepancy[] = [];
+
+  // Parse inteligente de endereço caso venha composto em address ou endereco
+  let streetParsed = safeFields.logradouro || safeFields.endereco || safeFields.address || safeFields.rua || safeFields.street;
+  let numberParsed = safeFields.numero || safeFields.number || safeFields.num;
+  let complementParsed = safeFields.complemento || safeFields.complement || safeFields.comp;
+  let neighborhoodParsed = safeFields.bairro || safeFields.neighborhood || safeFields.distrito;
+
+  if (streetParsed && (!numberParsed || !neighborhoodParsed)) {
+    const rawAddrStr = String(streetParsed);
+    const parts = rawAddrStr.split(",").map(p => p.trim());
+    if (parts.length >= 2) {
+      streetParsed = parts[0];
+      if (!numberParsed && parts[1]) {
+        const numMatch = parts[1].match(/^(\d+[A-Za-z]?)(?:\s+(.*))?$/);
+        if (numMatch) {
+          numberParsed = numMatch[1];
+          if (numMatch[2] && !complementParsed) complementParsed = numMatch[2];
+        } else {
+          numberParsed = parts[1];
+        }
+      }
+      if (parts.length >= 3) {
+        if (!complementParsed && parts[2].toLowerCase().includes("apto") || parts[2].toLowerCase().includes("bloco") || parts[2].toLowerCase().includes("sala")) {
+          complementParsed = parts[2];
+          if (parts[3] && !neighborhoodParsed) neighborhoodParsed = parts[3];
+        } else if (!neighborhoodParsed) {
+          neighborhoodParsed = parts[2];
+        }
+      }
+    }
+  }
 
   // Helper para buscar trecho de origem no rawText
   const findExcerpt = (val: string): string | undefined => {
@@ -137,15 +194,36 @@ export function buildCustomerReview(
     
     // Mapeamentos alternativos comuns de IA
     if (!rawVal) {
-      if (cfg.key === "name") rawVal = safeFields.nome || safeFields.razao_social || safeFields.full_name;
-      if (cfg.key === "cpf_cnpj") rawVal = safeFields.cpf || safeFields.cnpj || safeFields.doc_number;
-      if (cfg.key === "birth_date") rawVal = safeFields.data_nascimento || safeFields.nascimento;
-      if (cfg.key === "logradouro") rawVal = safeFields.endereco || safeFields.address || safeFields.rua;
+      if (cfg.key === "name") rawVal = safeFields.nome || safeFields.razao_social || safeFields.full_name || safeFields.cliente || safeFields.titular;
+      if (cfg.key === "cpf_cnpj") rawVal = safeFields.cpf || safeFields.cnpj || safeFields.doc_number || safeFields.documento;
+      if (cfg.key === "birth_date") rawVal = safeFields.data_nascimento || safeFields.nascimento || safeFields.data_nasc;
+      if (cfg.key === "logradouro") rawVal = streetParsed;
+      if (cfg.key === "numero") rawVal = numberParsed;
+      if (cfg.key === "complemento") rawVal = complementParsed;
+      if (cfg.key === "bairro") rawVal = neighborhoodParsed;
       if (cfg.key === "cidade") rawVal = safeFields.municipio || safeFields.city;
       if (cfg.key === "uf") rawVal = safeFields.estado || safeFields.state;
-      if (cfg.key === "cep") rawVal = safeFields.zip_code;
-      if (cfg.key === "phone") rawVal = safeFields.telefone;
-      if (cfg.key === "rg") rawVal = safeFields.identidade;
+      if (cfg.key === "cep") rawVal = safeFields.zip_code || safeFields.cep;
+      if (cfg.key === "phone") rawVal = safeFields.telefone || safeFields.celular || safeFields.whatsapp || safeFields.tel;
+      if (cfg.key === "email") rawVal = safeFields.email || safeFields.e_mail;
+      if (cfg.key === "rg") rawVal = safeFields.identidade || safeFields.doc_identidade || safeFields.rg_rne;
+    }
+
+    // Fallback de extração direta do rawText se o campo continuar vazio
+    if (!rawVal && rawText) {
+      if (cfg.key === "bairro") {
+        const m = rawText.match(/(?:BAIRRO|DISTRO|NEIGHBORHOOD)[:\s\n]+([A-ZÁ-Úa-zá-ú0-9\s\-]+?)(?:\n|CIDADE|MUNIC[ÍI]PIO|CEP|ESTADO|$)/i);
+        if (m) rawVal = m[1].trim();
+      } else if (cfg.key === "numero") {
+        const m = rawText.match(/(?:N[ÚU]MERO|N[ºO\.]?)[:\s\n]+(\d+[A-Za-z]?)/i);
+        if (m) rawVal = m[1].trim();
+      } else if (cfg.key === "logradouro") {
+        const m = rawText.match(/(?:LOGRADOURO|RUA|AVENIDA|AV\.)[:\s\n]+([^\n]+)/i);
+        if (m) rawVal = m[1].trim();
+      } else if (cfg.key === "complemento") {
+        const m = rawText.match(/(?:COMPLEMENTO)[:\s\n]+([^\n]+)/i);
+        if (m) rawVal = m[1].trim();
+      }
     }
 
     let valStr = (rawVal !== null && rawVal !== undefined) ? String(rawVal).trim() : "";
@@ -216,7 +294,6 @@ export function buildCustomerReview(
       if (existingVal && existingVal.toLowerCase() !== valStr.toLowerCase()) {
         const cleanExisting = existingVal.replace(/\D/g, "");
         const cleanVal = valStr.replace(/\D/g, "");
-        // Se for campo numérico/documento e diferir, ou se for nome substancialmente diferente
         if (cleanExisting !== cleanVal && (cleanExisting.length > 0 || valStr.length > 3)) {
           status = "divergent";
           discrepancies.push({
@@ -284,8 +361,12 @@ export function buildVesselReview(
   existingVessel?: Record<string, any> | null
 ): ExtractedDocumentReview {
   const safeFields = rawFields || {};
-  const docType = identifyDocumentType(rawText, safeFields.document_type);
-  const typeMeta = DOCUMENT_TYPE_LABELS[docType];
+  const docType = identifyDocumentType(
+    rawText, 
+    safeFields._document_type || safeFields.document_type,
+    "vessel"
+  );
+  const typeMeta = DOCUMENT_TYPE_LABELS[docType] || DOCUMENT_TYPE_LABELS.FICHA_EMBARCACAO;
   const fields: Record<string, ExtractedFieldDetail> = {};
   const discrepancies: DocumentDiscrepancy[] = [];
 
@@ -305,23 +386,36 @@ export function buildVesselReview(
     let rawVal: any = safeFields[cfg.key];
 
     if (!rawVal) {
-      if (cfg.key === "name") rawVal = safeFields.vessel_name || safeFields.nome_embarcacao;
-      if (cfg.key === "registration_number") rawVal = safeFields.inscricao || safeFields.numero_inscricao || safeFields.tie_number;
-      if (cfg.key === "vessel_type") rawVal = safeFields.tipo || safeFields.tipo_embarcacao;
-      if (cfg.key === "hull_material") rawVal = safeFields.material || safeFields.material_casco;
-      if (cfg.key === "construction_year") rawVal = safeFields.ano_construcao || safeFields.ano;
+      if (cfg.key === "name") rawVal = safeFields.vessel_name || safeFields.nome_embarcacao || safeFields.embarcacao || safeFields.nome;
+      if (cfg.key === "registration_number") rawVal = safeFields.inscricao || safeFields.numero_inscricao || safeFields.tie_number || safeFields.registro || safeFields.num_inscricao;
+      if (cfg.key === "vessel_type") rawVal = safeFields.tipo || safeFields.tipo_embarcacao || safeFields.categoria || safeFields.type;
+      if (cfg.key === "hull_material") rawVal = safeFields.material || safeFields.material_casco || safeFields.casco;
+      if (cfg.key === "construction_year") rawVal = safeFields.ano_construcao || safeFields.ano || safeFields.ano_fabricacao;
       if (cfg.key === "length") rawVal = safeFields.comprimento || safeFields.comprimento_total;
-      if (cfg.key === "engine_brand") rawVal = safeFields.motor || safeFields.marca_motor;
-      if (cfg.key === "engine_power") rawVal = safeFields.potencia || safeFields.potencia_motor;
-      if (cfg.key === "engine_serial_number") rawVal = safeFields.engine_serial || safeFields.numero_motor;
-      if (cfg.key === "identified_owner_name") rawVal = safeFields.owner_name || safeFields.proprietario;
-      if (cfg.key === "identified_owner_doc") rawVal = safeFields.owner_document || safeFields.cpf_proprietario;
+      if (cfg.key === "boca") rawVal = safeFields.boca || safeFields.beam || safeFields.largura;
+      if (cfg.key === "pontal") rawVal = safeFields.pontal || safeFields.depth || safeFields.altura;
+      if (cfg.key === "capacity") rawVal = safeFields.lotacao || safeFields.capacidade || safeFields.passageiros;
+      if (cfg.key === "gross_tonnage") rawVal = safeFields.gross_tonnage || safeFields.arqueacao_bruta || safeFields.ab;
+      if (cfg.key === "navigation_area") rawVal = safeFields.navigation_area || safeFields.area_navegacao || safeFields.navegacao;
+      if (cfg.key === "engine_brand") rawVal = safeFields.engine_brand || safeFields.motor || safeFields.marca_motor || safeFields.marca;
+      if (cfg.key === "engine_power") rawVal = safeFields.engine_power || safeFields.potencia || safeFields.potencia_motor;
+      if (cfg.key === "engine_serial_number") rawVal = safeFields.engine_serial || safeFields.numero_motor || safeFields.serie_motor || safeFields.numero_serie || safeFields.num_serie;
+      if (cfg.key === "identified_owner_name") rawVal = safeFields.owner_name || safeFields.proprietario || safeFields.proprietaria || safeFields.nome_proprietario;
+      if (cfg.key === "identified_owner_doc") rawVal = safeFields.owner_document || safeFields.cpf_proprietario || safeFields.cnpj_proprietario || safeFields.doc_proprietario;
     }
 
     let valStr = (rawVal !== null && rawVal !== undefined) ? String(rawVal).trim() : "";
     let confidence = valStr ? 0.92 : 0;
     let status: ExtractedFieldDetail["status"] = valStr ? "high_confidence" : "not_found";
     let doubtReason: string | undefined = undefined;
+
+    // Normalizações de medidas
+    if ((cfg.key === "boca" || cfg.key === "pontal" || cfg.key === "length") && valStr) {
+      const matchNum = valStr.replace(",", ".").match(/[\d.]+/);
+      if (matchNum) {
+        valStr = matchNum[0];
+      }
+    }
 
     // Validações náuticas específicas
     if (cfg.key === "construction_year" && valStr) {
@@ -337,7 +431,6 @@ export function buildVesselReview(
     }
 
     if (cfg.key === "registration_number" && valStr) {
-      // Normaliza espaços e pontuações
       valStr = valStr.toUpperCase().replace(/\s+/g, "");
       if (valStr.length < 5) {
         status = "doubt";

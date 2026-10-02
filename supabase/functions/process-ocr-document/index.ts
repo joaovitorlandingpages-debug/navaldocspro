@@ -5,9 +5,9 @@ import { authContext, rateLimit, consume, jsonResponse, corsHeaders, HttpError, 
 
 const EXTRACTION_PROMPT = `Você é um motor de OCR de alta precisão especialista em documentação brasileira e marítima para o NavalDocs Pro.
 Tipos principais atendidos:
-1. Identificação de Pessoas: CNH, RG, CPF, Cartão CNPJ.
+1. Identificação de Pessoas: CNH, RG, CPF, Cartão CNPJ, Ficha Cadastral / Ficha de Cliente.
 2. Comprovantes: Comprovante de Residência (luz, água, gás, telefone, internet).
-3. Documentação Náutica: TIE (Título de Inscrição de Embarcação), TIEM (Embarcação Miúda), Protocolo Provisório / BSADE, Termo de Entrega / Recibo de Compra e Venda de Embarcação, Nota Fiscal de Embarcação ou Motor.
+3. Documentação Náutica: TIE (Título de Inscrição de Embarcação), TIEM (Embarcação Miúda), Protocolo Provisório / BSADE, Termo de Entrega / Recibo de Compra e Venda de Embarcação, Ficha de Embarcação / Ficha Náutica, Nota Fiscal de Embarcação ou Motor.
 
 Orientações Críticas:
 - O documento pode estar girado em 90°, 180° ou 270°. Analise a orientação correta do texto.
@@ -17,7 +17,7 @@ Orientações Críticas:
 
 Retorne ESTRITAMENTE um JSON válido com a seguinte estrutura:
 {
-  "document_type": "CNH | RG | CPF | CARTAO_CNPJ | COMPROVANTE_RESIDENCIA | VESSEL_TIE | VESSEL_TIEM | VESSEL_PROVISORIO | VESSEL_SALE_DECLARATION | VESSEL_INVOICE | GENERIC",
+  "document_type": "CNH | RG | CPF | CARTAO_CNPJ | COMPROVANTE_RESIDENCIA | FICHA_CADASTRAL | VESSEL_TIE | VESSEL_TIEM | VESSEL_PROVISORIO | VESSEL_SALE_DECLARATION | VESSEL_INVOICE | FICHA_EMBARCACAO | GENERIC",
   "raw_text": "texto literal completo extraído do documento",
   "fields": {
     "name": "nome completo ou razão social",
@@ -329,6 +329,7 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")
     let rawContent = ""
     let parsedJson: any = {}
+    let aiError: string | null = null
 
     if (LOVABLE_API_KEY) {
       try {
@@ -357,14 +358,24 @@ serve(async (req) => {
           const start = clean.indexOf("{")
           const end = clean.lastIndexOf("}")
           if (start >= 0 && end > start) {
-            parsedJson = JSON.parse(clean.slice(start, end + 1))
+            try {
+              parsedJson = JSON.parse(clean.slice(start, end + 1))
+            } catch (jsonErr) {
+              console.warn("[AI Gateway JSON Parse Warning]", jsonErr)
+            }
           }
         } else {
-          console.warn("[AI Gateway Warning]", aiRes.status, await aiRes.text())
+          const errBody = await aiRes.text()
+          aiError = `Provedor de visão IA retornou status ${aiRes.status}: ${errBody.slice(0, 180)}`
+          console.error("[AI Gateway Error]", aiRes.status, errBody)
         }
-      } catch (aiErr) {
-        console.warn("[AI Gateway Fallback]", aiErr)
+      } catch (aiErr: any) {
+        aiError = `Falha na requisição ao provedor de IA: ${aiErr?.message || aiErr}`
+        console.error("[AI Gateway Fallback]", aiErr)
       }
+    } else {
+      aiError = "Chave do provedor de IA (LOVABLE_API_KEY) não configurada no ambiente."
+      console.warn("[OCR] LOVABLE_API_KEY ausente.")
     }
 
     // Combina texto da IA com o texto nativo do PDF digital
@@ -376,10 +387,16 @@ serve(async (req) => {
     // Reforço determinístico com analisadores de expressão regular brasileiros
     fields = parseRegexFallbacks(rawText, fields)
 
+    const targetEntity = body.targetEntity || (file.metadata as any)?.target_entity || (job.document_type?.includes("vessel") ? "vessel" : (job.document_type?.includes("customer") ? "customer" : null))
+
     // Ajuste fino do tipo de documento se classificado genericamente
     if (docType === "GENERIC" || !docType) {
       if (/HABILITA[ÇC][ÃA]O|CNH|SENATRAN|DETRAN|CONDUTOR|CATEGORIA\s+[ABCDE]/i.test(rawText)) {
         docType = "CNH"
+      } else if (/FICHA(?:\s+DE|\s+CADASTRAL)?\s+(?:DE\s+)?EMBARCA[ÇC][ÃA]O|DADOS\s+DA\s+EMBARCA[ÇC][ÃA]O/i.test(rawText)) {
+        docType = "FICHA_EMBARCACAO"
+      } else if (/FICHA(?:\s+DE|\s+CADASTRAL)?\s+(?:DE\s+)?CLIENTE|FICHA\s+CADASTRAL|DADOS\s+DO\s+CLIENTE/i.test(rawText)) {
+        docType = "FICHA_CADASTRAL"
       } else if (/INSCRI[ÇC][ÃA]O|TIE\b|TIEM\b|EMBARCA[ÇC][ÃA]O|CAPITANIA/i.test(rawText)) {
         docType = "VESSEL_TIE"
       } else if (/IDENTIDADE|REGISTRO\s+GERAL|SECRETARIA\s+DE\s+SEGURAN[ÇC]A/i.test(rawText)) {
@@ -389,11 +406,13 @@ serve(async (req) => {
       }
     }
 
-    // Ajuste de documento náutico caso detecte termos da Marinha
+    // Reforço por entidade alvo caso ainda esteja genérico
     if (docType === "GENERIC") {
-      if (/INSCRI[ÇC][ÃA]O|TIE|TIEM|EMBARCA/i.test(rawText)) docType = "VESSEL_TIE"
-      else if (/HABILITA[ÇC][ÃA]O|CNH/i.test(rawText)) docType = "CNH"
-      else if (/IDENTIDADE|REGISTRO\s+GERAL/i.test(rawText)) docType = "RG"
+      if (targetEntity === "vessel" && (fields.vessel_name || fields.registration_number || /embarca[çc][ãa]o|lancha|veleiro|motor|casco/i.test(rawText))) {
+        docType = "FICHA_EMBARCACAO"
+      } else if (targetEntity === "customer" && (fields.name || fields.cpf || /cliente|cadastro|propriet[áa]rio/i.test(rawText))) {
+        docType = "FICHA_CADASTRAL"
+      }
     }
 
     // Cálculo e validação por campo
@@ -412,6 +431,24 @@ serve(async (req) => {
 
     const foundCount = entries.length
     const avgConf = foundCount > 0 ? 0.9 : 0
+
+    // Se 0 campos foram encontrados:
+    // Nunca reportar sucesso se houve erro do provedor ou se o arquivo é completamente ilegível
+    if (foundCount === 0) {
+      if (aiError) {
+        throw new HttpError(502, {
+          error: "ai_provider_error",
+          message: `Falha técnica no provedor de visão: ${aiError}`,
+        })
+      }
+      if (!rawText || rawText.trim().length === 0) {
+        throw new HttpError(422, {
+          error: "unreadable_document",
+          message: "O motor de leitura não conseguiu detectar texto legível no documento enviado. Verifique a qualidade do arquivo.",
+        })
+      }
+    }
+
     const finalStatus = foundCount > 0 || rawText ? "completed" : "failed"
 
     const extracted_data = {
@@ -429,7 +466,7 @@ serve(async (req) => {
       confidence_score: avgConf,
       confidence_by_field,
       processing_time: Date.now() - startedAt,
-      error_message: foundCount === 0 && !rawText ? "Falha na leitura OCR." : null,
+      error_message: foundCount === 0 && !rawText ? "Falha na leitura OCR: nenhum texto legível." : null,
     }).eq("id", jobId)
 
     console.log("[OCR_DONE]", { jobId, docType, foundCount, finalStatus })

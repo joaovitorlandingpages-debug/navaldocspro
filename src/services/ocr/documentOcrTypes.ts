@@ -16,6 +16,8 @@ export type SupportedDocumentType =
   | "CPF"                       // Cadastro de Pessoas Físicas
   | "CARTAO_CNPJ"               // Comprovante de Inscrição e Situação Cadastral
   | "COMPROVANTE_RESIDENCIA"    // Conta de consumo (luz, água, gás, telefone, internet)
+  | "FICHA_CADASTRAL"           // Ficha Cadastral / Formulário de Cadastro de Cliente
+  | "FICHA_EMBARCACAO"          // Ficha Técnica / Formulário de Cadastro de Embarcação
   | "VESSEL_TIE"                // Título de Inscrição de Embarcação
   | "VESSEL_TIEM"               // Título de Inscrição de Embarcação Miúda
   | "VESSEL_PROVISORIO"         // Protocolo / Registro Provisório da Capitania / BSADE
@@ -104,6 +106,16 @@ export const DOCUMENT_TYPE_LABELS: Record<SupportedDocumentType, { label: string
     label: "Comprovante de Endereço / Residência",
     category: "proof_of_address",
     badgeColor: "bg-amber-50 text-amber-700 border-amber-200"
+  },
+  FICHA_CADASTRAL: {
+    label: "Ficha Cadastral de Cliente",
+    category: "customer_id",
+    badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200"
+  },
+  FICHA_EMBARCACAO: {
+    label: "Ficha Técnica de Embarcação",
+    category: "vessel_doc",
+    badgeColor: "bg-sky-50 text-sky-700 border-sky-200"
   },
   VESSEL_TIE: {
     label: "TIE — Título de Inscrição de Embarcação",
