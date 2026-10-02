@@ -168,13 +168,13 @@ export function CustomerDocumentUploadModal({
   return (
     <>
       <Dialog open={isOpen && !isReviewOpen} onOpenChange={(open) => !open && !isProcessing && onClose()}>
-        <DialogContent className="w-full max-w-xl max-h-[100dvh] bg-white rounded-none sm:rounded-2xl p-4 sm:p-6 shadow-xl border-0 sm:border border-slate-200 overflow-y-auto">
-          <DialogHeader className="border-b border-slate-100 pb-3">
+        <DialogContent className="w-full max-w-xl h-[100dvh] max-h-[100dvh] sm:h-auto sm:max-h-[90vh] bg-white rounded-none sm:rounded-2xl p-4 sm:p-6 shadow-xl border-0 sm:border border-slate-200 overflow-y-auto flex flex-col justify-between">
+          <DialogHeader className="border-b border-slate-100 pb-3 shrink-0">
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-lg bg-blue-50 text-[#075BFF] flex items-center justify-center">
                 <Sparkles className="h-4 w-4" />
               </div>
-              <DialogTitle className="text-lg font-bold text-[#0B1739]">
+              <DialogTitle className="text-base sm:text-lg font-bold text-[#0B1739]">
                 Leitura Automática de Documentos do Cliente
               </DialogTitle>
             </div>
@@ -184,7 +184,7 @@ export function CustomerDocumentUploadModal({
           </DialogHeader>
 
           {/* Área de Dropzone */}
-          <div className="space-y-4 py-3">
+          <div className="space-y-3 sm:space-y-4 py-2 sm:py-3 flex-1">
             <div
               onClick={() => fileInputRef.current?.click()}
               onDragOver={(e) => {
@@ -281,8 +281,8 @@ export function CustomerDocumentUploadModal({
 
           {/* Rodapé de Ações */}
           <div 
-            className="border-t border-slate-100 pt-4 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3"
-            style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom, 12px))" }}
+            className="border-t border-slate-100 pt-3 sm:pt-4 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3 shrink-0"
+            style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom, 16px))" }}
           >
             <Button
               type="button"

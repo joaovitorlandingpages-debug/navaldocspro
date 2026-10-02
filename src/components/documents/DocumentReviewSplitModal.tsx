@@ -180,40 +180,40 @@ export function DocumentReviewSplitModal({ isOpen, onClose, review, onConfirm }:
         {/* ========================================================================= */}
         {/* 1. CABEÇALHO DO MODAL COM IDENTIFICAÇÃO DO TIPO E ALERTA OBRIGATÓRIO */}
         {/* ========================================================================= */}
-        <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 sm:py-4 pr-12 sm:pr-6 flex flex-col gap-2.5 shrink-0 z-10">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div className="bg-white border-b border-slate-200 px-3 sm:px-6 py-2.5 sm:py-4 pr-12 sm:pr-6 flex flex-col gap-2 shrink-0 z-10">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-extrabold text-base sm:text-lg text-[#0B1739] leading-tight">
+                <span className="font-extrabold text-sm sm:text-lg text-[#0B1739] leading-tight">
                   Conferência de Leitura Automática
                 </span>
-                <Badge className={`${typeMeta.badgeColor} border text-[11px] font-bold px-2.5 py-0.5`}>
+                <Badge className={`${typeMeta.badgeColor} border text-[10px] sm:text-[11px] font-bold px-2 py-0.5`}>
                   {typeMeta.label}
                 </Badge>
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">
                 Arquivo: <strong className="text-slate-700">{review.fileName}</strong> ({((review.fileSize || 0) / 1024).toFixed(1)} KB)
               </p>
             </div>
 
             {/* Badges de estatística de extração */}
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 flex-wrap">
               {stats.filledCount > 0 ? (
-                <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                <span className="text-[10px] sm:text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg flex items-center gap-1">
                   <CheckCircle2 className="h-3 w-3" /> {stats.filledCount} campos identificados
                 </span>
               ) : (
-                <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" /> Nenhum campo extraido automaticamente
+                <span className="text-[10px] sm:text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" /> Nenhum campo extraído automaticamente
                 </span>
               )}
               {stats.doubtsCount > 0 && (
-                <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                <span className="text-[10px] sm:text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg flex items-center gap-1">
                   <AlertTriangle className="h-3 w-3" /> {stats.doubtsCount} conferir
                 </span>
               )}
               {stats.divergentCount > 0 && (
-                <span className="text-[11px] font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                <span className="text-[10px] sm:text-[11px] font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-lg flex items-center gap-1">
                   <AlertCircle className="h-3 w-3" /> {stats.divergentCount} divergentes
                 </span>
               )}
@@ -222,16 +222,16 @@ export function DocumentReviewSplitModal({ isOpen, onClose, review, onConfirm }:
 
           {/* STATUS DE EXTRAÇÃO: banners diferenciados por tipo de resultado */}
           {stats.filledCount === 0 ? (
-            <div className="bg-orange-50/90 border border-orange-200 rounded-xl p-3 flex items-start gap-2.5 text-xs text-orange-900 shadow-2xs">
-              <AlertCircle className="h-4 w-4 text-orange-600 shrink-0 mt-0.5" />
+            <div className="bg-orange-50/90 border border-orange-200 rounded-xl p-2.5 sm:p-3 flex items-start gap-2 text-[11px] sm:text-xs text-orange-900 shadow-2xs">
+              <AlertCircle className="h-3.5 w-3.5 text-orange-600 shrink-0 mt-0.5" />
               <div className="flex-1 font-medium leading-relaxed">
                 <strong>Não foi possível identificar os dados automaticamente.</strong>{" "}
                 Preencha os campos manualmente ao lado antes de aplicar ao cadastro.
               </div>
             </div>
           ) : (
-          <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-2.5 flex items-start gap-2.5 text-xs text-amber-900 shadow-2xs">
-            <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+          <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-2 sm:p-2.5 flex items-start gap-2 text-[11px] sm:text-xs text-amber-900 shadow-2xs">
+            <AlertTriangle className="h-3.5 w-3.5 text-amber-600 shrink-0 mt-0.5" />
             <div className="flex-1 font-medium leading-relaxed">
               <strong>Atenção:</strong> A leitura automática pode cometer erros. Confira todos os dados antes de salvar ou gerar documentos.
             </div>
@@ -382,7 +382,7 @@ export function DocumentReviewSplitModal({ isOpen, onClose, review, onConfirm }:
           <div className={`w-full lg:w-1/2 bg-white flex flex-col overflow-y-auto overscroll-contain ${
             mobileTab === "fields" ? "flex" : "hidden lg:flex"
           }`}>
-            <div className="p-4 sm:p-6 space-y-5 pb-[calc(180px+env(safe-area-inset-bottom,0px))] sm:pb-8">
+            <div className="p-3.5 sm:p-6 space-y-4 sm:space-y-5 pb-[calc(150px+env(safe-area-inset-bottom,0px))] sm:pb-8">
 
               {/* Bloco de Divergências Encontradas (se houver) */}
               {review.discrepancies.length > 0 && (
