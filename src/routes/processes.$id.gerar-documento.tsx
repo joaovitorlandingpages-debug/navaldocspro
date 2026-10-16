@@ -1776,7 +1776,7 @@ function GerarDocumentoPage() {
                 </div>
                 <div className="flex justify-between py-1">
                   <span className="text-slate-400">Formato:</span>
-                  <span className="font-semibold text-slate-800">PDF A4 (Formatação Oficial)</span>
+                  <span className="font-semibold text-slate-800">PDF A4</span>
                 </div>
               </div>
 
