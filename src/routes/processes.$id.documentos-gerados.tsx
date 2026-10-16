@@ -1,25 +1,25 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { 
-  ArrowLeft, 
-  Search, 
-  Plus, 
-  ChevronDown, 
-  Eye, 
-  Download, 
-  MoreVertical, 
-  Paperclip, 
-  ExternalLink, 
-  Loader2, 
-  AlertCircle, 
-  FileCheck, 
-  Upload, 
-  Clock, 
-  History, 
+import {
+  ArrowLeft,
+  Search,
+  Plus,
+  ChevronDown,
+  Eye,
+  Download,
+  MoreVertical,
+  Paperclip,
+  ExternalLink,
+  Loader2,
+  AlertCircle,
+  FileCheck,
+  Upload,
+  Clock,
+  History,
   X,
   CheckCircle2,
   FileText,
   PenTool,
-  Info
+  Info,
 } from "lucide-react";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -28,11 +28,20 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { openStoredFile, downloadStoredFile } from "@/utils/file-preview";
 import { uploadToBucket } from "@/lib/storage";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/processes/$id/documentos-gerados")({
-  validateSearch: (search: Record<string, unknown>): {
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): {
     from?: string;
     selectedDocId?: string;
   } => ({
@@ -60,9 +69,9 @@ function PdfBadgeIcon() {
 // Ícone de caneta de assinatura GOV.BR conforme a referência visual da Tela 08
 function GovBrPenIcon({ className = "w-8 h-8 text-[#075BFF]" }: { className?: string }) {
   return (
-    <svg 
-      viewBox="0 0 40 40" 
-      fill="none" 
+    <svg
+      viewBox="0 0 40 40"
+      fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
       stroke="currentColor"
@@ -121,10 +130,10 @@ function DocumentosGeradosPage() {
 
   // 1. Carregar Ocorrência do Processo / Serviço
   const loadProcessData = useCallback(async () => {
-    const isPreview = typeof window !== 'undefined' && (
-      window.location.search.includes('preview=true') ||
-      window.localStorage.getItem('preview_mode') === 'true'
-    );
+    const isPreview =
+      typeof window !== "undefined" &&
+      (window.location.search.includes("preview=true") ||
+        window.localStorage.getItem("preview_mode") === "true");
     if (!id || (!companyId && !isPreview)) return;
     setIsLoading(true);
     setIsError(false);
@@ -134,11 +143,13 @@ function DocumentosGeradosPage() {
       if (companyId) {
         const { data } = await supabase
           .from("processes")
-          .select(`
+          .select(
+            `
             *,
             customer:customers!processes_customer_id_fkey(id, name, cpf_cnpj, email, phone),
             vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, category, vessel_type)
-          `)
+          `,
+          )
           .eq("id", id)
           .eq("company_id", companyId)
           .maybeSingle();
@@ -146,10 +157,10 @@ function DocumentosGeradosPage() {
       }
 
       if (!proc) {
-        const isPreview = typeof window !== 'undefined' && (
-          window.location.search.includes('preview=true') ||
-          window.localStorage.getItem('preview_mode') === 'true'
-        );
+        const isPreview =
+          typeof window !== "undefined" &&
+          (window.location.search.includes("preview=true") ||
+            window.localStorage.getItem("preview_mode") === "true");
         if (isPreview) {
           const demoProc = {
             id,
@@ -161,10 +172,21 @@ function DocumentosGeradosPage() {
             draft_data: {
               category: "profissional",
               category_label: "Embarcações profissionais",
-              services: ["laudo_engenharia", "despacho_maritimo", "inscricao_inicial", "renovacao_tie"],
+              services: [
+                "laudo_engenharia",
+                "despacho_maritimo",
+                "inscricao_inicial",
+                "renovacao_tie",
+              ],
             },
             customer: { id: "c-1", name: "Marina Alves de Souza", cpf_cnpj: "123.456.789-00" },
-            vessel: { id: "v-1", name: "Brisa Azul Teste", registration_number: "SP-123456", category: "profissional", vessel_type: "Embarcação Comercial" },
+            vessel: {
+              id: "v-1",
+              name: "Brisa Azul Teste",
+              registration_number: "SP-123456",
+              category: "profissional",
+              vessel_type: "Embarcação Comercial",
+            },
           };
           setProcessData(demoProc);
           setCustomer(demoProc.customer);
@@ -190,10 +212,10 @@ function DocumentosGeradosPage() {
 
   // 2. Carregar Documentos Gerados
   const loadGeneratedDocuments = useCallback(async () => {
-    const isPreview = typeof window !== 'undefined' && (
-      window.location.search.includes('preview=true') ||
-      window.localStorage.getItem('preview_mode') === 'true'
-    );
+    const isPreview =
+      typeof window !== "undefined" &&
+      (window.location.search.includes("preview=true") ||
+        window.localStorage.getItem("preview_mode") === "true");
     if (!id || (!companyId && !isPreview)) return;
     setIsLoadingDocs(true);
 
@@ -202,9 +224,11 @@ function DocumentosGeradosPage() {
       if (companyId) {
         const { data, error: docsError } = await supabase
           .from("generated_documents")
-          .select(`
+          .select(
+            `
             *
-          `)
+          `,
+          )
           .eq("company_id", companyId)
           .eq("process_id", id)
           .order("created_at", { ascending: false });
@@ -214,22 +238,23 @@ function DocumentosGeradosPage() {
 
       const list = docsData || [];
       if (list.length === 0) {
-        const isPreview = typeof window !== 'undefined' && (
-          window.location.search.includes('preview=true') ||
-          window.localStorage.getItem('preview_mode') === 'true'
-        );
+        const isPreview =
+          typeof window !== "undefined" &&
+          (window.location.search.includes("preview=true") ||
+            window.localStorage.getItem("preview_mode") === "true");
         if (isPreview) {
           const demoDoc = {
             id: "doc-demo-1",
             name: "Requerimento de Embarcação Profissional - Brisa Azul Teste",
             file_name: "REQ-PROF_Brisa_Azul_Teste.pdf",
-            generated_file_url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+            generated_file_url:
+              "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
             created_at: new Date().toISOString(),
             version: 1,
             signature_status: "Não anexada",
             metadata: {
               responsible_name: "João Vitor",
-            }
+            },
           };
           setDocuments([demoDoc]);
           setSelectedDoc(demoDoc);
@@ -242,7 +267,12 @@ function DocumentosGeradosPage() {
 
       // Se houver algum documento com versão assinada, selecione-o por padrão
       if (list.length > 0) {
-        const withSigned = list.find((d: any) => d.signed_file_url || d.signature_status === "Anexada" || d.signature_status === "signed");
+        const withSigned = list.find(
+          (d: any) =>
+            d.signed_file_url ||
+            d.signature_status === "Anexada" ||
+            d.signature_status === "signed",
+        );
         setSelectedDoc(withSigned || list[0]);
       }
     } catch (err) {
@@ -278,7 +308,12 @@ function DocumentosGeradosPage() {
   }, [processData]);
 
   const protocolCode = useMemo(() => {
-    return processData?.protocol_number || `PROC-${String(processData?.id || id).slice(0, 4).toUpperCase()}`;
+    return (
+      processData?.protocol_number ||
+      `PROC-${String(processData?.id || id)
+        .slice(0, 4)
+        .toUpperCase()}`
+    );
   }, [processData, id]);
 
   const customerName = useMemo(() => {
@@ -292,8 +327,11 @@ function DocumentosGeradosPage() {
   // Filtro de Documentos (Pesquisa por nome + filtro de versão assinada)
   const filteredDocuments = useMemo(() => {
     return documents.filter((doc) => {
-      const isSigned = !!doc.signed_file_url || doc.signature_status === "Anexada" || doc.signature_status === "signed";
-      
+      const isSigned =
+        !!doc.signed_file_url ||
+        doc.signature_status === "Anexada" ||
+        doc.signature_status === "signed";
+
       if (filterSigned === "signed" && !isSigned) return false;
       if (filterSigned === "unsigned" && isSigned) return false;
 
@@ -400,7 +438,8 @@ function DocumentosGeradosPage() {
         </div>
         <h2 className="text-xl font-bold text-[#0B1739]">Serviço não encontrado</h2>
         <p className="text-sm text-slate-500">
-          A ocorrência deste serviço não existe ou você não possui permissão para visualizá-la nesta empresa.
+          A ocorrência deste serviço não existe ou você não possui permissão para visualizá-la nesta
+          empresa.
         </p>
         <div className="pt-2">
           <Link
@@ -434,7 +473,11 @@ function DocumentosGeradosPage() {
         {/* Caminho de navegação (Breadcrumbs) */}
         <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium overflow-x-auto whitespace-nowrap">
           {customer ? (
-            <Link to="/customers/$id" params={{ id: customer.id }} className="hover:text-slate-600 hover:underline truncate max-w-[160px]">
+            <Link
+              to="/customers/$id"
+              params={{ id: customer.id }}
+              className="hover:text-slate-600 hover:underline truncate max-w-[160px]"
+            >
               {customerName}
             </Link>
           ) : (
@@ -442,14 +485,22 @@ function DocumentosGeradosPage() {
           )}
           <span>/</span>
           {vessel ? (
-            <Link to="/vessels/$id" params={{ id: vessel.id }} className="hover:text-slate-600 hover:underline truncate max-w-[160px] font-bold text-slate-700">
+            <Link
+              to="/vessels/$id"
+              params={{ id: vessel.id }}
+              className="hover:text-slate-600 hover:underline truncate max-w-[160px] font-bold text-slate-700"
+            >
               {vesselName}
             </Link>
           ) : (
             <span className="font-bold text-slate-700">{vesselName}</span>
           )}
           <span>/</span>
-          <Link to="/processes/$id" params={{ id }} className="hover:text-slate-600 hover:underline">
+          <Link
+            to="/processes/$id"
+            params={{ id }}
+            className="hover:text-slate-600 hover:underline"
+          >
             {serviceTitle}
           </Link>
         </div>
@@ -483,9 +534,7 @@ function DocumentosGeradosPage() {
           <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
             Cliente
           </p>
-          <p className="text-sm font-bold text-[#0B1739] truncate">
-            {customerName}
-          </p>
+          <p className="text-sm font-bold text-[#0B1739] truncate">{customerName}</p>
         </div>
 
         {/* Embarcação */}
@@ -493,9 +542,7 @@ function DocumentosGeradosPage() {
           <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
             Embarcação
           </p>
-          <p className="text-sm font-bold text-[#0B1739] truncate">
-            {vesselName}
-          </p>
+          <p className="text-sm font-bold text-[#0B1739] truncate">{vesselName}</p>
         </div>
 
         {/* Serviço */}
@@ -503,9 +550,7 @@ function DocumentosGeradosPage() {
           <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
             Serviço
           </p>
-          <p className="text-sm font-bold text-[#0B1739] truncate">
-            {serviceTitle}
-          </p>
+          <p className="text-sm font-bold text-[#0B1739] truncate">{serviceTitle}</p>
         </div>
 
         {/* Processo */}
@@ -513,9 +558,7 @@ function DocumentosGeradosPage() {
           <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
             Processo
           </p>
-          <p className="text-sm font-bold text-[#0B1739]">
-            {protocolCode}
-          </p>
+          <p className="text-sm font-bold text-[#0B1739]">{protocolCode}</p>
         </div>
       </div>
 
@@ -611,8 +654,8 @@ function DocumentosGeradosPage() {
                   <td colSpan={5} className="py-12 text-center text-xs text-slate-400 space-y-2">
                     <FileText className="h-8 w-8 text-slate-200 mx-auto" />
                     <p className="font-semibold text-slate-700">
-                      {documents.length === 0 
-                        ? "Nenhum documento gerado para este serviço" 
+                      {documents.length === 0
+                        ? "Nenhum documento gerado para este serviço"
                         : "Nenhum documento encontrado com os filtros aplicados"}
                     </p>
                     {documents.length === 0 ? (
@@ -620,7 +663,9 @@ function DocumentosGeradosPage() {
                         <button
                           type="button"
                           id="btn-gerar-primeiro-documento"
-                          onClick={() => navigate({ to: "/processes/$id/gerar-documento", params: { id } })}
+                          onClick={() =>
+                            navigate({ to: "/processes/$id/gerar-documento", params: { id } })
+                          }
                           className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#075BFF] text-white text-xs font-medium hover:bg-blue-600 cursor-pointer"
                         >
                           <Plus className="h-3.5 w-3.5" />
@@ -643,14 +688,24 @@ function DocumentosGeradosPage() {
                 </tr>
               ) : (
                 filteredDocuments.map((doc) => {
-                  const isSigned = !!doc.signed_file_url || doc.signature_status === "Anexada" || doc.signature_status === "signed";
-                  const responsibleName = doc.metadata?.responsible_name || profile?.name || "João Vitor";
-                  const formattedDate = doc.created_at ? new Date(doc.created_at).toLocaleDateString("pt-BR") : "27/09/2026";
+                  const isSigned =
+                    !!doc.signed_file_url ||
+                    doc.signature_status === "Anexada" ||
+                    doc.signature_status === "signed";
+                  const responsibleName =
+                    doc.metadata?.responsible_name || profile?.name || "João Vitor";
+                  const formattedDate = doc.created_at
+                    ? new Date(doc.created_at).toLocaleDateString("pt-BR")
+                    : "27/09/2026";
                   const versionNum = doc.version || 1;
 
+                  const hasRealPdf = Boolean(
+                    doc.generated_file_url && doc.status !== "draft" && doc.status !== "failed",
+                  );
+
                   return (
-                    <tr 
-                      key={doc.id} 
+                    <tr
+                      key={doc.id}
                       onClick={() => setSelectedDoc(doc)}
                       className={`hover:bg-slate-50/80 transition-colors cursor-pointer ${
                         selectedDoc?.id === doc.id ? "bg-blue-50/30" : ""
@@ -659,13 +714,19 @@ function DocumentosGeradosPage() {
                       {/* Documento */}
                       <td className="py-3.5 px-3">
                         <div className="flex items-center gap-3">
-                          <PdfBadgeIcon />
+                          {hasRealPdf ? (
+                            <PdfBadgeIcon />
+                          ) : (
+                            <div className="w-8 h-9 rounded-lg bg-amber-100 text-amber-700 flex flex-col items-center justify-center font-bold shrink-0 select-none border border-amber-300">
+                              <span className="text-[8px] font-black tracking-tight leading-none">RASC</span>
+                            </div>
+                          )}
                           <div>
                             <p className="text-xs sm:text-sm font-bold text-[#0B1739]">
                               {doc.name}
                             </p>
                             <p className="text-[11px] text-slate-400">
-                              Versão {versionNum} • PDF
+                              {hasRealPdf ? `Versão ${versionNum} • PDF A4` : "Minuta em rascunho • PDF não gerado"}
                             </p>
                           </div>
                         </div>
@@ -698,36 +759,52 @@ function DocumentosGeradosPage() {
                       <td className="py-3.5 px-3 text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-3">
                           {/* Visualizar */}
-                          <button
-                            type="button"
-                            id={`btn-view-doc-${doc.id}`}
-                            onClick={() => openStoredFile(doc)}
-                            className="inline-flex items-center gap-1 text-xs font-semibold text-[#075BFF] hover:underline cursor-pointer"
-                            title="Visualizar PDF"
-                          >
-                            <Eye className="h-3.5 w-3.5" />
-                            <span>Visualizar</span>
-                          </button>
+                          {hasRealPdf ? (
+                            <button
+                              type="button"
+                              id={`btn-view-doc-${doc.id}`}
+                              onClick={() => openStoredFile(doc)}
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-[#075BFF] hover:underline cursor-pointer"
+                              title="Visualizar PDF"
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                              <span>Visualizar</span>
+                            </button>
+                          ) : (
+                            <Link
+                              to="/processes/$id/gerar-documento"
+                              params={{ id }}
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-amber-600 hover:underline cursor-pointer"
+                              title="Gerar PDF para este rascunho"
+                            >
+                              <Plus className="h-3.5 w-3.5" />
+                              <span>Gerar PDF</span>
+                            </Link>
+                          )}
 
                           {/* Baixar PDF */}
-                          <button
-                            type="button"
-                            onClick={() => downloadStoredFile(doc, doc.name)}
-                            className="inline-flex items-center gap-1 text-xs font-semibold text-[#075BFF] hover:underline cursor-pointer"
-                            title="Baixar PDF original"
-                          >
-                            <Download className="h-3.5 w-3.5" />
-                            <span>Baixar PDF</span>
-                          </button>
+                          {hasRealPdf && (
+                            <button
+                              type="button"
+                              onClick={() => downloadStoredFile(doc, doc.name)}
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-[#075BFF] hover:underline cursor-pointer"
+                              title="Baixar PDF original"
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                              <span>Baixar PDF</span>
+                            </button>
+                          )}
 
                           {/* Anexar versão assinada */}
                           <button
                             type="button"
-                            onClick={() => navigate({
-                              to: "/processes/$id/anexar-versao-assinada",
-                              params: { id },
-                              search: { docId: doc.id }
-                            })}
+                            onClick={() =>
+                              navigate({
+                                to: "/processes/$id/anexar-versao-assinada",
+                                params: { id },
+                                search: { docId: doc.id },
+                              })
+                            }
                             className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded cursor-pointer"
                             title="Anexar versão assinada"
                           >
@@ -756,22 +833,40 @@ function DocumentosGeradosPage() {
             </div>
           ) : (
             filteredDocuments.map((doc) => {
-              const isSigned = !!doc.signed_file_url || doc.signature_status === "Anexada" || doc.signature_status === "signed";
-              const responsibleName = doc.metadata?.responsible_name || profile?.name || "João Vitor";
-              const formattedDate = doc.created_at ? new Date(doc.created_at).toLocaleDateString("pt-BR") : "27/09/2026";
+              const isSigned =
+                !!doc.signed_file_url ||
+                doc.signature_status === "Anexada" ||
+                doc.signature_status === "signed";
+              const responsibleName =
+                doc.metadata?.responsible_name || profile?.name || "João Vitor";
+              const formattedDate = doc.created_at
+                ? new Date(doc.created_at).toLocaleDateString("pt-BR")
+                : "27/09/2026";
+
+              const hasRealPdf = Boolean(
+                doc.generated_file_url && doc.status !== "draft" && doc.status !== "failed",
+              );
 
               return (
-                <div 
-                  key={doc.id} 
+                <div
+                  key={doc.id}
                   onClick={() => setSelectedDoc(doc)}
                   className="py-3.5 space-y-2.5 cursor-pointer"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <PdfBadgeIcon />
+                      {hasRealPdf ? (
+                        <PdfBadgeIcon />
+                      ) : (
+                        <div className="w-8 h-9 rounded-lg bg-amber-100 text-amber-700 flex flex-col items-center justify-center font-bold shrink-0 border border-amber-300">
+                          <span className="text-[8px] font-black leading-none">RASC</span>
+                        </div>
+                      )}
                       <div className="min-w-0">
                         <p className="font-bold text-xs text-[#0B1739] truncate">{doc.name}</p>
-                        <p className="text-[11px] text-slate-400">Versão {doc.version || 1} • PDF</p>
+                        <p className="text-[11px] text-slate-400">
+                          {hasRealPdf ? `Versão ${doc.version || 1} • PDF A4` : "Minuta em rascunho • PDF não gerado"}
+                        </p>
                       </div>
                     </div>
                     <div>
@@ -788,27 +883,45 @@ function DocumentosGeradosPage() {
                   </div>
 
                   <div className="text-[11px] text-slate-500 flex items-center justify-between pl-10">
-                    <span>Responsável: <strong>{responsibleName}</strong></span>
+                    <span>
+                      Responsável: <strong>{responsibleName}</strong>
+                    </span>
                     <span>{formattedDate}</span>
                   </div>
 
-                  <div className="flex items-center justify-end gap-3 pt-1 border-t border-slate-100" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      type="button"
-                      onClick={() => openStoredFile(doc)}
-                      className="text-xs font-semibold text-[#075BFF] flex items-center gap-1"
-                    >
-                      <Eye className="h-3.5 w-3.5" />
-                      <span>Visualizar</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => downloadStoredFile(doc, doc.name)}
-                      className="text-xs font-semibold text-[#075BFF] flex items-center gap-1"
-                    >
-                      <Download className="h-3.5 w-3.5" />
-                      <span>Baixar PDF</span>
-                    </button>
+                  <div
+                    className="flex items-center justify-end gap-3 pt-1 border-t border-slate-100"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {hasRealPdf ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => openStoredFile(doc)}
+                          className="text-xs font-semibold text-[#075BFF] flex items-center gap-1"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          <span>Visualizar</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => downloadStoredFile(doc, doc.name)}
+                          className="text-xs font-semibold text-[#075BFF] flex items-center gap-1"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          <span>Baixar PDF</span>
+                        </button>
+                      </>
+                    ) : (
+                      <Link
+                        to="/processes/$id/gerar-documento"
+                        params={{ id }}
+                        className="text-xs font-semibold text-amber-600 flex items-center gap-1"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        <span>Gerar PDF</span>
+                      </Link>
+                    )}
                     <button
                       type="button"
                       onClick={() => setDocToAttach(doc)}
@@ -826,46 +939,59 @@ function DocumentosGeradosPage() {
       </div>
 
       {/* 6. SUB-CARD DE VERSÃO ASSINADA VINCULADA */}
-      {selectedDoc && (selectedDoc.signed_file_url || selectedDoc.signature_status === "Anexada" || selectedDoc.signature_status === "signed") && (
-        <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-xs space-y-2">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#075BFF] flex items-center justify-center shrink-0">
-                <Paperclip className="h-4 w-4" />
+      {selectedDoc &&
+        (selectedDoc.signed_file_url ||
+          selectedDoc.signature_status === "Anexada" ||
+          selectedDoc.signature_status === "signed") && (
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-xs space-y-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#075BFF] flex items-center justify-center shrink-0">
+                  <Paperclip className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-bold text-xs sm:text-sm text-[#0B1739] truncate">
+                    {selectedDoc.name} — versão assinada.pdf
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="font-bold text-xs sm:text-sm text-[#0B1739] truncate">
-                  {selectedDoc.name} — versão assinada.pdf
-                </p>
+
+              <div className="flex items-center gap-3 shrink-0">
+                <button
+                  type="button"
+                  onClick={() =>
+                    openStoredFile({
+                      file_url: selectedDoc.signed_file_url,
+                      category: "generated-documents",
+                    })
+                  }
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#075BFF] hover:underline cursor-pointer"
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                  <span>Visualizar</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    downloadStoredFile(
+                      { file_url: selectedDoc.signed_file_url, category: "generated-documents" },
+                      `${selectedDoc.name} - Versao Assinada.pdf`,
+                    )
+                  }
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#075BFF] hover:underline cursor-pointer"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  <span>Baixar</span>
+                </button>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 shrink-0">
-              <button
-                type="button"
-                onClick={() => openStoredFile({ file_url: selectedDoc.signed_file_url, category: "generated-documents" })}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-[#075BFF] hover:underline cursor-pointer"
-              >
-                <Eye className="h-3.5 w-3.5" />
-                <span>Visualizar</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => downloadStoredFile({ file_url: selectedDoc.signed_file_url, category: "generated-documents" }, `${selectedDoc.name} - Versao Assinada.pdf`)}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-[#075BFF] hover:underline cursor-pointer"
-              >
-                <Download className="h-3.5 w-3.5" />
-                <span>Baixar</span>
-              </button>
-            </div>
+            <p className="text-[11px] text-slate-400 pl-11">
+              O arquivo original é preservado ao anexar uma versão assinada.
+            </p>
           </div>
-
-          <p className="text-[11px] text-slate-400 pl-11">
-            O arquivo original é preservado ao anexar uma versão assinada.
-          </p>
-        </div>
-      )}
+        )}
 
       {/* ========================================================================= */}
       {/* MODAL: ANEXAR VERSÃO ASSINADA */}
@@ -920,7 +1046,9 @@ function DocumentosGeradosPage() {
               <div className="bg-blue-50/60 border border-blue-100 rounded-xl p-3 flex items-start gap-2 text-xs text-slate-600">
                 <Info className="h-4 w-4 text-[#075BFF] shrink-0 mt-0.5" />
                 <span>
-                  O arquivo original será preservado. O sistema registrará a data do envio ({new Date().toLocaleDateString("pt-BR")}) e o usuário responsável ({profile?.name || "Usuário"}).
+                  O arquivo original será preservado. O sistema registrará a data do envio (
+                  {new Date().toLocaleDateString("pt-BR")}) e o usuário responsável (
+                  {profile?.name || "Usuário"}).
                 </span>
               </div>
 
@@ -963,7 +1091,10 @@ function DocumentosGeradosPage() {
       {/* MODAL: GERAR DOCUMENTO */}
       {/* ========================================================================= */}
       {isGenerateModalOpen && (
-        <Dialog open={isGenerateModalOpen} onOpenChange={(open) => !open && setIsGenerateModalOpen(false)}>
+        <Dialog
+          open={isGenerateModalOpen}
+          onOpenChange={(open) => !open && setIsGenerateModalOpen(false)}
+        >
           <DialogContent className="max-w-xl rounded-2xl bg-white border border-slate-200 p-0 overflow-hidden">
             <DialogHeader className="p-5 sm:p-6 border-b border-slate-100">
               <div className="flex items-center gap-3">
@@ -1021,13 +1152,17 @@ function DocumentosGeradosPage() {
                       Nenhum modelo disponível para este serviço
                     </p>
                     <p className="text-[11px] text-slate-400">
-                      O catálogo de formulários náuticos está em fase de preparação para esta categoria.
+                      O catálogo de formulários náuticos está em fase de preparação para esta
+                      categoria.
                     </p>
                   </div>
                 ) : (
                   <div className="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden max-h-56 overflow-y-auto">
                     {availableTemplates.map((tpl) => (
-                      <div key={tpl.id} className="p-3.5 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                      <div
+                        key={tpl.id}
+                        className="p-3.5 flex items-center justify-between hover:bg-slate-50 transition-colors"
+                      >
                         <div>
                           <p className="font-semibold text-xs text-[#0B1739]">{tpl.title}</p>
                           <p className="text-[11px] text-slate-400">{tpl.category || "Oficial"}</p>
@@ -1039,7 +1174,11 @@ function DocumentosGeradosPage() {
                             setIsGenerateModalOpen(false);
                             navigate({
                               to: "/processes/arquivos-gerados",
-                              search: { orderId: id, customerId: customer?.id, vesselId: vessel?.id },
+                              search: {
+                                orderId: id,
+                                customerId: customer?.id,
+                                vesselId: vessel?.id,
+                              },
                             });
                           }}
                           className="px-3 py-1.5 rounded-lg bg-[#075BFF] text-white text-xs font-semibold hover:bg-blue-600"

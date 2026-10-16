@@ -1,13 +1,13 @@
 import { createFileRoute, Link, useNavigate, Outlet, useMatchRoute } from "@tanstack/react-router";
-import { 
+import {
   ArrowLeft,
-  Search, 
-  Plus, 
-  ChevronRight, 
-  User, 
-  FileText, 
-  Loader2, 
-  X, 
+  Search,
+  Plus,
+  ChevronRight,
+  User,
+  FileText,
+  Loader2,
+  X,
   AlertCircle,
   Info,
   Award,
@@ -32,19 +32,28 @@ import {
   FileSpreadsheet,
   Ban,
   RefreshCw,
-  ExternalLink
+  ExternalLink,
 } from "lucide-react";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DashboardLayout } from "@/routes/dashboard";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { getServiceDefinition } from "@/services/catalog/servicesCatalogValidation";
 
 export const Route = createFileRoute("/processes/$id")({
-  validateSearch: (search: Record<string, unknown>): {
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): {
     from?: string;
     customerId?: string;
     vesselId?: string;
@@ -84,25 +93,61 @@ const SERVICE_CATALOG: Record<string, { title: string; categoryLabel: string }> 
   "inscricao-inicial": { title: "Inscrição inicial", categoryLabel: "Esporte e recreio" },
   "renovacao-tie": { title: "Renovação do TIE", categoryLabel: "Esporte e recreio" },
   "segunda-via-tie": { title: "Segunda via do TIE", categoryLabel: "Esporte e recreio" },
-  "transferencia-propriedade": { title: "Transferência de propriedade", categoryLabel: "Esporte e recreio" },
-  "transferencia-jurisdicao": { title: "Transferência de jurisdição", categoryLabel: "Esporte e recreio" },
-  "transferencia-ambas": { title: "Transferência de propriedade e jurisdição", categoryLabel: "Esporte e recreio" },
+  "transferencia-propriedade": {
+    title: "Transferência de propriedade",
+    categoryLabel: "Esporte e recreio",
+  },
+  "transferencia-jurisdicao": {
+    title: "Transferência de jurisdição",
+    categoryLabel: "Esporte e recreio",
+  },
+  "transferencia-ambas": {
+    title: "Transferência de propriedade e jurisdição",
+    categoryLabel: "Esporte e recreio",
+  },
   "comunicacao-venda": { title: "Comunicação de venda", categoryLabel: "Esporte e recreio" },
-  "inscricao-comercial": { title: "Inscrição comercial inicial", categoryLabel: "Embarcações profissionais" },
-  "renovacao-tie-prof": { title: "Renovação de TIE profissional", categoryLabel: "Embarcações profissionais" },
-  "segunda-via-tie-prof": { title: "Segunda via de TIE profissional", categoryLabel: "Embarcações profissionais" },
-  "transferencia-prof": { title: "Transferência de propriedade profissional", categoryLabel: "Embarcações profissionais" },
-  "transferencia-jurisdicao-prof": { title: "Transferência de jurisdição profissional", categoryLabel: "Embarcações profissionais" },
+  "inscricao-comercial": {
+    title: "Inscrição comercial inicial",
+    categoryLabel: "Embarcações profissionais",
+  },
+  "renovacao-tie-prof": {
+    title: "Renovação de TIE profissional",
+    categoryLabel: "Embarcações profissionais",
+  },
+  "segunda-via-tie-prof": {
+    title: "Segunda via de TIE profissional",
+    categoryLabel: "Embarcações profissionais",
+  },
+  "transferencia-prof": {
+    title: "Transferência de propriedade profissional",
+    categoryLabel: "Embarcações profissionais",
+  },
+  "transferencia-jurisdicao-prof": {
+    title: "Transferência de jurisdição profissional",
+    categoryLabel: "Embarcações profissionais",
+  },
 };
 
 // Estados suportados pelo sistema
 const PROCESS_STATUS_LIST = [
   { value: "draft", label: "Rascunho", color: "bg-slate-100 text-slate-700 border-slate-200" },
   { value: "preparing", label: "Em preparação", color: "bg-blue-50 text-blue-700 border-blue-200" },
-  { value: "pending_docs", label: "Documentação pendente", color: "bg-amber-50 text-amber-700 border-amber-200" },
-  { value: "ready_for_protocol", label: "Pronto para protocolo", color: "bg-indigo-50 text-indigo-700 border-indigo-200" },
+  {
+    value: "pending_docs",
+    label: "Documentação pendente",
+    color: "bg-amber-50 text-amber-700 border-amber-200",
+  },
+  {
+    value: "ready_for_protocol",
+    label: "Pronto para protocolo",
+    color: "bg-indigo-50 text-indigo-700 border-indigo-200",
+  },
   { value: "in_progress", label: "Em andamento", color: "bg-sky-50 text-sky-700 border-sky-200" },
-  { value: "completed", label: "Concluído", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  {
+    value: "completed",
+    label: "Concluído",
+    color: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  },
   { value: "cancelled", label: "Cancelado", color: "bg-red-50 text-red-700 border-red-200" },
 ];
 
@@ -131,15 +176,14 @@ function ProcessDetailsPage() {
   const [isStatusChanging, setIsStatusChanging] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
-  const [selectedServiceForModal, setSelectedServiceForModal] = useState<any | null>(null);
-  const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
+  // Modal de Serviço removido em favor de página dedicada e navegação direta
 
   // 1. Carregar Processo e Relacionamentos
   const loadProcessDetails = useCallback(async () => {
-    const isPreview = typeof window !== 'undefined' && (
-      window.location.search.includes('preview=true') ||
-      window.localStorage.getItem('preview_mode') === 'true'
-    );
+    const isPreview =
+      typeof window !== "undefined" &&
+      (window.location.search.includes("preview=true") ||
+        window.localStorage.getItem("preview_mode") === "true");
     if (!id || (!companyId && !isPreview)) return;
 
     setIsLoading(true);
@@ -150,11 +194,13 @@ function ProcessDetailsPage() {
       if (companyId) {
         const { data, error: pError } = await supabase
           .from("processes")
-          .select(`
+          .select(
+            `
             *,
             customer:customers!processes_customer_id_fkey(id, name, cpf_cnpj, email, phone),
             vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, category, vessel_type, length)
-          `)
+          `,
+          )
           .eq("id", id)
           .eq("company_id", companyId)
           .maybeSingle();
@@ -173,10 +219,21 @@ function ProcessDetailsPage() {
             draft_data: {
               category: "profissional",
               category_label: "Embarcações profissionais",
-              services: ["laudo_engenharia", "despacho_maritimo", "inscricao_inicial", "renovacao_tie"],
+              services: [
+                "laudo_engenharia",
+                "despacho_maritimo",
+                "inscricao_inicial",
+                "renovacao_tie",
+              ],
             },
             customer: { id: "c-1", name: "Marina Alves de Souza", cpf_cnpj: "123.456.789-00" },
-            vessel: { id: "v-1", name: "Brisa Azul Teste", registration_number: "SP-123456", category: "profissional", vessel_type: "Embarcação Comercial" },
+            vessel: {
+              id: "v-1",
+              name: "Brisa Azul Teste",
+              registration_number: "SP-123456",
+              category: "profissional",
+              vessel_type: "Embarcação Comercial",
+            },
           };
           setProcessData(demoProc);
           setCurrentStatus("draft");
@@ -248,6 +305,13 @@ function ProcessDetailsPage() {
     }
   }, [companyId, id]);
 
+  // Documentos gerados com arquivo PDF comprovadamente existente (exclui rascunhos sem arquivo)
+  const validGeneratedDocs = useMemo(() => {
+    return generatedDocs.filter(
+      (doc) => !!doc.generated_file_url && doc.status !== "draft" && doc.status !== "failed",
+    );
+  }, [generatedDocs]);
+
   useEffect(() => {
     loadProcessDetails();
     loadProcessFiles();
@@ -260,7 +324,8 @@ function ProcessDetailsPage() {
 
     try {
       const now = new Date().toISOString();
-      const statusLabel = PROCESS_STATUS_LIST.find((s) => s.value === newStatus)?.label || newStatus;
+      const statusLabel =
+        PROCESS_STATUS_LIST.find((s) => s.value === newStatus)?.label || newStatus;
       const historyEntry = {
         event: "status_changed",
         description: `Situação alterada para "${statusLabel}"`,
@@ -372,14 +437,19 @@ function ProcessDetailsPage() {
   const processServices = useMemo(() => {
     const draft = (processData?.draft_data || processData?.metadata || {}) as any;
 
-    if (draft?.parsed_services && Array.isArray(draft.parsed_services) && draft.parsed_services.length > 0) {
+    if (
+      draft?.parsed_services &&
+      Array.isArray(draft.parsed_services) &&
+      draft.parsed_services.length > 0
+    ) {
       return draft.parsed_services.map((srv: any) => ({
         ...srv,
         categoryLabel: srv.categoryLabel || categoryDisplayName,
       }));
     }
 
-    const serviceKeys: string[] = draft?.services || draft?.selected_services || [processData?.process_type].filter(Boolean);
+    const serviceKeys: string[] =
+      draft?.services || draft?.selected_services || [processData?.process_type].filter(Boolean);
     if (Array.isArray(serviceKeys) && serviceKeys.length > 0) {
       return serviceKeys.map((key: string) => {
         const def = getServiceDefinition(key);
@@ -399,22 +469,32 @@ function ProcessDetailsPage() {
 
     const singleKey = processData?.process_type || "renovacao_inscricao";
     const singleDef = getServiceDefinition(singleKey);
-    return [{
-      key: singleKey,
-      id: singleDef.id,
-      title: singleDef.title || processData?.title || "Serviço náutico",
-      categoryLabel: categoryDisplayName,
-      status: singleDef.status === "validated" ? "Requisitos conferidos" : "Requisitos em revisão",
-      isValidated: singleDef.status === "validated",
-    }];
+    return [
+      {
+        key: singleKey,
+        id: singleDef.id,
+        title: singleDef.title || processData?.title || "Serviço náutico",
+        categoryLabel: categoryDisplayName,
+        status:
+          singleDef.status === "validated" ? "Requisitos conferidos" : "Requisitos em revisão",
+        isValidated: singleDef.status === "validated",
+      },
+    ];
   }, [processData, categoryDisplayName]);
 
   // Histórico Consolidado de Eventos Reais
   const historyEvents = useMemo(() => {
-    const events: Array<{ id: string; event: string; description: string; user: string; date: string }> = [];
+    const events: Array<{
+      id: string;
+      event: string;
+      description: string;
+      user: string;
+      date: string;
+    }> = [];
 
     // Eventos customizados do draft_data ou metadata
-    const historyList = (processData?.draft_data as any)?.history || (processData?.metadata as any)?.history;
+    const historyList =
+      (processData?.draft_data as any)?.history || (processData?.metadata as any)?.history;
     if (historyList && Array.isArray(historyList)) {
       historyList.forEach((h: any, idx: number) => {
         events.push({
@@ -508,7 +588,6 @@ function ProcessDetailsPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24 font-sans text-slate-800">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
-        
         {/* ========================================================================= */}
         {/* 1. CABEÇALHO */}
         {/* ========================================================================= */}
@@ -531,7 +610,7 @@ function ProcessDetailsPage() {
                 {processCode}
               </span>
             </div>
-            
+
             <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
               <Calendar className="h-3.5 w-3.5 text-slate-400" />
               <span>Criado em {creationDateFormatted}</span>
@@ -571,7 +650,9 @@ function ProcessDetailsPage() {
         <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-xs grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
           {/* Cliente */}
           <div className="pt-2 sm:pt-0 sm:pr-3">
-            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Cliente</span>
+            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+              Cliente
+            </span>
             {customer?.id ? (
               <Link
                 to="/customers/$id"
@@ -592,7 +673,9 @@ function ProcessDetailsPage() {
 
           {/* Embarcação */}
           <div className="pt-3 sm:pt-0 sm:px-3">
-            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Embarcação</span>
+            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+              Embarcação
+            </span>
             {vessel?.id ? (
               <Link
                 to="/vessels/$id"
@@ -613,7 +696,9 @@ function ProcessDetailsPage() {
 
           {/* Categoria */}
           <div className="pt-3 sm:pt-0 sm:px-3">
-            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Categoria</span>
+            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+              Categoria
+            </span>
             <span className="text-sm font-bold text-[#0B1739] truncate block">
               {categoryDisplayName}
             </span>
@@ -624,21 +709,26 @@ function ProcessDetailsPage() {
 
           {/* Responsável */}
           <div className="pt-3 sm:pt-0 sm:px-3">
-            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Responsável</span>
+            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+              Responsável
+            </span>
             <span className="text-sm font-bold text-[#0B1739] truncate block">
               {profile?.full_name || user?.email || "Operador"}
             </span>
-            <span className="text-[11px] text-slate-400 block">
-              Equipe NavalDocs
-            </span>
+            <span className="text-[11px] text-slate-400 block">Equipe NavalDocs</span>
           </div>
 
           {/* Situação */}
           <div className="pt-3 sm:pt-0 sm:pl-3">
-            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Situação</span>
-            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border mt-1 ${
-              PROCESS_STATUS_LIST.find((s) => s.value === currentStatus)?.color || "bg-blue-50 text-blue-700 border-blue-200"
-            }`}>
+            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+              Situação
+            </span>
+            <span
+              className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border mt-1 ${
+                PROCESS_STATUS_LIST.find((s) => s.value === currentStatus)?.color ||
+                "bg-blue-50 text-blue-700 border-blue-200"
+              }`}
+            >
               {PROCESS_STATUS_LIST.find((s) => s.value === currentStatus)?.label || currentStatus}
             </span>
           </div>
@@ -656,12 +746,12 @@ function ProcessDetailsPage() {
                   <FileText className="h-5 w-5" />
                 </div>
                 <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-50 text-[#075BFF] border border-blue-100">
-                  {generatedDocs.length} {generatedDocs.length === 1 ? "gerado" : "gerados"}
+                  {validGeneratedDocs.length} {validGeneratedDocs.length === 1 ? "gerado" : "gerados"}
                 </span>
               </div>
               <h3 className="text-sm font-bold text-[#0B1739]">Documentos gerados</h3>
               <p className="text-xs text-slate-500">
-                Requerimentos, procurações e minutas preenchidas automaticamente.
+                Requerimentos, procurações e minutas com PDF pronto para assinatura.
               </p>
             </div>
 
@@ -761,17 +851,13 @@ function ProcessDetailsPage() {
         {/* 4. GRID PRINCIPAL (2 COLUNAS: SERVIÇOS À ESQUERDA + HISTÓRICO & AÇÕES À DIREITA) */}
         {/* ========================================================================= */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
           {/* COLUNA ESQUERDA (7 COLUNAS): SERVIÇOS DO PROCESSO */}
           <div className="lg:col-span-7 space-y-6">
-            
             {/* SERVIÇOS DESTE PROCESSO */}
             <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-base font-bold text-[#0B1739]">
-                    Serviços deste processo
-                  </h2>
+                  <h2 className="text-base font-bold text-[#0B1739]">Serviços deste processo</h2>
                   <p className="text-xs text-slate-400 mt-0.5">
                     Ocorrências de serviços vinculadas a este processo
                   </p>
@@ -782,7 +868,10 @@ function ProcessDetailsPage() {
                     navigate({
                       to: "/servicos/selecionar",
                       search: {
-                        category: (processData?.draft_data as any)?.category || (processData?.metadata as any)?.category || "esporte_recreio",
+                        category:
+                          (processData?.draft_data as any)?.category ||
+                          (processData?.metadata as any)?.category ||
+                          "esporte_recreio",
                         customerId: customer?.id || "",
                         vesselId: vessel?.id || "",
                       },
@@ -796,74 +885,85 @@ function ProcessDetailsPage() {
               </div>
 
               <div className="divide-y divide-slate-100">
-                {processServices.map((srv: any, idx: number) => (
-                  <div key={srv.key + idx} className="py-4 first:pt-2 last:pb-2 space-y-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#075BFF] flex items-center justify-center shrink-0 mt-0.5">
-                          <Cog className="h-5 w-5" />
+                {processServices.map((srv: any, idx: number) => {
+                  const srvGeneratedDocs = validGeneratedDocs.filter(
+                    (d) =>
+                      (d.metadata as any)?.service_key === srv.key ||
+                      (d.metadata as any)?.template_code?.toLowerCase().includes(srv.key) ||
+                      processServices.length === 1,
+                  );
+                  const srvProtocolFiles = protocolFiles.filter(
+                    (p) => (p.metadata as any)?.service_key === srv.key || processServices.length === 1,
+                  );
+                  const srvIssuedDocs = issuedDocs.filter(
+                    (i) => (i.metadata as any)?.service_key === srv.key || processServices.length === 1,
+                  );
+
+                  return (
+                    <div key={srv.key + idx} className="py-4 first:pt-2 last:pb-2 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3 min-w-0">
+                          <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#075BFF] flex items-center justify-center shrink-0 mt-0.5">
+                            <Cog className="h-5 w-5" />
+                          </div>
+                          <div className="min-w-0">
+                            <h4 className="text-xs font-bold text-[#0B1739] truncate">{srv.title}</h4>
+                            <p className="text-[11px] text-slate-500">{srv.categoryLabel}</p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <h4 className="text-xs font-bold text-[#0B1739] truncate">
-                            {srv.title}
-                          </h4>
-                          <p className="text-[11px] text-slate-500">
-                            {srv.categoryLabel}
-                          </p>
+
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-50 text-sky-700 border border-sky-200 shrink-0">
+                          {srv.status || "Em andamento"}
+                        </span>
+                      </div>
+
+                      {/* Métricas Contextuais do Serviço */}
+                      <div className="grid grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-xl text-center text-xs">
+                        <div>
+                          <span className="text-[10px] text-slate-400 block uppercase">Gerados</span>
+                          <span className="font-bold text-slate-700">{srvGeneratedDocs.length}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-400 block uppercase">
+                            Protocolos
+                          </span>
+                          <span className="font-bold text-slate-700">{srvProtocolFiles.length}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-400 block uppercase">Emitidos</span>
+                          <span className="font-bold text-slate-700">{srvIssuedDocs.length}</span>
                         </div>
                       </div>
 
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-50 text-sky-700 border border-sky-200 shrink-0">
-                        {srv.status || "Em andamento"}
-                      </span>
-                    </div>
-
-                    {/* Métricas do Serviço */}
-                    <div className="grid grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-xl text-center text-xs">
-                      <div>
-                        <span className="text-[10px] text-slate-400 block uppercase">Gerados</span>
-                        <span className="font-bold text-slate-700">{generatedDocs.length}</span>
+                      <div className="flex items-center justify-end gap-2 pt-1">
+                        <Link
+                          to="/processes/$id/pendencias"
+                          params={{ id }}
+                          search={{ serviceKey: srv.key }}
+                          className="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                        >
+                          <AlertCircle className="h-3.5 w-3.5 text-amber-600" />
+                          <span>Ver pendências</span>
+                        </Link>
+                        <Link
+                          to="/processes/$id/pendencias"
+                          params={{ id }}
+                          search={{ serviceKey: srv.key }}
+                          className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors inline-flex items-center gap-1 cursor-pointer"
+                        >
+                          <span>Abrir serviço</span>
+                          <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                        </Link>
                       </div>
-                      <div>
-                        <span className="text-[10px] text-slate-400 block uppercase">Protocolos</span>
-                        <span className="font-bold text-slate-700">{protocolFiles.length}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-400 block uppercase">Emitidos</span>
-                        <span className="font-bold text-slate-700">{issuedDocs.length}</span>
-                      </div>
                     </div>
-
-                    <div className="flex items-center justify-end gap-2 pt-1">
-                      <Link
-                        to="/processes/$id/pendencias"
-                        params={{ id }}
-                        className="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
-                      >
-                        <AlertCircle className="h-3.5 w-3.5 text-amber-600" />
-                        <span>Ver pendências</span>
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedServiceForModal(srv);
-                          setIsServiceModalOpen(true);
-                        }}
-                        className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
-                      >
-                        Abrir serviço
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
             {/* AÇÕES RÁPIDAS DO PROCESSO */}
             <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-              <h2 className="text-base font-bold text-[#0B1739]">
-                Ações do processo
-              </h2>
+              <h2 className="text-base font-bold text-[#0B1739]">Ações do processo</h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
@@ -891,7 +991,10 @@ function ProcessDetailsPage() {
                     navigate({
                       to: "/servicos/documentos",
                       search: {
-                        category: (processData?.draft_data as any)?.category || (processData?.metadata as any)?.category || "esporte_recreio",
+                        category:
+                          (processData?.draft_data as any)?.category ||
+                          (processData?.metadata as any)?.category ||
+                          "esporte_recreio",
                         customerId: customer?.id || "",
                         vesselId: vessel?.id || "",
                         services: processServices.map((s: any) => s.key).join(","),
@@ -967,28 +1070,22 @@ function ProcessDetailsPage() {
                   onClick={() => setIsCancelModalOpen(true)}
                   className="p-3 rounded-xl border border-red-100 hover:border-red-300 hover:bg-red-50/30 text-left transition-all cursor-pointer group"
                 >
-                  <p className="text-xs font-bold text-red-600">
-                    Cancelar processo
-                  </p>
+                  <p className="text-xs font-bold text-red-600">Cancelar processo</p>
                   <p className="text-[11px] text-red-400 mt-0.5">
                     Interromper andamento deste processo
                   </p>
                 </button>
               </div>
             </div>
-
           </div>
 
           {/* COLUNA DIREITA (5 COLUNAS): HISTÓRICO DO PROCESSO */}
           <div className="lg:col-span-5 space-y-6">
-            
             <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <History className="h-4 w-4 text-[#075BFF]" />
-                  <h2 className="text-base font-bold text-[#0B1739]">
-                    Histórico do processo
-                  </h2>
+                  <h2 className="text-base font-bold text-[#0B1739]">Histórico do processo</h2>
                 </div>
                 <Link
                   to="/processes/$id/historico"
@@ -1007,8 +1104,8 @@ function ProcessDetailsPage() {
                 <div className="space-y-4 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
                   {historyEvents.map((evt) => {
                     const evtDate = new Date(evt.date);
-                    const formattedDate = isNaN(evtDate.getTime()) 
-                      ? evt.date 
+                    const formattedDate = isNaN(evtDate.getTime())
+                      ? evt.date
                       : new Intl.DateTimeFormat("pt-BR", {
                           day: "2-digit",
                           month: "2-digit",
@@ -1034,64 +1131,10 @@ function ProcessDetailsPage() {
                 </div>
               )}
             </div>
-
           </div>
-
         </div>
-
       </div>
 
-      {/* ========================================================================= */}
-      {/* MODAL: DETALHES DO SERVIÇO */}
-      {/* ========================================================================= */}
-      <Dialog open={isServiceModalOpen} onOpenChange={setIsServiceModalOpen}>
-        <DialogContent className="max-w-md p-0 overflow-hidden rounded-2xl bg-white border border-slate-200">
-          <DialogHeader className="p-5 border-b border-slate-100">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#075BFF] flex items-center justify-center shrink-0">
-                <Cog className="h-5 w-5" />
-              </div>
-              <div>
-                <DialogTitle className="text-base font-bold text-[#0B1739]">
-                  {selectedServiceForModal?.title || "Detalhes do serviço"}
-                </DialogTitle>
-                <DialogDescription className="text-xs text-slate-500">
-                  {selectedServiceForModal?.categoryLabel}
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-
-          <div className="p-5 space-y-3 text-xs">
-            <div className="flex justify-between py-1.5 border-b border-slate-100">
-              <span className="text-slate-500">Processo vinculado:</span>
-              <span className="font-bold text-[#0B1739]">{processCode}</span>
-            </div>
-            <div className="flex justify-between py-1.5 border-b border-slate-100">
-              <span className="text-slate-500">Documentos gerados:</span>
-              <span className="font-semibold text-slate-800">{generatedDocs.length}</span>
-            </div>
-            <div className="flex justify-between py-1.5 border-b border-slate-100">
-              <span className="text-slate-500">Protocolos cadastrados:</span>
-              <span className="font-semibold text-slate-800">{protocolFiles.length}</span>
-            </div>
-            <div className="flex justify-between py-1.5">
-              <span className="text-slate-500">Documentos emitidos:</span>
-              <span className="font-semibold text-slate-800">{issuedDocs.length}</span>
-            </div>
-          </div>
-
-          <DialogFooter className="p-4 bg-slate-50 border-t border-slate-100 flex gap-2">
-            <button
-              type="button"
-              onClick={() => setIsServiceModalOpen(false)}
-              className="w-full py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-            >
-              Fechar
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* ========================================================================= */}
       {/* MODAL: CANCELAR PROCESSO */}
@@ -1142,7 +1185,6 @@ function ProcessDetailsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }

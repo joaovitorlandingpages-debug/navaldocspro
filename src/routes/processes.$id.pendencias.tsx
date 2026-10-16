@@ -1,26 +1,26 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { 
-  ArrowLeft, 
-  Search, 
-  FileText, 
-  Award, 
-  FileCheck2, 
-  PenTool, 
-  Plus, 
-  Calendar, 
-  Clock, 
-  User, 
-  Building2, 
-  Download, 
-  Eye, 
-  X, 
-  Filter, 
-  Loader2, 
-  AlertCircle, 
-  Check, 
-  AlertTriangle, 
-  ShieldCheck, 
-  Sparkles, 
+import {
+  ArrowLeft,
+  Search,
+  FileText,
+  Award,
+  FileCheck2,
+  PenTool,
+  Plus,
+  Calendar,
+  Clock,
+  User,
+  Building2,
+  Download,
+  Eye,
+  X,
+  Filter,
+  Loader2,
+  AlertCircle,
+  Check,
+  AlertTriangle,
+  ShieldCheck,
+  Sparkles,
   RefreshCw,
   FolderOpen,
   ArrowUpDown,
@@ -33,7 +33,7 @@ import {
   FileSpreadsheet,
   Layers,
   HelpCircle,
-  Undo2
+  Undo2,
 } from "lucide-react";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -42,13 +42,22 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadToBucket } from "@/lib/storage";
 import { openStoredFile, downloadStoredFile } from "@/utils/file-preview";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { SERVICES, findService, type ServiceDef } from "@/types/service-requirements";
+import { getServiceDefinition } from "@/services/catalog/servicesCatalogValidation";
 
 export const Route = createFileRoute("/processes/$id/pendencias")({
-  validateSearch: (search: Record<string, unknown>): { group?: string } => ({
+  validateSearch: (search: Record<string, unknown>): { group?: string; serviceKey?: string } => ({
     ...(search.group ? { group: search.group as string } : {}),
+    ...(search.serviceKey ? { serviceKey: search.serviceKey as string } : {}),
   }),
   component: () => (
     <ProtectedRoute>
@@ -72,16 +81,16 @@ export interface PendingItem {
   completedAt?: string;
   completedBy?: string;
   notes?: string;
-  actionType: 
-    | "fill_vessel" 
-    | "fill_customer" 
-    | "fill_process" 
-    | "upload_doc" 
-    | "generate_pdf" 
-    | "review_pdf" 
-    | "sign_doc" 
-    | "protocol" 
-    | "issued_doc" 
+  actionType:
+    | "fill_vessel"
+    | "fill_customer"
+    | "fill_process"
+    | "upload_doc"
+    | "generate_pdf"
+    | "review_pdf"
+    | "sign_doc"
+    | "protocol"
+    | "issued_doc"
     | "manual_action";
   actionLabel: string;
   actionTarget?: {
@@ -126,7 +135,7 @@ function PendenciasProcessoPage() {
 
   // Filtro de Grupo ("todos" | "dados" | "documentos" | "acoes")
   const [activeGroup, setActiveGroup] = useState<PendingGroup>(
-    (searchParams.group as PendingGroup) || "todos"
+    (searchParams.group as PendingGroup) || "todos",
   );
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -152,24 +161,67 @@ function PendenciasProcessoPage() {
 
   // 1. Carregar Contexto Completo do Processo
   const loadContext = useCallback(async () => {
-    if (!companyId || !id) return;
+    const isPreview =
+      typeof window !== "undefined" &&
+      (window.location.search.includes("preview=true") ||
+        window.localStorage.getItem("preview_mode") === "true");
+    if (!id || (!companyId && !isPreview)) return;
     setIsLoading(true);
     setIsError(false);
 
     try {
-      // 1.1 Processo com Cliente e Embarcação Vinculada
-      const { data: proc, error: pError } = await supabase
-        .from("processes")
-        .select(`
-          *,
-          customer:customers!processes_customer_id_fkey(*),
-          vessel:vessels!processes_vessel_id_fkey(*)
-        `)
-        .eq("id", id)
-        .eq("company_id", companyId)
-        .maybeSingle();
+      let proc: any = null;
+      if (companyId) {
+        // 1.1 Processo com Cliente e Embarcação Vinculada
+        const { data, error: pError } = await supabase
+          .from("processes")
+          .select(
+            `
+            *,
+            customer:customers!processes_customer_id_fkey(*),
+            vessel:vessels!processes_vessel_id_fkey(*)
+          `,
+          )
+          .eq("id", id)
+          .eq("company_id", companyId)
+          .maybeSingle();
+        proc = data;
+      }
 
-      if (pError || !proc) {
+      if (!proc) {
+        if (isPreview) {
+          const demoProc = {
+            id,
+            title: "Processo Demonstrativo",
+            process_type: "laudo_engenharia",
+            status: "draft",
+            is_draft: true,
+            created_at: new Date().toISOString(),
+            draft_data: {
+              category: "profissional",
+              category_label: "Embarcações profissionais",
+              services: [
+                "laudo_engenharia",
+                "despacho_maritimo",
+                "inscricao_inicial",
+                "renovacao_tie",
+              ],
+            },
+            customer: { id: "c-1", name: "Marina Alves de Souza", cpf_cnpj: "123.456.789-00", address: "Av Beira Mar 100", phone: "11999999999" },
+            vessel: {
+              id: "v-1",
+              name: "Brisa Azul Teste",
+              registration_number: "SP-123456",
+              category: "profissional",
+              vessel_type: "Embarcação Comercial",
+            },
+          };
+          setProcessData(demoProc);
+          setCustomer(demoProc.customer);
+          setVessel(demoProc.vessel);
+          setIsLoading(false);
+          return;
+        }
         setIsError(true);
         setIsLoading(false);
         return;
@@ -222,14 +274,44 @@ function PendenciasProcessoPage() {
   }, [processData]);
 
   const protocolCode = useMemo(() => {
-    return processData?.protocol_number || `PROC-${String(processData?.id || id).slice(0, 4).toUpperCase()}`;
+    return (
+      processData?.protocol_number ||
+      `PROC-${String(processData?.id || id)
+        .slice(0, 4)
+        .toUpperCase()}`
+    );
   }, [processData, id]);
+
+  // Lista de todos os serviços do processo (para suportar múltiplos serviços)
+  const availableServices = useMemo(() => {
+    const draft = (processData?.draft_data || processData?.metadata || {}) as any;
+    const list: string[] =
+      draft?.services || draft?.selected_services || [processData?.process_type].filter(Boolean);
+    if (Array.isArray(list) && list.length > 0) {
+      return list.map((key) => {
+        const def = getServiceDefinition(key);
+        return {
+          key,
+          id: def.id,
+          title: def.title,
+          categoryDisplayName: def.categoryDisplayName,
+        };
+      });
+    }
+    return [{ key: "geral", id: "geral", title: serviceTitle, categoryDisplayName: "Geral" }];
+  }, [processData, serviceTitle]);
+
+  const activeServiceKey = (searchParams.serviceKey as string) || "todos";
 
   // Definição de Requisitos do Serviço
   const serviceDef = useMemo(() => {
-    const rawKind = normalizeServiceKey(processData?.process_type || processData?.title);
-    return SERVICES.find(s => s.kind === rawKind) || SERVICES[0];
-  }, [processData]);
+    const targetKey =
+      activeServiceKey !== "todos"
+        ? activeServiceKey
+        : processData?.process_type || processData?.title;
+    const rawKind = normalizeServiceKey(targetKey);
+    return SERVICES.find((s) => s.kind === rawKind) || SERVICES[0];
+  }, [processData, activeServiceKey]);
 
   // =========================================================================
   // MOTOR DE AVALIAÇÃO DE PENDÊNCIAS DINÂMICAS (3 GRUPOS ESTRITOS)
@@ -244,195 +326,191 @@ function PendenciasProcessoPage() {
     // -----------------------------------------------------------------------
     // GRUPO 1: DADOS A PREENCHER
     // -----------------------------------------------------------------------
-    
+
     // 1.1 CPF / CNPJ do Cliente
     const hasCpfCnpj = Boolean(
-      customer?.cpf_cnpj && customer.cpf_cnpj.replace(/\D/g, "").length >= 11
+      customer?.cpf_cnpj && customer.cpf_cnpj.replace(/\D/g, "").length >= 11,
     );
     items.push({
       id: "dado-cliente-cpf-cnpj",
       group: "dados",
       groupLabel: "Dados a preencher",
       title: "CPF ou CNPJ do cliente",
-      description: hasCpfCnpj 
-        ? `Documento cadastrado e validado: ${customer?.cpf_cnpj}` 
+      description: hasCpfCnpj
+        ? `Documento cadastrado e validado: ${customer?.cpf_cnpj}`
         : "Obrigatório para qualificação do requerente perante a Capitania dos Portos.",
       isCompleted: hasCpfCnpj,
       isRequired: true,
       actionType: "fill_customer",
       actionLabel: hasCpfCnpj ? "Ver no cadastro" : "Preencher CPF/CNPJ",
-      actionTarget: { field: "cpf_cnpj" }
+      actionTarget: { field: "cpf_cnpj" },
     });
 
     // 1.2 Endereço / Comarca do Cliente
     const hasAddress = Boolean(
       (customer?.address && customer.address.trim().length > 3) ||
-      (customer?.city && customer?.state)
+      (customer?.city && customer?.state),
     );
     items.push({
       id: "dado-cliente-endereco",
       group: "dados",
       groupLabel: "Dados a preencher",
       title: "Endereço completo de domicílio",
-      description: hasAddress 
-        ? `Localidade informada: ${customer?.city || "Endereço completo cadastrado"} - ${customer?.state || ""}` 
+      description: hasAddress
+        ? `Localidade informada: ${customer?.city || "Endereço completo cadastrado"} - ${customer?.state || ""}`
         : "Endereço com CEP necessário para confecção dos termos e procurações.",
       isCompleted: hasAddress,
       isRequired: true,
       actionType: "fill_customer",
       actionLabel: hasAddress ? "Ver no cadastro" : "Preencher endereço",
-      actionTarget: { field: "address" }
+      actionTarget: { field: "address" },
     });
 
     // 1.3 Contato (Telefone ou E-mail)
     const hasContact = Boolean(
       (customer?.phone && customer.phone.trim().length > 7) ||
-      (customer?.email && customer.email.includes("@"))
+      (customer?.email && customer.email.includes("@")),
     );
     items.push({
       id: "dado-cliente-contato",
       group: "dados",
       groupLabel: "Dados a preencher",
       title: "Telefone ou e-mail de contato",
-      description: hasContact 
-        ? `Contato principal: ${customer?.phone || customer?.email}` 
+      description: hasContact
+        ? `Contato principal: ${customer?.phone || customer?.email}`
         : "Telefone ou e-mail para comunicação de exigências e notificações da Capitania.",
       isCompleted: hasContact,
       isRequired: true,
       actionType: "fill_customer",
       actionLabel: hasContact ? "Ver contato" : "Preencher contato",
-      actionTarget: { field: "phone" }
+      actionTarget: { field: "phone" },
     });
 
     // 1.4 Número de Inscrição no TIE/TIEM (Não obrigatório apenas para Registro Inicial)
     if (rawKind !== "registro_inicial") {
       const hasTie = Boolean(
-        vessel?.registration_number && vessel.registration_number.trim().length >= 3
+        vessel?.registration_number && vessel.registration_number.trim().length >= 3,
       );
       items.push({
         id: "dado-embarcacao-tie",
         group: "dados",
         groupLabel: "Dados a preencher",
         title: "Número de inscrição (TIE/TIEM)",
-        description: hasTie 
-          ? `Inscrição naval registrada: ${vessel?.registration_number}` 
+        description: hasTie
+          ? `Inscrição naval registrada: ${vessel?.registration_number}`
           : "Número de registro da embarcação perante a Autoridade Marítima.",
         isCompleted: hasTie,
         isRequired: true,
         actionType: "fill_vessel",
         actionLabel: hasTie ? "Ver na embarcação" : "Completar dado da embarcação",
-        actionTarget: { field: "registration_number" }
+        actionTarget: { field: "registration_number" },
       });
     }
 
     // 1.5 Comprimento total da embarcação
-    const hasLength = Boolean(
-      vessel?.length && Number(vessel.length) > 0
-    );
+    const hasLength = Boolean(vessel?.length && Number(vessel.length) > 0);
     items.push({
       id: "dado-embarcacao-comprimento",
       group: "dados",
       groupLabel: "Dados a preencher",
       title: "Comprimento total da embarcação (m)",
-      description: hasLength 
-        ? `Comprimento cadastrado: ${vessel?.length} metros` 
+      description: hasLength
+        ? `Comprimento cadastrado: ${vessel?.length} metros`
         : "Comprimento em metros exigido para enquadramento nas NORMAMs e cálculo de taxas.",
       isCompleted: hasLength,
       isRequired: true,
       actionType: "fill_vessel",
       actionLabel: hasLength ? "Ver na embarcação" : "Informar comprimento",
-      actionTarget: { field: "length" }
+      actionTarget: { field: "length" },
     });
 
     // 1.6 Categoria / Tipo de Embarcação
-    const hasCategoryType = Boolean(
-      vessel?.category || vessel?.vessel_type
-    );
+    const hasCategoryType = Boolean(vessel?.category || vessel?.vessel_type);
     items.push({
       id: "dado-embarcacao-categoria",
       group: "dados",
       groupLabel: "Dados a preencher",
       title: "Classificação e tipo de navegação",
-      description: hasCategoryType 
-        ? `Tipo: ${vessel?.vessel_type || "Embarcação"} | Categoria: ${vessel?.category || "Esporte e Recreio"}` 
+      description: hasCategoryType
+        ? `Tipo: ${vessel?.vessel_type || "Embarcação"} | Categoria: ${vessel?.category || "Esporte e Recreio"}`
         : "Indicação da atividade (Esporte/Recreio, Comercial ou Pesca) e tipo de casco.",
       isCompleted: hasCategoryType,
       isRequired: true,
       actionType: "fill_vessel",
       actionLabel: hasCategoryType ? "Ver na embarcação" : "Definir categoria naval",
-      actionTarget: { field: "category" }
+      actionTarget: { field: "category" },
     });
 
     // 1.7 Dados Específicos de Transferência (Comprador)
     if (rawKind === "transferencia") {
       const hasBuyer = Boolean(
-        (processData.new_owner_name && processData.new_owner_name.trim().length > 3) &&
-        (processData.new_owner_cpf_cnpj && processData.new_owner_cpf_cnpj.replace(/\D/g, "").length >= 11)
+        processData.new_owner_name &&
+        processData.new_owner_name.trim().length > 3 &&
+        processData.new_owner_cpf_cnpj &&
+        processData.new_owner_cpf_cnpj.replace(/\D/g, "").length >= 11,
       );
       items.push({
         id: "dado-processo-comprador",
         group: "dados",
         groupLabel: "Dados a preencher",
         title: "Nome e CPF/CNPJ do comprador",
-        description: hasBuyer 
-          ? `Novo Adquirente: ${processData.new_owner_name} (${processData.new_owner_cpf_cnpj})` 
+        description: hasBuyer
+          ? `Novo Adquirente: ${processData.new_owner_name} (${processData.new_owner_cpf_cnpj})`
           : "Identificação completa do novo proprietário para emissão do novo título de propriedade.",
         isCompleted: hasBuyer,
         isRequired: true,
         actionType: "fill_process",
         actionLabel: hasBuyer ? "Ver dados da venda" : "Informar comprador",
-        actionTarget: { field: "buyer" }
+        actionTarget: { field: "buyer" },
       });
     }
 
     // 1.8 Dados Específicos de Alteração de Motor
     if (rawKind === "alteracao_motor") {
       const hasMotor = Boolean(
-        processData.metadata?.engine_power || 
-        processData.metadata?.engine_serial || 
-        vessel?.engine_power
+        processData.metadata?.engine_power ||
+        processData.metadata?.engine_serial ||
+        vessel?.engine_power,
       );
       items.push({
         id: "dado-processo-motor",
         group: "dados",
         groupLabel: "Dados a preencher",
         title: "Dados técnicos do novo motor",
-        description: hasMotor 
-          ? `Motor: ${processData.metadata?.engine_power || vessel?.engine_power || "Cadastrado"} HP` 
+        description: hasMotor
+          ? `Motor: ${processData.metadata?.engine_power || vessel?.engine_power || "Cadastrado"} HP`
           : "Potência (HP), marca e número de série do novo motor a ser averbado no TIE.",
         isCompleted: hasMotor,
         isRequired: true,
         actionType: "fill_process",
         actionLabel: hasMotor ? "Ver dados do motor" : "Preencher dados do motor",
-        actionTarget: { field: "engine" }
+        actionTarget: { field: "engine" },
       });
     }
 
     // 1.9 Dados Específicos de Segunda Via (Motivo)
     if (rawKind === "segunda_via") {
-      const hasReason = Boolean(
-        processData.metadata?.reason || processData.notes
-      );
+      const hasReason = Boolean(processData.metadata?.reason || processData.notes);
       items.push({
         id: "dado-processo-motivo",
         group: "dados",
         groupLabel: "Dados a preencher",
         title: "Motivo da solicitação de 2ª via",
-        description: hasReason 
-          ? `Justificativa: ${processData.metadata?.reason || processData.notes}` 
+        description: hasReason
+          ? `Justificativa: ${processData.metadata?.reason || processData.notes}`
           : "Informar justificativa legal (extravio, dano ou furto) para a declaração oficial.",
         isCompleted: hasReason,
         isRequired: true,
         actionType: "fill_process",
         actionLabel: hasReason ? "Ver motivo" : "Informar motivo",
-        actionTarget: { field: "reason" }
+        actionTarget: { field: "reason" },
       });
     }
 
     // -----------------------------------------------------------------------
     // GRUPO 2: DOCUMENTOS A ENVIAR (EXIGIDOS PELO SERVIÇO ESPECÍFICO)
     // -----------------------------------------------------------------------
-    
+
     // Lista de documentos requeridos para este serviço
     const requiredDocTypes: { id: string; title: string; hint: string; matchers: string[] }[] = [];
 
@@ -442,20 +520,20 @@ function PendenciasProcessoPage() {
           id: "doc-cnh-proprietario",
           title: "Documento com foto (CNH/RG do proprietário)",
           hint: "Cópia legível frente e verso de documento oficial de identidade.",
-          matchers: ["cnh", "rg", "identidade", "foto", "proprietario"]
+          matchers: ["cnh", "rg", "identidade", "foto", "proprietario"],
         },
         {
           id: "doc-residencia",
           title: "Comprovante de residência atualizado",
           hint: "Contas de consumo (água, luz, telefone) emitidas nos últimos 90 dias.",
-          matchers: ["residencia", "endereco", "comprovante_residencia"]
+          matchers: ["residencia", "endereco", "comprovante_residencia"],
         },
         {
           id: "doc-tie-anterior",
           title: "Título anterior (TIE/TIEM a renovar)",
           hint: "Cópia do título de inscrição de embarcação atual a ser renovado.",
-          matchers: ["tie", "tiem", "titulo", "anterior"]
-        }
+          matchers: ["tie", "tiem", "titulo", "anterior"],
+        },
       );
     } else if (rawKind === "transferencia") {
       requiredDocTypes.push(
@@ -463,26 +541,26 @@ function PendenciasProcessoPage() {
           id: "doc-comprador-id",
           title: "Documento de identificação do comprador",
           hint: "CNH ou RG do adquirente e comprovante de endereço.",
-          matchers: ["comprador", "adquirente", "cnh_comprador"]
+          matchers: ["comprador", "adquirente", "cnh_comprador"],
         },
         {
           id: "doc-vendedor-id",
           title: "Documento de identificação do vendedor",
           hint: "CNH ou RG do proprietário vendedor.",
-          matchers: ["vendedor", "proprietario_vendedor", "cnh_vendedor"]
+          matchers: ["vendedor", "proprietario_vendedor", "cnh_vendedor"],
         },
         {
           id: "doc-tie-original",
           title: "Título de inscrição anterior (TIE/TIEM)",
           hint: "Cópia autenticada ou original do TIE para cancelamento/averbação.",
-          matchers: ["tie", "tiem", "titulo"]
+          matchers: ["tie", "tiem", "titulo"],
         },
         {
           id: "doc-atpv-contrato",
           title: "Autorização de Transferência (ATPV) ou Contrato",
           hint: "Documento com firmas reconhecidas por autenticidade em cartório.",
-          matchers: ["atpv", "contrato", "compra_venda", "recibo"]
-        }
+          matchers: ["atpv", "contrato", "compra_venda", "recibo"],
+        },
       );
     } else if (rawKind === "registro_inicial") {
       requiredDocTypes.push(
@@ -490,26 +568,26 @@ function PendenciasProcessoPage() {
           id: "doc-id-proprietario",
           title: "Documento com foto e residência do proprietário",
           hint: "CNH ou RG com CPF e comprovante de residência do requerente.",
-          matchers: ["cnh", "rg", "identidade", "residencia"]
+          matchers: ["cnh", "rg", "identidade", "residencia"],
         },
         {
           id: "doc-nf-embarcacao",
           title: "Nota Fiscal da embarcação / Estaleiro",
           hint: "Nota fiscal de aquisição emitida pelo fabricante ou construtor.",
-          matchers: ["nota_fiscal", "nf", "estaleiro", "aquisicao"]
+          matchers: ["nota_fiscal", "nf", "estaleiro", "aquisicao"],
         },
         {
           id: "doc-memorial-descritivo",
           title: "Memorial Descritivo e Declaração de Conformidade",
           hint: "Especificações técnicas assinadas por engenheiro naval ou fabricante.",
-          matchers: ["memorial", "conformidade", "art", "especificacao"]
+          matchers: ["memorial", "conformidade", "art", "especificacao"],
         },
         {
           id: "doc-nf-motor",
           title: "Nota Fiscal do Motor",
           hint: "Nota fiscal de compra do motor de propulsão com número de série.",
-          matchers: ["motor", "nf_motor", "propulsao"]
-        }
+          matchers: ["motor", "nf_motor", "propulsao"],
+        },
       );
     } else if (rawKind === "alteracao_motor") {
       requiredDocTypes.push(
@@ -517,20 +595,20 @@ function PendenciasProcessoPage() {
           id: "doc-tie-atual",
           title: "Título atual da embarcação (TIE)",
           hint: "Cópia do TIE atual onde consta o motor antigo.",
-          matchers: ["tie", "tiem", "titulo"]
+          matchers: ["tie", "tiem", "titulo"],
         },
         {
           id: "doc-nf-novo-motor",
           title: "Nota fiscal do novo motor instalado",
           hint: "Nota fiscal comprovando a procedência lícita e potência.",
-          matchers: ["nota_fiscal", "nf_motor", "novo_motor", "motor"]
+          matchers: ["nota_fiscal", "nf_motor", "novo_motor", "motor"],
         },
         {
           id: "doc-laudo-instalacao",
           title: "Termo de responsabilidade técnica de instalação",
           hint: "Declaração de instalação emitida por estaleiro ou oficina credenciada.",
-          matchers: ["laudo", "termo", "responsabilidade", "instalacao"]
-        }
+          matchers: ["laudo", "termo", "responsabilidade", "instalacao"],
+        },
       );
     } else if (rawKind === "alteracao_caracteristica") {
       requiredDocTypes.push(
@@ -538,20 +616,20 @@ function PendenciasProcessoPage() {
           id: "doc-tie-atual",
           title: "Título atual da embarcação (TIE)",
           hint: "Cópia do TIE atual a ser retificado.",
-          matchers: ["tie", "tiem", "titulo"]
+          matchers: ["tie", "tiem", "titulo"],
         },
         {
           id: "doc-memorial-alteracoes",
           title: "Memorial das alterações técnicas e estabilidade",
           hint: "Cálculos técnicos e descrição das modificações estruturais.",
-          matchers: ["memorial", "alteracao", "laudo", "estabilidade"]
+          matchers: ["memorial", "alteracao", "laudo", "estabilidade"],
         },
         {
           id: "doc-art-engenheiro",
           title: "ART / RRT de engenheiro naval responsável",
           hint: "Anotação de Responsabilidade Técnica quitada.",
-          matchers: ["art", "rrt", "crea", "engenheiro"]
-        }
+          matchers: ["art", "rrt", "crea", "engenheiro"],
+        },
       );
     } else if (rawKind === "segunda_via") {
       requiredDocTypes.push(
@@ -559,14 +637,14 @@ function PendenciasProcessoPage() {
           id: "doc-id-proprietario",
           title: "Documento oficial de identidade do proprietário",
           hint: "CNH ou RG do proprietário solicitante da 2ª via.",
-          matchers: ["cnh", "rg", "identidade", "foto"]
+          matchers: ["cnh", "rg", "identidade", "foto"],
         },
         {
           id: "doc-bo-extravio",
           title: "Boletim de Ocorrência (BO) ou Declaração de Extravio",
           hint: "Registro policial em caso de perda/furto ou declaração oficial.",
-          matchers: ["boletim", "bo", "extravio", "perda", "declaracao"]
-        }
+          matchers: ["boletim", "bo", "extravio", "perda", "declaracao"],
+        },
       );
     } else {
       // Regularização e outros
@@ -575,14 +653,14 @@ function PendenciasProcessoPage() {
           id: "doc-id-requerente",
           title: "Documento oficial de identificação",
           hint: "CNH ou RG com foto e comprovante de endereço.",
-          matchers: ["cnh", "rg", "identidade", "residencia"]
+          matchers: ["cnh", "rg", "identidade", "residencia"],
         },
         {
           id: "doc-comprovante-posse",
           title: "Documento comprobatório da posse da embarcação",
           hint: "Recibos antigos, contrato ou declaração de posse contínua.",
-          matchers: ["posse", "declaracao", "recibo", "titulo"]
-        }
+          matchers: ["posse", "declaracao", "recibo", "titulo"],
+        },
       );
     }
 
@@ -591,12 +669,17 @@ function PendenciasProcessoPage() {
       // Busca arquivo correspondente em uploadedFiles
       const matchingFile = uploadedFiles.find((f: any) => {
         const name = (f.file_name || "").toLowerCase();
-        const role = (f.metadata?.document_role || f.metadata?.doc_label || f.metadata?.required_doc_id || "").toLowerCase();
+        const role = (
+          f.metadata?.document_role ||
+          f.metadata?.doc_label ||
+          f.metadata?.required_doc_id ||
+          ""
+        ).toLowerCase();
         const cat = (f.category || "").toLowerCase();
-        
+
         if (f.metadata?.required_doc_id === docReq.id) return true;
-        
-        return docReq.matchers.some(m => name.includes(m) || role.includes(m) || cat.includes(m));
+
+        return docReq.matchers.some((m) => name.includes(m) || role.includes(m) || cat.includes(m));
       });
 
       const isCompleted = Boolean(matchingFile);
@@ -606,8 +689,8 @@ function PendenciasProcessoPage() {
         group: "documentos",
         groupLabel: "Documentos a enviar",
         title: docReq.title,
-        description: isCompleted 
-          ? `Arquivo anexado: ${matchingFile.file_name} (${(matchingFile.file_size ? (matchingFile.file_size / 1024 / 1024).toFixed(2) + " MB" : "Enviado")})` 
+        description: isCompleted
+          ? `Arquivo anexado: ${matchingFile.file_name} (${matchingFile.file_size ? (matchingFile.file_size / 1024 / 1024).toFixed(2) + " MB" : "Enviado"})`
           : docReq.hint,
         isCompleted,
         isRequired: true,
@@ -616,7 +699,7 @@ function PendenciasProcessoPage() {
         actionTarget: {
           fileObj: matchingFile || null,
           docKind: docReq.id,
-        }
+        },
       });
     });
 
@@ -627,12 +710,13 @@ function PendenciasProcessoPage() {
     // 3.1 Gerar e revisar minuta do requerimento (PDF) ou Requerimento externo anexado
     const hasGeneratedDoc = generatedDocs.length > 0;
     const latestGeneratedDoc = generatedDocs[0];
-    
+
     // Suporte a requerimento externo anexado (quando o usuário já possui preenchido fora)
-    const attachedReqDoc = uploadedFiles.find((f: any) => 
-      f.category === "attached_requirement" || 
-      f.metadata?.category === "attached_requirement" ||
-      f.metadata?.document_role === "attached_requirement"
+    const attachedReqDoc = uploadedFiles.find(
+      (f: any) =>
+        f.category === "attached_requirement" ||
+        f.metadata?.category === "attached_requirement" ||
+        f.metadata?.document_role === "attached_requirement",
     );
     const hasRequirementDoc = hasGeneratedDoc || Boolean(attachedReqDoc);
 
@@ -643,42 +727,53 @@ function PendenciasProcessoPage() {
       title: "Requerimento do Processo (Gerado ou Anexado)",
       description: attachedReqDoc
         ? `Requerimento externo anexado: "${attachedReqDoc.file_name}" (dispensa geração)`
-        : hasGeneratedDoc 
-          ? `Requerimento oficial gerado: "${latestGeneratedDoc?.title || "Requerimento Náutico"}"` 
+        : hasGeneratedDoc
+          ? `Requerimento oficial gerado: "${latestGeneratedDoc?.title || "Requerimento Náutico"}"`
           : "Gerar a minuta consolidada pelo NavalDocs ou anexar documento já preenchido fora do sistema.",
       isCompleted: hasRequirementDoc,
       isRequired: true,
-      actionType: attachedReqDoc ? "upload_doc" : (hasGeneratedDoc ? "review_pdf" : "generate_pdf"),
-      actionLabel: attachedReqDoc ? "Visualizar anexo" : (hasGeneratedDoc ? "Revisar documento" : "Gerar minuta (PDF)"),
-      actionTarget: attachedReqDoc 
+      actionType: attachedReqDoc ? "upload_doc" : hasGeneratedDoc ? "review_pdf" : "generate_pdf",
+      actionLabel: attachedReqDoc
+        ? "Visualizar anexo"
+        : hasGeneratedDoc
+          ? "Revisar documento"
+          : "Gerar minuta (PDF)",
+      actionTarget: attachedReqDoc
         ? { fileObj: attachedReqDoc }
         : {
             docId: latestGeneratedDoc?.id,
-            route: hasGeneratedDoc ? "/processes/$id/revisar-documento" : "/processes/$id/gerar-documento"
-          }
+            route: hasGeneratedDoc
+              ? "/processes/$id/revisar-documento"
+              : "/processes/$id/gerar-documento",
+          },
     });
 
     // 3.2 Coletar assinatura do cliente (gov.br ou física)
     const isSigned = Boolean(
       generatedDocs.some((d: any) => d.status === "signed" || !!d.signed_file_url) ||
-      uploadedFiles.some((f: any) => f.category === "signed" || f.category === "arquivo_assinado") ||
-      (attachedReqDoc && (attachedReqDoc.metadata?.is_signed || attachedReqDoc.metadata?.already_signed))
+      uploadedFiles.some(
+        (f: any) => f.category === "signed" || f.category === "arquivo_assinado",
+      ) ||
+      (attachedReqDoc &&
+        (attachedReqDoc.metadata?.is_signed || attachedReqDoc.metadata?.already_signed)),
     );
     items.push({
       id: "acao-coletar-assinatura",
       group: "acoes",
       groupLabel: "Ações a realizar",
       title: "Assinatura do documento (gov.br ou física)",
-      description: isSigned 
-        ? "Documento assinado registrado e autenticado com sucesso." 
+      description: isSigned
+        ? "Documento assinado registrado e autenticado com sucesso."
         : "Colher assinatura digital do cliente pelo gov.br ou anexar cópia com firma reconhecida.",
       isCompleted: isSigned,
       isRequired: true,
       actionType: "sign_doc",
       actionLabel: isSigned ? "Ver assinado" : "Anexar documento assinado",
       actionTarget: {
-        route: hasGeneratedDoc ? "/processes/$id/anexar-versao-assinada" : "/processes/$id/gerar-documento"
-      }
+        route: hasGeneratedDoc
+          ? "/processes/$id/anexar-versao-assinada"
+          : "/processes/$id/gerar-documento",
+      },
     });
 
     // 3.3 Pagar taxa da Capitania (GRU) / Custas do serviço (AÇÃO MANUAL COM REGISTRO DE QUEM/QUANDO)
@@ -689,8 +784,8 @@ function PendenciasProcessoPage() {
       group: "acoes",
       groupLabel: "Ações a realizar",
       title: "Pagamento da taxa da Capitania (GRU)",
-      description: isGruPaid 
-        ? `Concluído por ${gruAction.completed_by} em ${new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(gruAction.completed_at))}${gruAction.notes ? ` — Obs: "${gruAction.notes}"` : ""}` 
+      description: isGruPaid
+        ? `Concluído por ${gruAction.completed_by} em ${new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(gruAction.completed_at))}${gruAction.notes ? ` — Obs: "${gruAction.notes}"` : ""}`
         : "Efetuar o recolhimento da taxa bancária (GRU) necessária para tramitação na Capitania.",
       isCompleted: isGruPaid,
       isRequired: true,
@@ -703,47 +798,50 @@ function PendenciasProcessoPage() {
 
     // 3.4 Registrar protocolo na Capitania dos Portos
     const hasProtocol = Boolean(
-      processData.protocol_number || 
-      uploadedFiles.some((f: any) => f.category === "protocol")
+      processData.protocol_number || uploadedFiles.some((f: any) => f.category === "protocol"),
     );
     items.push({
       id: "acao-registrar-protocolo",
       group: "acoes",
       groupLabel: "Ações a realizar",
       title: "Registrar protocolo na Capitania / Delegacia",
-      description: hasProtocol 
-        ? `Protocolo oficial ativo: ${processData.protocol_number || "Comprovante anexado no processo"}` 
+      description: hasProtocol
+        ? `Protocolo oficial ativo: ${processData.protocol_number || "Comprovante anexado no processo"}`
         : "Dar entrada do processo na Autoridade Marítima e anexar o comprovante de protocolo.",
       isCompleted: hasProtocol,
       isRequired: true,
       actionType: "protocol",
       actionLabel: hasProtocol ? "Ver protocolos" : "Registrar protocolo",
       actionTarget: {
-        route: hasProtocol ? "/processes/$id/protocolos-realizados" : "/processes/$id/anexar-protocolo"
-      }
+        route: hasProtocol
+          ? "/processes/$id/protocolos-realizados"
+          : "/processes/$id/anexar-protocolo",
+      },
     });
 
     // 3.5 Anexar documento emitido final (TIE / TIEM / Certidão)
     const hasIssuedDoc = Boolean(
-      uploadedFiles.some((f: any) => 
-        ["issued", "issued_doc", "documento_emitido", "final_document"].includes(f.category)
-      )
+      uploadedFiles.some((f: any) =>
+        ["issued", "issued_doc", "documento_emitido", "final_document"].includes(f.category),
+      ),
     );
     items.push({
       id: "acao-anexar-emitido",
       group: "acoes",
       groupLabel: "Ações a realizar",
       title: "Anexar documento emitido final (TIE/TIEM)",
-      description: hasIssuedDoc 
-        ? "Documento final recebido da Capitania e anexado para entrega ao cliente." 
+      description: hasIssuedDoc
+        ? "Documento final recebido da Capitania e anexado para entrega ao cliente."
         : "Cadastrar e disponibilizar o título ou certificado deferido pela Capitania.",
       isCompleted: hasIssuedDoc,
       isRequired: true,
       actionType: "issued_doc",
       actionLabel: hasIssuedDoc ? "Ver emitidos" : "Anexar documento emitido",
       actionTarget: {
-        route: hasIssuedDoc ? "/processes/$id/documentos-emitidos" : "/processes/$id/anexar-documento-emitido"
-      }
+        route: hasIssuedDoc
+          ? "/processes/$id/documentos-emitidos"
+          : "/processes/$id/anexar-documento-emitido",
+      },
     });
 
     return items;
@@ -752,7 +850,7 @@ function PendenciasProcessoPage() {
   // Cálculos de Progresso
   const totalCount = allPendingItems.length;
   const completedCount = useMemo(() => {
-    return allPendingItems.filter(i => i.isCompleted).length;
+    return allPendingItems.filter((i) => i.isCompleted).length;
   }, [allPendingItems]);
 
   const pendingCount = totalCount - completedCount;
@@ -761,26 +859,26 @@ function PendenciasProcessoPage() {
 
   // Contagens por grupo
   const groupStats = useMemo(() => {
-    const dados = allPendingItems.filter(i => i.group === "dados");
-    const docs = allPendingItems.filter(i => i.group === "documentos");
-    const acoes = allPendingItems.filter(i => i.group === "acoes");
+    const dados = allPendingItems.filter((i) => i.group === "dados");
+    const docs = allPendingItems.filter((i) => i.group === "documentos");
+    const acoes = allPendingItems.filter((i) => i.group === "acoes");
 
     return {
       dados: {
         total: dados.length,
-        completed: dados.filter(i => i.isCompleted).length,
-        pending: dados.filter(i => !i.isCompleted).length,
+        completed: dados.filter((i) => i.isCompleted).length,
+        pending: dados.filter((i) => !i.isCompleted).length,
       },
       documentos: {
         total: docs.length,
-        completed: docs.filter(i => i.isCompleted).length,
-        pending: docs.filter(i => !i.isCompleted).length,
+        completed: docs.filter((i) => i.isCompleted).length,
+        pending: docs.filter((i) => !i.isCompleted).length,
       },
       acoes: {
         total: acoes.length,
-        completed: acoes.filter(i => i.isCompleted).length,
-        pending: acoes.filter(i => !i.isCompleted).length,
-      }
+        completed: acoes.filter((i) => i.isCompleted).length,
+        pending: acoes.filter((i) => !i.isCompleted).length,
+      },
     };
   }, [allPendingItems]);
 
@@ -802,11 +900,11 @@ function PendenciasProcessoPage() {
 
   // Itens separados por status
   const pendingItemsList = useMemo(() => {
-    return filteredItems.filter(i => !i.isCompleted);
+    return filteredItems.filter((i) => !i.isCompleted);
   }, [filteredItems]);
 
   const completedItemsList = useMemo(() => {
-    return filteredItems.filter(i => i.isCompleted);
+    return filteredItems.filter((i) => i.isCompleted);
   }, [filteredItems]);
 
   // =========================================================================
@@ -816,7 +914,11 @@ function PendenciasProcessoPage() {
   // Abrir resolução do item
   const handleResolveItem = (item: PendingItem) => {
     // 1. Dados a preencher
-    if (item.actionType === "fill_customer" || item.actionType === "fill_vessel" || item.actionType === "fill_process") {
+    if (
+      item.actionType === "fill_customer" ||
+      item.actionType === "fill_vessel" ||
+      item.actionType === "fill_process"
+    ) {
       setDataModalTarget(item);
       // Preencher valor atual se existir
       if (item.actionTarget?.field === "cpf_cnpj") {
@@ -918,7 +1020,8 @@ function PendenciasProcessoPage() {
       // 2. Atualizar Embarcação
       if (dataModalTarget.actionType === "fill_vessel" && vessel?.id) {
         const updatePayload: Record<string, any> = {};
-        if (field === "registration_number") updatePayload.registration_number = dataInputValue.trim();
+        if (field === "registration_number")
+          updatePayload.registration_number = dataInputValue.trim();
         if (field === "length") updatePayload.length = Number(dataInputValue.replace(",", "."));
         if (field === "category") updatePayload.category = dataInputValue.trim();
 
@@ -936,7 +1039,8 @@ function PendenciasProcessoPage() {
         const updatePayload: Record<string, any> = {};
         if (field === "buyer") {
           updatePayload.new_owner_name = dataInputValue.trim();
-          if (dataInputSecondary.trim()) updatePayload.new_owner_cpf_cnpj = dataInputSecondary.trim();
+          if (dataInputSecondary.trim())
+            updatePayload.new_owner_cpf_cnpj = dataInputSecondary.trim();
         } else if (field === "engine") {
           updatePayload.metadata = {
             ...(processData.metadata || {}),
@@ -1092,7 +1196,7 @@ function PendenciasProcessoPage() {
       // Registro no histórico de auditoria
       const historyEntry = {
         event: markAsDone ? "manual_action_completed" : "manual_action_reopened",
-        description: markAsDone 
+        description: markAsDone
           ? `Ação manual concluída: "${manualModalTarget.title}" (${manualActionNotes.trim() || "Sem observações adicionais"})`
           : `Ação manual reaberta: "${manualModalTarget.title}"`,
         user: authorName,
@@ -1118,9 +1222,9 @@ function PendenciasProcessoPage() {
       if (error) throw error;
 
       toast.success(
-        markAsDone 
-          ? `Ação "${manualModalTarget.title}" marcada como concluída!` 
-          : `Ação "${manualModalTarget.title}" reaberta para pendente.`
+        markAsDone
+          ? `Ação "${manualModalTarget.title}" marcada como concluída!`
+          : `Ação "${manualModalTarget.title}" reaberta para pendente.`,
       );
       setIsManualModalOpen(false);
       setManualModalTarget(null);
@@ -1146,7 +1250,8 @@ function PendenciasProcessoPage() {
 
       const historyEntry = {
         event: "process_completed",
-        description: "Processo concluído com êxito! Todas as pendências e exigências foram atendidas.",
+        description:
+          "Processo concluído com êxito! Todas as pendências e exigências foram atendidas.",
         user: authorName,
         date: now,
       };
@@ -1211,7 +1316,6 @@ function PendenciasProcessoPage() {
 
   return (
     <div className="max-w-6xl mx-auto py-3 sm:py-6 px-3 sm:px-6 space-y-6 font-sans text-slate-800">
-      
       {/* ========================================================================= */}
       {/* 1. NAVEGAÇÃO: Processos → Cliente → Embarcação → Serviço → Pendências */}
       {/* ========================================================================= */}
@@ -1234,7 +1338,11 @@ function PendenciasProcessoPage() {
           </Link>
           <span>/</span>
           {customer ? (
-            <Link to="/customers/$id" params={{ id: customer.id }} className="hover:text-slate-600 hover:underline truncate max-w-[150px]">
+            <Link
+              to="/customers/$id"
+              params={{ id: customer.id }}
+              className="hover:text-slate-600 hover:underline truncate max-w-[150px]"
+            >
               {customerName}
             </Link>
           ) : (
@@ -1242,14 +1350,22 @@ function PendenciasProcessoPage() {
           )}
           <span>/</span>
           {vessel ? (
-            <Link to="/vessels/$id" params={{ id: vessel.id }} className="hover:text-slate-600 hover:underline truncate max-w-[150px] font-bold text-slate-700">
+            <Link
+              to="/vessels/$id"
+              params={{ id: vessel.id }}
+              className="hover:text-slate-600 hover:underline truncate max-w-[150px] font-bold text-slate-700"
+            >
               {vesselName}
             </Link>
           ) : (
             <span className="font-bold text-slate-700">{vesselName}</span>
           )}
           <span>/</span>
-          <Link to="/processes/$id" params={{ id }} className="hover:text-slate-600 hover:underline">
+          <Link
+            to="/processes/$id"
+            params={{ id }}
+            className="hover:text-slate-600 hover:underline"
+          >
             {serviceTitle}
           </Link>
           <span>/</span>
@@ -1267,15 +1383,15 @@ function PendenciasProcessoPage() {
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-[#075BFF] border border-blue-200">
                 {serviceDef.name}
               </span>
-              <span className="text-xs text-slate-400 font-mono">
-                {protocolCode}
-              </span>
+              <span className="text-xs text-slate-400 font-mono">{protocolCode}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0B1739]">
               Pendências do processo
             </h1>
             <p className="text-xs sm:text-sm text-slate-500">
-              Acompanhe o que falta para concluir o serviço náutico com segurança e conformidade.
+              {activeServiceKey !== "todos"
+                ? `Exibindo pendências do serviço: ${serviceDef.name}`
+                : "Acompanhe o que falta para concluir o serviço náutico com segurança e conformidade."}
             </p>
           </div>
 
@@ -1283,7 +1399,7 @@ function PendenciasProcessoPage() {
             <button
               type="button"
               onClick={() => loadContext()}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
               title="Atualizar lista de pendências"
             >
               <RefreshCw className="h-3.5 w-3.5" />
@@ -1300,31 +1416,98 @@ function PendenciasProcessoPage() {
           </div>
         </div>
 
+        {/* NAVEGAÇÃO DOS MÚLTIPLOS SERVIÇOS DO PROCESSO */}
+        {availableServices.length > 1 && (
+          <div className="pt-2 border-t border-slate-100">
+            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              Serviços vinculados a este processo ({availableServices.length}):
+            </p>
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+              <button
+                type="button"
+                onClick={() =>
+                  (navigate as any)({
+                    search: { group: activeGroup, serviceKey: undefined },
+                  })
+                }
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                  activeServiceKey === "todos"
+                    ? "bg-[#075BFF] text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                Todos os serviços ({availableServices.length})
+              </button>
+              {availableServices.map((srv) => {
+                const isSelected = activeServiceKey === srv.key;
+                return (
+                  <button
+                    key={srv.key}
+                    type="button"
+                    onClick={() =>
+                      (navigate as any)({
+                        search: { group: activeGroup, serviceKey: srv.key },
+                      })
+                    }
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                      isSelected
+                        ? "bg-[#075BFF] text-white shadow-xs"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    }`}
+                  >
+                    <span>{srv.title}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Card Contexto: Cliente, Embarcação, Serviço e Progresso */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50/70 p-4 rounded-xl border border-slate-100 text-xs">
           <div>
-            <span className="text-slate-400 block text-[10px] uppercase font-semibold">Cliente</span>
-            <span className="font-bold text-[#0B1739] block truncate text-sm mt-0.5">{customerName}</span>
-            <span className="text-slate-500 text-[11px] font-mono">{customer?.cpf_cnpj || "CPF não informado"}</span>
+            <span className="text-slate-400 block text-[10px] uppercase font-semibold">
+              Cliente
+            </span>
+            <span className="font-bold text-[#0B1739] block truncate text-sm mt-0.5">
+              {customerName}
+            </span>
+            <span className="text-slate-500 text-[11px] font-mono">
+              {customer?.cpf_cnpj || "CPF não informado"}
+            </span>
           </div>
           <div>
-            <span className="text-slate-400 block text-[10px] uppercase font-semibold">Embarcação</span>
-            <span className="font-bold text-[#0B1739] block truncate text-sm mt-0.5">{vesselName}</span>
-            <span className="text-slate-500 text-[11px]">{vessel?.registration_number ? `TIE: ${vessel.registration_number}` : "Inscrição pendente"}</span>
+            <span className="text-slate-400 block text-[10px] uppercase font-semibold">
+              Embarcação
+            </span>
+            <span className="font-bold text-[#0B1739] block truncate text-sm mt-0.5">
+              {vesselName}
+            </span>
+            <span className="text-slate-500 text-[11px]">
+              {vessel?.registration_number
+                ? `TIE: ${vessel.registration_number}`
+                : "Inscrição pendente"}
+            </span>
           </div>
           <div>
-            <span className="text-slate-400 block text-[10px] uppercase font-semibold">Serviço</span>
-            <span className="font-bold text-[#0B1739] block truncate text-sm mt-0.5">{serviceTitle}</span>
+            <span className="text-slate-400 block text-[10px] uppercase font-semibold">
+              Serviço
+            </span>
+            <span className="font-bold text-[#0B1739] block truncate text-sm mt-0.5">
+              {serviceTitle}
+            </span>
             <span className="text-slate-500 text-[11px]">Tipo: {serviceDef.name}</span>
           </div>
           <div>
             <div className="flex items-center justify-between mb-1">
-              <span className="text-slate-400 text-[10px] uppercase font-semibold">Progresso Geral</span>
+              <span className="text-slate-400 text-[10px] uppercase font-semibold">
+                Progresso Geral
+              </span>
               <span className="font-bold text-[#075BFF] text-xs">{progressPercentage}%</span>
             </div>
             {/* Barra de Progresso */}
             <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-              <div 
+              <div
                 className={`h-full transition-all duration-500 ${isAllReady ? "bg-emerald-500" : "bg-[#075BFF]"}`}
                 style={{ width: `${progressPercentage}%` }}
               />
@@ -1349,7 +1532,8 @@ function PendenciasProcessoPage() {
                   Tudo pronto para a próxima etapa
                 </h3>
                 <p className="text-xs text-emerald-700">
-                  Todos os dados foram preenchidos, documentos comprobatórios anexados e ações executadas para este serviço.
+                  Todos os dados foram preenchidos, documentos comprobatórios anexados e ações
+                  executadas para este serviço.
                 </p>
               </div>
             </div>
@@ -1384,7 +1568,6 @@ function PendenciasProcessoPage() {
       {/* ========================================================================= */}
       <div className="space-y-3">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          
           {/* Abas dos 3 Grupos */}
           <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl overflow-x-auto">
             <button
@@ -1409,9 +1592,13 @@ function PendenciasProcessoPage() {
               }`}
             >
               <span>Dados a preencher</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                groupStats.dados.pending > 0 ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"
-              }`}>
+              <span
+                className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                  groupStats.dados.pending > 0
+                    ? "bg-amber-100 text-amber-800"
+                    : "bg-emerald-100 text-emerald-800"
+                }`}
+              >
                 {groupStats.dados.completed}/{groupStats.dados.total}
               </span>
             </button>
@@ -1426,9 +1613,13 @@ function PendenciasProcessoPage() {
               }`}
             >
               <span>Documentos a enviar</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                groupStats.documentos.pending > 0 ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"
-              }`}>
+              <span
+                className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                  groupStats.documentos.pending > 0
+                    ? "bg-amber-100 text-amber-800"
+                    : "bg-emerald-100 text-emerald-800"
+                }`}
+              >
                 {groupStats.documentos.completed}/{groupStats.documentos.total}
               </span>
             </button>
@@ -1443,9 +1634,13 @@ function PendenciasProcessoPage() {
               }`}
             >
               <span>Ações a realizar</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                groupStats.acoes.pending > 0 ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"
-              }`}>
+              <span
+                className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                  groupStats.acoes.pending > 0
+                    ? "bg-amber-100 text-amber-800"
+                    : "bg-emerald-100 text-emerald-800"
+                }`}
+              >
                 {groupStats.acoes.completed}/{groupStats.acoes.total}
               </span>
             </button>
@@ -1478,7 +1673,6 @@ function PendenciasProcessoPage() {
       {/* 4. LISTAGEM DE ITENS: PENDÊNCIAS ABERTAS E ITENS JÁ CONCLUÍDOS */}
       {/* ========================================================================= */}
       <div className="space-y-6">
-
         {/* 4.1 O QUE FALTA CONCLUIR */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
@@ -1495,9 +1689,7 @@ function PendenciasProcessoPage() {
               <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
                 <Check className="h-5 w-5" />
               </div>
-              <h3 className="text-sm font-bold text-[#0B1739]">
-                Nenhuma pendência neste grupo!
-              </h3>
+              <h3 className="text-sm font-bold text-[#0B1739]">Nenhuma pendência neste grupo!</h3>
               <p className="text-xs text-slate-400 max-w-sm mx-auto">
                 Todos os itens avaliados nesta categoria foram preenchidos ou aprovados com sucesso.
               </p>
@@ -1526,9 +1718,7 @@ function PendenciasProcessoPage() {
                         <h3 className="text-sm font-bold text-[#0B1739] leading-snug">
                           {item.title}
                         </h3>
-                        <p className="text-xs text-slate-500 leading-relaxed">
-                          {item.description}
-                        </p>
+                        <p className="text-xs text-slate-500 leading-relaxed">{item.description}</p>
                       </div>
                     </div>
 
@@ -1589,9 +1779,7 @@ function PendenciasProcessoPage() {
                       <h4 className="text-xs sm:text-sm font-bold text-[#0B1739] truncate">
                         {item.title}
                       </h4>
-                      <p className="text-[11px] text-slate-500 truncate">
-                        {item.description}
-                      </p>
+                      <p className="text-[11px] text-slate-500 truncate">{item.description}</p>
                     </div>
                   </div>
 
@@ -1652,16 +1840,23 @@ function PendenciasProcessoPage() {
             </div>
 
             {/* Campo Secundário (ex: Cidade no Endereço ou CPF no Comprador) */}
-            {(dataModalTarget?.actionTarget?.field === "address" || dataModalTarget?.actionTarget?.field === "buyer") && (
+            {(dataModalTarget?.actionTarget?.field === "address" ||
+              dataModalTarget?.actionTarget?.field === "buyer") && (
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-[#0B1739]">
-                  {dataModalTarget.actionTarget.field === "address" ? "Município / Comarca" : "CPF/CNPJ do Comprador"}
+                  {dataModalTarget.actionTarget.field === "address"
+                    ? "Município / Comarca"
+                    : "CPF/CNPJ do Comprador"}
                 </label>
                 <input
                   type="text"
                   value={dataInputSecondary}
                   onChange={(e) => setDataInputSecondary(e.target.value)}
-                  placeholder={dataModalTarget.actionTarget.field === "address" ? "Ex: Rio de Janeiro" : "Ex: 000.000.000-00"}
+                  placeholder={
+                    dataModalTarget.actionTarget.field === "address"
+                      ? "Ex: Rio de Janeiro"
+                      : "Ex: 000.000.000-00"
+                  }
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF]"
                 />
               </div>
@@ -1670,7 +1865,8 @@ function PendenciasProcessoPage() {
             <div className="p-3 rounded-xl bg-blue-50/70 border border-blue-100 flex items-start gap-2.5 text-[11px] text-blue-800">
               <ShieldCheck className="h-4 w-4 text-[#075BFF] shrink-0 mt-0.5" />
               <p>
-                Os dados serão salvos de forma permanente no cadastro correspondente e registrados no histórico de auditoria do processo.
+                Os dados serão salvos de forma permanente no cadastro correspondente e registrados
+                no histórico de auditoria do processo.
               </p>
             </div>
 
@@ -1722,9 +1918,10 @@ function PendenciasProcessoPage() {
           <form onSubmit={handleUploadDocument} className="space-y-4 pt-2">
             <div className="space-y-2">
               <label className="text-xs font-bold text-[#0B1739]">
-                Selecione o arquivo (PDF, PNG ou JPG até 10MB) <span className="text-red-500">*</span>
+                Selecione o arquivo (PDF, PNG ou JPG até 10MB){" "}
+                <span className="text-red-500">*</span>
               </label>
-              
+
               <div className="border-2 border-dashed border-slate-200 hover:border-blue-400 rounded-2xl p-5 text-center transition-colors bg-slate-50/50">
                 <input
                   type="file"
@@ -1747,7 +1944,8 @@ function PendenciasProcessoPage() {
                     <div>
                       <p className="text-xs font-bold text-[#0B1739]">{selectedUploadFile.name}</p>
                       <p className="text-[10px] text-slate-400 mt-0.5">
-                        {(selectedUploadFile.size / 1024 / 1024).toFixed(2)} MB • Clique para substituir
+                        {(selectedUploadFile.size / 1024 / 1024).toFixed(2)} MB • Clique para
+                        substituir
                       </p>
                     </div>
                   ) : (
@@ -1831,7 +2029,10 @@ function PendenciasProcessoPage() {
               <div className="flex justify-between">
                 <span className="text-slate-400">Data/Hora:</span>
                 <span className="font-bold text-[#0B1739]">
-                  {new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date())}
+                  {new Intl.DateTimeFormat("pt-BR", {
+                    dateStyle: "short",
+                    timeStyle: "short",
+                  }).format(new Date())}
                 </span>
               </div>
             </div>
@@ -1890,7 +2091,6 @@ function PendenciasProcessoPage() {
           </div>
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }
