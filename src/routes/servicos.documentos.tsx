@@ -1,41 +1,50 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { 
-  ArrowLeft, 
-  User, 
-  Ship, 
-  Folder, 
-  Cog, 
-  FileText, 
-  Clock, 
-  CheckCircle2, 
-  MinusCircle, 
-  AlertTriangle, 
-  ExternalLink, 
-  Eye, 
-  Upload, 
-  Loader2, 
-  Save, 
-  FileCheck2, 
-  Info, 
-  Check, 
-  X, 
-  FileSpreadsheet, 
-  Building2, 
-  Home, 
+import {
+  ArrowLeft,
+  User,
+  Ship,
+  Folder,
+  Cog,
+  FileText,
+  Clock,
+  CheckCircle2,
+  MinusCircle,
+  AlertTriangle,
+  ExternalLink,
+  Eye,
+  Upload,
+  Loader2,
+  Save,
+  FileCheck2,
+  Info,
+  Check,
+  X,
+  FileSpreadsheet,
+  Building2,
+  Home,
   CreditCard,
-  Anchor
+  Anchor,
 } from "lucide-react";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DashboardLayout } from "@/routes/dashboard";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { getServiceDefinition } from "@/services/catalog/servicesCatalogValidation";
 
 export const Route = createFileRoute("/servicos/documentos")({
-  validateSearch: (search: Record<string, unknown>): {
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): {
     category?: "profissional" | "esporte_recreio";
     customerId?: string;
     vesselId?: string;
@@ -64,16 +73,16 @@ export const Route = createFileRoute("/servicos/documentos")({
 function DocumentosDoServicoPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const currentCompany = profile?.companies;
 
   const category = search.category || "esporte_recreio";
   const customerId = search.customerId;
   const vesselId = search.vesselId;
   const rawServices = search.services ? search.services.split(",").filter(Boolean) : [];
-  
+
   const [activeServiceKey, setActiveServiceKey] = useState<string>(
-    search.activeServiceId || rawServices[0] || "renovacao-tie"
+    search.activeServiceId || rawServices[0] || "renovacao-tie",
   );
 
   // Estados de dados carregados
@@ -85,7 +94,9 @@ function DocumentosDoServicoPage() {
   const [vesselType, setVesselType] = useState("Lancha");
   const [lengthMeters, setLengthMeters] = useState("6,50 m");
   const [ownerType, setOwnerType] = useState<"pf" | "pj">("pf");
-  const [serviceAttendance, setServiceAttendance] = useState<"representante" | "proprietario">("representante");
+  const [serviceAttendance, setServiceAttendance] = useState<"representante" | "proprietario">(
+    "representante",
+  );
 
   // Estado dos arquivos anexados / disponíveis
   const [attachedFiles, setAttachedFiles] = useState<{
@@ -125,7 +136,10 @@ function DocumentosDoServicoPage() {
 
           if (custData) {
             setCustomer(custData);
-            if (custData.document_type === "CNPJ" || (custData.document && custData.document.length > 14)) {
+            if (
+              custData.document_type === "CNPJ" ||
+              (custData.document && custData.document.length > 14)
+            ) {
               setOwnerType("pj");
             } else {
               setOwnerType("pf");
@@ -164,7 +178,12 @@ function DocumentosDoServicoPage() {
   const isJetSki = useMemo(() => {
     const typeStr = (vesselType || vessel?.vessel_type || "").toLowerCase();
     const nameStr = (vessel?.name || "").toLowerCase();
-    return typeStr.includes("moto") || typeStr.includes("jet") || typeStr.includes("aquática") || nameStr.includes("jet");
+    return (
+      typeStr.includes("moto") ||
+      typeStr.includes("jet") ||
+      typeStr.includes("aquática") ||
+      nameStr.includes("jet")
+    );
   }, [vesselType, vessel]);
 
   // Obter definição oficial e dados de orientação conforme serviço ativo
@@ -241,16 +260,86 @@ function DocumentosDoServicoPage() {
     }
   };
 
-  // Salvar rascunho
+  // Salvar rascunho de verdade no Supabase sem gerar documentos
   const handleSaveDraft = async () => {
+    const effectiveCompanyId = currentCompany?.id || profile?.company_id;
+    if (!effectiveCompanyId) {
+      toast.error("Vínculo de empresa não identificado.");
+      return;
+    }
+
+    let effectiveCustomerId = customerId || customer?.id;
+    if (!effectiveCustomerId) {
+      const { data: firstCust } = await supabase
+        .from("customers")
+        .select("id")
+        .eq("company_id", effectiveCompanyId)
+        .limit(1)
+        .maybeSingle();
+      effectiveCustomerId = firstCust?.id;
+    }
+
+    if (!effectiveCustomerId) {
+      toast.error("Selecione um cliente para vincular ao processo.");
+      return;
+    }
+
     setIsDraftSaving(true);
     try {
-      await new Promise((r) => setTimeout(r, 500));
-      toast.success("Rascunho do serviço salvo com sucesso!", {
-        description: "Você pode continuar a organização dos documentos quando desejar.",
+      const primaryServiceTitle = serviceDef?.title || "Serviço Náutico";
+      const otherServicesCount = rawServices.length - 1;
+      const serviceDisplayTitle =
+        otherServicesCount > 0
+          ? `${primaryServiceTitle} (+${otherServicesCount} serviço${otherServicesCount > 1 ? "s" : ""})`
+          : primaryServiceTitle;
+
+      const customerName = customer?.fantasy_name || customer?.name || "Cliente";
+      const vesselName = vessel?.name || "Embarcação";
+      const processTitle = `${serviceDisplayTitle} - ${vesselName} (${customerName})`;
+
+      const { data: newProcess, error: procError } = await supabase
+        .from("processes")
+        .insert({
+          company_id: effectiveCompanyId,
+          customer_id: effectiveCustomerId,
+          vessel_id: vesselId || null,
+          title: processTitle,
+          process_type: activeServiceKey || rawServices[0] || "renovacao_inscricao",
+          status: "draft",
+          priority: "medium",
+          is_draft: true,
+          draft_data: {
+            category,
+            category_label: officialSourceInfo.categoryName,
+            services: rawServices,
+            selected_services: rawServices,
+            active_service_key: activeServiceKey,
+            services_count: rawServices.length,
+            attached_files: attachedFiles,
+            is_jet_ski: isJetSki,
+            created_by_user_id: user?.id,
+            created_by_email: user?.email,
+            created_at_date: new Date().toISOString(),
+          },
+        } as any)
+        .select("id")
+        .single();
+
+      if (procError || !newProcess) {
+        throw new Error(procError?.message || "Falha ao salvar rascunho.");
+      }
+
+      toast.success("Rascunho do processo salvo com sucesso!", {
+        description: "Processo salvo como rascunho. Nenhum documento foi gerado ainda.",
       });
-    } catch (err) {
-      toast.error("Erro ao salvar rascunho.");
+
+      navigate({
+        to: "/processes/$id",
+        params: { id: newProcess.id },
+      });
+    } catch (err: any) {
+      console.error("Erro ao salvar rascunho do processo:", err);
+      toast.error(err?.message || "Erro ao salvar rascunho.");
     } finally {
       setIsDraftSaving(false);
     }
@@ -259,7 +348,6 @@ function DocumentosDoServicoPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24 font-sans text-slate-800">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
-        
         {/* ========================================================================= */}
         {/* CABEÇALHO COM LINK VOLTAR */}
         {/* ========================================================================= */}
@@ -296,7 +384,9 @@ function DocumentosDoServicoPage() {
         {/* ========================================================================= */}
         {rawServices.length > 1 && (
           <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-slate-200">
-            <span className="text-xs font-semibold text-slate-500 shrink-0 mr-1">Serviço ativo:</span>
+            <span className="text-xs font-semibold text-slate-500 shrink-0 mr-1">
+              Serviço ativo:
+            </span>
             {rawServices.map((srvKey) => {
               const srvInfo = getServiceDefinition(srvKey);
               const isCurrent = srvKey === activeServiceKey;
@@ -328,7 +418,9 @@ function DocumentosDoServicoPage() {
               <User className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Cliente</span>
+              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+                Cliente
+              </span>
               <span className="text-sm font-bold text-[#0B1739] truncate block">
                 {customer?.fantasy_name || customer?.name || "Cliente não informado"}
               </span>
@@ -341,7 +433,9 @@ function DocumentosDoServicoPage() {
               <Ship className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Embarcação</span>
+              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+                Embarcação
+              </span>
               <span className="text-sm font-bold text-[#0B1739] truncate block">
                 {vessel?.name || "Embarcação não informada"}
               </span>
@@ -354,7 +448,9 @@ function DocumentosDoServicoPage() {
               <Folder className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Categoria</span>
+              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+                Categoria
+              </span>
               <span className="text-sm font-bold text-[#0B1739] truncate block">
                 {officialSourceInfo.categoryName}
               </span>
@@ -367,7 +463,9 @@ function DocumentosDoServicoPage() {
               <Cog className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Serviço</span>
+              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+                Serviço
+              </span>
               <span className="text-sm font-bold text-[#0B1739] truncate block">
                 {activeServiceTitle}
               </span>
@@ -379,12 +477,10 @@ function DocumentosDoServicoPage() {
         {/* GRID PRINCIPAL: 2 COLUNAS CONFORME IMAGEM */}
         {/* ========================================================================= */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
           {/* ======================================================================= */}
           {/* COLUNA ESQUERDA (7 COLUNAS): DADOS DE REQUISITOS + ARQUIVOS DO CLIENTE */}
           {/* ======================================================================= */}
           <div className="lg:col-span-7 space-y-6">
-            
             {/* CARD 1: DADOS PARA DEFINIR OS REQUISITOS */}
             <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
               <h2 className="text-base font-bold text-[#0B1739]">
@@ -440,7 +536,9 @@ function DocumentosDoServicoPage() {
                   <label className="text-xs font-semibold text-slate-600">Atendimento</label>
                   <select
                     value={serviceAttendance}
-                    onChange={(e) => setServiceAttendance(e.target.value as "representante" | "proprietario")}
+                    onChange={(e) =>
+                      setServiceAttendance(e.target.value as "representante" | "proprietario")
+                    }
                     className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   >
                     <option value="representante">Por representante</option>
@@ -465,9 +563,7 @@ function DocumentosDoServicoPage() {
             {/* CARD 2: ARQUIVOS DO CLIENTE */}
             <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
               <div>
-                <h2 className="text-base font-bold text-[#0B1739]">
-                  Arquivos do cliente
-                </h2>
+                <h2 className="text-base font-bold text-[#0B1739]">Arquivos do cliente</h2>
                 <p className="text-xs text-slate-400 mt-0.5">
                   Confira os arquivos existentes ou anexe novos.
                 </p>
@@ -624,12 +720,9 @@ function DocumentosDoServicoPage() {
           {/* COLUNA DIREITA (5 COLUNAS): FORMULÁRIOS + SITUAÇÃO DOS REQUISITOS */}
           {/* ======================================================================= */}
           <div className="lg:col-span-5 space-y-6">
-            
             {/* CARD 3: FORMULÁRIOS DO SERVIÇO */}
             <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-              <h2 className="text-base font-bold text-[#0B1739]">
-                Formulários do serviço
-              </h2>
+              <h2 className="text-base font-bold text-[#0B1739]">Formulários do serviço</h2>
 
               <div className="space-y-3">
                 {/* Requerimento */}
@@ -638,9 +731,7 @@ function DocumentosDoServicoPage() {
                     <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#075BFF] flex items-center justify-center shrink-0">
                       <FileText className="h-4 w-4" />
                     </div>
-                    <span className="text-xs font-semibold text-slate-800">
-                      Requerimento
-                    </span>
+                    <span className="text-xs font-semibold text-slate-800">Requerimento</span>
                   </div>
                   {serviceDef.status === "validated" ? (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
@@ -661,9 +752,7 @@ function DocumentosDoServicoPage() {
                     <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#075BFF] flex items-center justify-center shrink-0">
                       <FileSpreadsheet className="h-4 w-4" />
                     </div>
-                    <span className="text-xs font-semibold text-slate-800">
-                      Procuração
-                    </span>
+                    <span className="text-xs font-semibold text-slate-800">Procuração</span>
                   </div>
                   {serviceDef.status === "validated" ? (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
@@ -696,9 +785,7 @@ function DocumentosDoServicoPage() {
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold text-emerald-900">
-                        Requisitos conferidos
-                      </h3>
+                      <h3 className="text-sm font-bold text-emerald-900">Requisitos conferidos</h3>
                       <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
                         {serviceDef.validationDateFormatted}
                       </span>
@@ -734,15 +821,14 @@ function DocumentosDoServicoPage() {
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold text-[#92400E]">
-                        Requisitos em revisão
-                      </h3>
+                      <h3 className="text-sm font-bold text-[#92400E]">Requisitos em revisão</h3>
                       <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
                         {serviceDef.validationDateFormatted}
                       </span>
                     </div>
                     <p className="text-xs text-[#B45309] leading-relaxed">
-                      {serviceDef.missingValidationNote || "A lista oficial deste serviço ainda precisa ser validada com a Capitania local."}
+                      {serviceDef.missingValidationNote ||
+                        "A lista oficial deste serviço ainda precisa ser validada com a Capitania local."}
                     </p>
                   </div>
                 </div>
@@ -752,7 +838,8 @@ function DocumentosDoServicoPage() {
                     Fonte: {serviceDef.officialSource}
                   </p>
                   <p className="text-[11px] text-[#B45309]/80 font-medium">
-                    Trabalho salvo como rascunho: Este serviço ainda não está liberado para protocolo final automatizado.
+                    Trabalho salvo como rascunho: Este serviço ainda não está liberado para
+                    protocolo final automatizado.
                   </p>
                   <div>
                     <a
@@ -768,9 +855,7 @@ function DocumentosDoServicoPage() {
                 </div>
               </div>
             )}
-
           </div>
-
         </div>
 
         {/* ========================================================================= */}
@@ -800,7 +885,11 @@ function DocumentosDoServicoPage() {
             onClick={handleSaveDraft}
             className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#075BFF] text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
           >
-            {isDraftSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+            {isDraftSaving ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Save className="h-3.5 w-3.5" />
+            )}
             <span>Salvar rascunho</span>
           </button>
 
@@ -822,7 +911,6 @@ function DocumentosDoServicoPage() {
             <span>Revisar processo</span>
           </button>
         </div>
-
       </div>
 
       {/* ========================================================================= */}
@@ -849,11 +937,15 @@ function DocumentosDoServicoPage() {
           <div className="p-5 space-y-3 text-xs">
             <div className="flex justify-between py-1.5 border-b border-slate-100">
               <span className="text-slate-500">Nome:</span>
-              <span className="font-bold text-[#0B1739]">{vessel?.name || "Embarcação não informada"}</span>
+              <span className="font-bold text-[#0B1739]">
+                {vessel?.name || "Embarcação não informada"}
+              </span>
             </div>
             <div className="flex justify-between py-1.5 border-b border-slate-100">
               <span className="text-slate-500">Número de Inscrição:</span>
-              <span className="font-medium text-slate-800">{vessel?.registration_number || "Sem inscrição"}</span>
+              <span className="font-medium text-slate-800">
+                {vessel?.registration_number || "Sem inscrição"}
+              </span>
             </div>
             <div className="flex justify-between py-1.5 border-b border-slate-100">
               <span className="text-slate-500">Tipo:</span>
@@ -865,11 +957,15 @@ function DocumentosDoServicoPage() {
             </div>
             <div className="flex justify-between py-1.5 border-b border-slate-100">
               <span className="text-slate-500">Capitania / Jurisdição:</span>
-              <span className="font-medium text-slate-800">{vessel?.port_of_registry || "Não informada"}</span>
+              <span className="font-medium text-slate-800">
+                {vessel?.port_of_registry || "Não informada"}
+              </span>
             </div>
             <div className="flex justify-between py-1.5">
               <span className="text-slate-500">Proprietário vinculado:</span>
-              <span className="font-medium text-slate-800">{customer?.fantasy_name || customer?.name || "Cliente não informado"}</span>
+              <span className="font-medium text-slate-800">
+                {customer?.fantasy_name || customer?.name || "Cliente não informado"}
+              </span>
             </div>
           </div>
 
@@ -910,7 +1006,9 @@ function DocumentosDoServicoPage() {
             <p className="leading-relaxed">{previewData?.desc}</p>
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-2">
               <FileText className="h-4 w-4 text-[#075BFF]" />
-              <span className="font-semibold text-slate-700">Arquivo válido e pronto para uso no processo</span>
+              <span className="font-semibold text-slate-700">
+                Arquivo válido e pronto para uso no processo
+              </span>
             </div>
           </div>
 
@@ -966,7 +1064,9 @@ function DocumentosDoServicoPage() {
             >
               <Upload className="h-8 w-8 text-[#075BFF] mx-auto mb-2" />
               <p className="text-xs font-semibold text-slate-700">
-                {selectedFileForUpload ? selectedFileForUpload.name : "Clique para selecionar o arquivo"}
+                {selectedFileForUpload
+                  ? selectedFileForUpload.name
+                  : "Clique para selecionar o arquivo"}
               </p>
               <p className="text-[11px] text-slate-400 mt-1">
                 Formatos aceitos: PDF, PNG, JPG (máx. 10MB)
@@ -1020,10 +1120,14 @@ function DocumentosDoServicoPage() {
 
           <div className="p-5 space-y-3 text-xs text-slate-600 leading-relaxed">
             <p>
-              Os requisitos oficiais e os modelos de formulários para <strong>{activeServiceTitle}</strong> ({officialSourceInfo.categoryName}) estão atualmente em fase de revisão regulatória.
+              Os requisitos oficiais e os modelos de formulários para{" "}
+              <strong>{activeServiceTitle}</strong> ({officialSourceInfo.categoryName}) estão
+              atualmente em fase de revisão regulatória.
             </p>
             <p>
-              Você pode salvar o rascunho dos documentos e dados preenchidos. A geração do processo definitivo estará disponível assim que a revisão da lista de exigências for aprovada para uso.
+              Você pode salvar o rascunho dos documentos e dados preenchidos. A geração do processo
+              definitivo estará disponível assim que a revisão da lista de exigências for aprovada
+              para uso.
             </p>
           </div>
 
@@ -1048,7 +1152,6 @@ function DocumentosDoServicoPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }

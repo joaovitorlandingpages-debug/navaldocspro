@@ -1,28 +1,28 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { 
-  ArrowLeft, 
-  Download, 
-  ExternalLink, 
-  FileText, 
-  ZoomIn, 
-  ZoomOut, 
-  RotateCcw, 
-  Maximize2, 
-  Minimize2, 
-  ChevronLeft, 
-  ChevronRight, 
-  CheckCircle2, 
-  AlertTriangle, 
-  Clock, 
-  User, 
-  Ship, 
-  Folder, 
-  Building2, 
-  History, 
-  FileCheck2, 
-  Loader2, 
-  PenTool, 
-  Plus, 
+import {
+  ArrowLeft,
+  Download,
+  ExternalLink,
+  FileText,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  Maximize2,
+  Minimize2,
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle2,
+  AlertTriangle,
+  Clock,
+  User,
+  Ship,
+  Folder,
+  Building2,
+  History,
+  FileCheck2,
+  Loader2,
+  PenTool,
+  Plus,
   Sparkles,
   Info,
   Check,
@@ -35,7 +35,7 @@ import {
   Save,
   HelpCircle,
   FileCheck,
-  FileQuestion
+  FileQuestion,
 } from "lucide-react";
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -43,11 +43,20 @@ import { DashboardLayout } from "@/routes/dashboard";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { downloadStoredFile, openStoredFile } from "@/utils/file-preview";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/processes/$id/revisar-documento")({
-  validateSearch: (search: Record<string, unknown>): {
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): {
     docId?: string;
     from?: string;
   } => ({
@@ -149,11 +158,13 @@ function RevisarDocumentoGeradoPage() {
       // 1.1 Carregar Processo, Cliente e Embarcação Vinculada
       const { data: proc, error: pError } = await supabase
         .from("processes")
-        .select(`
+        .select(
+          `
           *,
           customer:customers!processes_customer_id_fkey(id, name, cpf_cnpj, email, phone, address, city, state),
           vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, category, vessel_type, length)
-        `)
+        `,
+        )
         .eq("id", id)
         .eq("company_id", companyId)
         .maybeSingle();
@@ -217,7 +228,7 @@ function RevisarDocumentoGeradoPage() {
         if (profilesData) {
           profilesData.forEach((p: any) => {
             const exists = empList.some(
-              (e) => e.id === p.id || (p.email && e.email?.toLowerCase() === p.email.toLowerCase())
+              (e) => e.id === p.id || (p.email && e.email?.toLowerCase() === p.email.toLowerCase()),
             );
             if (!exists) {
               empList.push({
@@ -237,7 +248,9 @@ function RevisarDocumentoGeradoPage() {
         // Selecionar responsável inicial
         if (empList.length > 0) {
           const matchLogged = empList.find(
-            (e) => e.id === profile?.id || (user?.email && e.email?.toLowerCase() === user.email.toLowerCase())
+            (e) =>
+              e.id === profile?.id ||
+              (user?.email && e.email?.toLowerCase() === user.email.toLowerCase()),
           );
           setSelectedEmployeeId(matchLogged ? matchLogged.id : empList[0].id);
         }
@@ -267,8 +280,12 @@ function RevisarDocumentoGeradoPage() {
         // Objeto padrão para revisão pré-geração
         setDocument({
           id: searchParams.docId || "doc-draft",
-          title: proc?.title ? `Requerimento Padrão — ${proc.vessel?.name || "Embarcação"}` : "Requerimento Padrão do Interessado",
-          name: proc?.title ? `Requerimento Padrão — ${proc.vessel?.name || "Embarcação"}` : "Requerimento Padrão do Interessado",
+          title: proc?.title
+            ? `Requerimento Padrão — ${proc.vessel?.name || "Embarcação"}`
+            : "Requerimento Padrão do Interessado",
+          name: proc?.title
+            ? `Requerimento Padrão — ${proc.vessel?.name || "Embarcação"}`
+            : "Requerimento Padrão do Interessado",
           document_type: "REQ-001",
           status: "rascunho",
           version: 1,
@@ -293,14 +310,17 @@ function RevisarDocumentoGeradoPage() {
 
   // Funcionário selecionado atualmente
   const selectedEmployee = useMemo(() => {
-    return employees.find((e) => e.id === selectedEmployeeId) || employees[0] || {
-      id: profile?.id || "default",
-      name: profile?.name || "Despachante Náutico",
-      role: "Responsável Técnico",
-      document_name: profile?.name || "Despachante Náutico",
-      document_role: "Despachante Náutico Responsável",
-      professional_registry: "CRDD-SP / Capitania dos Portos",
-    };
+    return (
+      employees.find((e) => e.id === selectedEmployeeId) ||
+      employees[0] || {
+        id: profile?.id || "default",
+        name: profile?.name || "Despachante Náutico",
+        role: "Responsável Técnico",
+        document_name: profile?.name || "Despachante Náutico",
+        document_role: "Despachante Náutico Responsável",
+        professional_registry: "CRDD-SP / Capitania dos Portos",
+      }
+    );
   }, [employees, selectedEmployeeId, profile]);
 
   // Normalização do Título e Código do Processo
@@ -309,7 +329,12 @@ function RevisarDocumentoGeradoPage() {
   }, [processData]);
 
   const protocolCode = useMemo(() => {
-    return processData?.protocol_number || `PROC-${String(processData?.id || id).slice(0, 4).toUpperCase()}`;
+    return (
+      processData?.protocol_number ||
+      `PROC-${String(processData?.id || id)
+        .slice(0, 4)
+        .toUpperCase()}`
+    );
   }, [processData, id]);
 
   const customerName = useMemo(() => {
@@ -360,7 +385,10 @@ function RevisarDocumentoGeradoPage() {
       },
       {
         label: "Cidade / UF",
-        value: customer?.city && customer?.state ? `${customer.city} / ${customer.state}` : customer?.city || customer?.state,
+        value:
+          customer?.city && customer?.state
+            ? `${customer.city} / ${customer.state}`
+            : customer?.city || customer?.state,
         source: "cliente",
         sourceLabel: "Cadastro do Cliente",
         isRequired: true,
@@ -368,7 +396,10 @@ function RevisarDocumentoGeradoPage() {
       },
       {
         label: "Telefone / E-mail",
-        value: customer?.phone || customer?.email ? `${customer?.phone || ""} • ${customer?.email || ""}` : null,
+        value:
+          customer?.phone || customer?.email
+            ? `${customer?.phone || ""} • ${customer?.email || ""}`
+            : null,
         source: "cliente",
         sourceLabel: "Cadastro do Cliente",
         isRequired: false,
@@ -394,7 +425,10 @@ function RevisarDocumentoGeradoPage() {
       },
       {
         label: "Tipo / Categoria",
-        value: vessel?.vessel_type || vessel?.category ? `${vessel?.vessel_type || "Embarcação"} (${vessel?.category || "Geral"})` : null,
+        value:
+          vessel?.vessel_type || vessel?.category
+            ? `${vessel?.vessel_type || "Embarcação"} (${vessel?.category || "Geral"})`
+            : null,
         source: "embarcacao",
         sourceLabel: "Cadastro da Embarcação",
         isRequired: true,
@@ -410,7 +444,10 @@ function RevisarDocumentoGeradoPage() {
       },
       {
         label: "Comprimento Total",
-        value: vessel?.length_overall || vessel?.length ? `${vessel?.length_overall || vessel?.length} m` : null,
+        value:
+          vessel?.length_overall || vessel?.length
+            ? `${vessel?.length_overall || vessel?.length} m`
+            : null,
         source: "embarcacao",
         sourceLabel: "Cadastro da Embarcação",
         isRequired: false,
@@ -551,7 +588,7 @@ function RevisarDocumentoGeradoPage() {
 
     try {
       const now = new Date().toISOString();
-      const nextVersion = (document?.version || 1);
+      const nextVersion = document?.version || 1;
 
       const staffPayload = {
         id: selectedEmployee.id,
@@ -660,7 +697,9 @@ function RevisarDocumentoGeradoPage() {
           .update({
             registration_number: correctionForm.vesselRegistration || vessel.registration_number,
             port_of_registry: correctionForm.vesselPort || vessel.port_of_registry,
-            length: correctionForm.vesselLength ? parseFloat(correctionForm.vesselLength) : vessel.length,
+            length: correctionForm.vesselLength
+              ? parseFloat(correctionForm.vesselLength)
+              : vessel.length,
           })
           .eq("id", vessel.id)
           .eq("company_id", companyId);
@@ -723,7 +762,9 @@ function RevisarDocumentoGeradoPage() {
     return (
       <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-6 font-sans">
         <Loader2 className="h-8 w-8 text-[#075BFF] animate-spin mb-3" />
-        <p className="text-sm font-semibold text-slate-700">Carregando conferência e prévia do documento...</p>
+        <p className="text-sm font-semibold text-slate-700">
+          Carregando conferência e prévia do documento...
+        </p>
       </div>
     );
   }
@@ -736,7 +777,8 @@ function RevisarDocumentoGeradoPage() {
         </div>
         <h2 className="text-xl font-bold text-[#0B1739]">Serviço não encontrado</h2>
         <p className="text-sm text-slate-500">
-          A ocorrência deste serviço não existe ou você não possui permissão para visualizá-la nesta empresa.
+          A ocorrência deste serviço não existe ou você não possui permissão para visualizá-la nesta
+          empresa.
         </p>
         <div className="pt-2">
           <Link
@@ -754,7 +796,6 @@ function RevisarDocumentoGeradoPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24 font-sans text-slate-800">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6 space-y-6">
-        
         {/* ========================================================================= */}
         {/* 1. NAVEGAÇÃO E TRILHA ESTRUTURADA (Cliente → Embarcação → Serviço → Documento) */}
         {/* ========================================================================= */}
@@ -772,7 +813,11 @@ function RevisarDocumentoGeradoPage() {
 
           <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium overflow-x-auto whitespace-nowrap">
             {customer ? (
-              <Link to="/customers/$id" params={{ id: customer.id }} className="hover:text-slate-600 hover:underline truncate max-w-[150px]">
+              <Link
+                to="/customers/$id"
+                params={{ id: customer.id }}
+                className="hover:text-slate-600 hover:underline truncate max-w-[150px]"
+              >
                 {customerName}
               </Link>
             ) : (
@@ -780,18 +825,30 @@ function RevisarDocumentoGeradoPage() {
             )}
             <span>/</span>
             {vessel ? (
-              <Link to="/vessels/$id" params={{ id: vessel.id }} className="hover:text-slate-600 hover:underline truncate max-w-[150px] font-bold text-slate-700">
+              <Link
+                to="/vessels/$id"
+                params={{ id: vessel.id }}
+                className="hover:text-slate-600 hover:underline truncate max-w-[150px] font-bold text-slate-700"
+              >
                 {vesselName}
               </Link>
             ) : (
               <span className="font-bold text-slate-700">{vesselName}</span>
             )}
             <span>/</span>
-            <Link to="/processes/$id" params={{ id }} className="hover:text-slate-600 hover:underline">
+            <Link
+              to="/processes/$id"
+              params={{ id }}
+              className="hover:text-slate-600 hover:underline"
+            >
               {serviceTitle}
             </Link>
             <span>/</span>
-            <Link to="/processes/$id/documentos-gerados" params={{ id }} className="hover:text-slate-600 hover:underline">
+            <Link
+              to="/processes/$id/documentos-gerados"
+              params={{ id }}
+              className="hover:text-slate-600 hover:underline"
+            >
               Documentos gerados
             </Link>
             <span>/</span>
@@ -815,9 +872,10 @@ function RevisarDocumentoGeradoPage() {
                 NavalDocs Pro
               </span>
             </div>
-            
+
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Confira os dados com rastreio de origem, selecione o funcionário responsável e emita o PDF oficial.
+              Confira os dados com rastreio de origem, selecione o funcionário responsável e emita o
+              documento (PDF A4).
             </p>
           </div>
 
@@ -900,12 +958,10 @@ function RevisarDocumentoGeradoPage() {
         {/* GRID PRINCIPAL (2 COLUNAS): PRÉVIA DO PDF À ESQUERDA + CONFERÊNCIA À DIREITA */}
         {/* ========================================================================= */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
           {/* ======================================================================= */}
           {/* COLUNA ESQUERDA (7 COLUNAS): PRÉVIA DO PDF COM DADOS DA EMPRESA E LOGO */}
           {/* ======================================================================= */}
           <div className="lg:col-span-7 space-y-4">
-            
             {/* Barra de Ferramentas da Prévia */}
             <div className="bg-white border border-slate-200/90 rounded-2xl p-3 shadow-xs flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
@@ -949,17 +1005,21 @@ function RevisarDocumentoGeradoPage() {
                   className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 ml-1"
                   title="Tela cheia"
                 >
-                  {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                  {isFullscreen ? (
+                    <Minimize2 className="h-4 w-4" />
+                  ) : (
+                    <Maximize2 className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </div>
 
             {/* Container da Folha do PDF Formatada com Logo e Empresa */}
-            <div 
+            <div
               ref={viewerContainerRef}
               className="bg-slate-200/80 border border-slate-300 rounded-2xl p-3 sm:p-6 flex justify-center items-start min-h-[620px] overflow-auto shadow-inner"
             >
-              <div 
+              <div
                 style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: "top center" }}
                 className="bg-white text-slate-900 w-full max-w-[620px] min-h-[860px] p-6 sm:p-10 rounded-sm shadow-xl border border-slate-200/90 font-serif text-[12.5px] leading-relaxed transition-transform duration-150 space-y-6 select-text"
               >
@@ -979,7 +1039,9 @@ function RevisarDocumentoGeradoPage() {
                     )}
                     <div>
                       <p className="font-bold text-xs uppercase tracking-wide text-[#0B1739]">
-                        {companyDetails?.name || currentCompany?.name || "NavalDocs Despachante Marítimo"}
+                        {companyDetails?.name ||
+                          currentCompany?.name ||
+                          "NavalDocs Despachante Marítimo"}
                       </p>
                       {companyDetails?.cnpj && (
                         <p className="text-[10px] text-slate-500 font-mono">
@@ -987,7 +1049,9 @@ function RevisarDocumentoGeradoPage() {
                         </p>
                       )}
                       <p className="text-[10px] text-slate-400">
-                        {companyDetails?.city ? `${companyDetails.city}/${companyDetails.state || "SP"}` : "Atendimento Náutico Especializado"}
+                        {companyDetails?.city
+                          ? `${companyDetails.city}/${companyDetails.state || "SP"}`
+                          : "Atendimento Náutico Especializado"}
                       </p>
                     </div>
                   </div>
@@ -1017,90 +1081,173 @@ function RevisarDocumentoGeradoPage() {
                     <strong>Ao Senhor Capitão dos Portos:</strong>
                   </p>
                   <p className="leading-relaxed text-justify">
-                    O(A) interessado(a) qualificado(a) no Quadro 1, por intermédio de seu despachante e responsável operacional indicado no Quadro 4, vem mui respeitosamente requerer a V. Sa. a realização do serviço de <strong>{serviceTitle}</strong> referente à embarcação especificada no Quadro 2:
+                    O(A) interessado(a) qualificado(a) no Quadro 1, por intermédio de seu
+                    despachante e responsável operacional indicado no Quadro 4, vem mui
+                    respeitosamente requerer a V. Sa. a realização do serviço de{" "}
+                    <strong>{serviceTitle}</strong> referente à embarcação especificada no Quadro 2:
                   </p>
 
                   {/* Quadro 1: Identificação do Requerente */}
                   <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1">
                     <div className="flex items-center justify-between border-b border-slate-200/60 pb-1 mb-1">
-                      <span className="font-bold text-[11px] text-slate-900 uppercase">1. IDENTIFICAÇÃO DO PROPRIETÁRIO / REQUERENTE</span>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-[#075BFF]">Origem: Cadastro do Cliente</span>
+                      <span className="font-bold text-[11px] text-slate-900 uppercase">
+                        1. IDENTIFICAÇÃO DO PROPRIETÁRIO / REQUERENTE
+                      </span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-[#075BFF]">
+                        Origem: Cadastro do Cliente
+                      </span>
                     </div>
-                    <p><strong>Nome / Razão Social:</strong> {customer?.fantasy_name || customer?.name || <span className="text-red-500 font-bold">[Não informado]</span>}</p>
-                    <p><strong>CPF / CNPJ:</strong> {customer?.cpf_cnpj || customer?.document || <span className="text-red-500 font-bold">[Não informado]</span>}</p>
-                    <p><strong>Endereço:</strong> {customer?.address || <span className="text-red-500 font-bold">[Não informado]</span>}</p>
-                    <p><strong>Cidade / UF:</strong> {customer?.city ? `${customer.city} / ${customer.state || ""}` : <span className="text-red-500 font-bold">[Não informado]</span>}</p>
+                    <p>
+                      <strong>Nome / Razão Social:</strong>{" "}
+                      {customer?.fantasy_name || customer?.name || (
+                        <span className="text-red-500 font-bold">[Não informado]</span>
+                      )}
+                    </p>
+                    <p>
+                      <strong>CPF / CNPJ:</strong>{" "}
+                      {customer?.cpf_cnpj || customer?.document || (
+                        <span className="text-red-500 font-bold">[Não informado]</span>
+                      )}
+                    </p>
+                    <p>
+                      <strong>Endereço:</strong>{" "}
+                      {customer?.address || (
+                        <span className="text-red-500 font-bold">[Não informado]</span>
+                      )}
+                    </p>
+                    <p>
+                      <strong>Cidade / UF:</strong>{" "}
+                      {customer?.city ? (
+                        `${customer.city} / ${customer.state || ""}`
+                      ) : (
+                        <span className="text-red-500 font-bold">[Não informado]</span>
+                      )}
+                    </p>
                   </div>
 
                   {/* Quadro 2: Dados da Embarcação */}
                   <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1">
                     <div className="flex items-center justify-between border-b border-slate-200/60 pb-1 mb-1">
-                      <span className="font-bold text-[11px] text-slate-900 uppercase">2. DADOS DA EMBARCAÇÃO</span>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">Origem: Cadastro da Embarcação</span>
+                      <span className="font-bold text-[11px] text-slate-900 uppercase">
+                        2. DADOS DA EMBARCAÇÃO
+                      </span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">
+                        Origem: Cadastro da Embarcação
+                      </span>
                     </div>
-                    <p><strong>Nome da Embarcação:</strong> {vessel?.name || <span className="text-red-500 font-bold">[Não informado]</span>}</p>
-                    <p><strong>Número de Inscrição:</strong> {vessel?.registration_number || <span className="text-red-500 font-bold">[Não informado]</span>}</p>
-                    <p><strong>Tipo / Categoria:</strong> {vessel?.vessel_type || "Embarcação"} — {vessel?.category || "Esporte e Recreio"}</p>
-                    <p><strong>Porto de Registro:</strong> {vessel?.port_of_registry || "Capitania dos Portos de São Paulo"}</p>
-                    {vessel?.length_overall && <p><strong>Comprimento Total:</strong> {vessel.length_overall} m</p>}
+                    <p>
+                      <strong>Nome da Embarcação:</strong>{" "}
+                      {vessel?.name || (
+                        <span className="text-red-500 font-bold">[Não informado]</span>
+                      )}
+                    </p>
+                    <p>
+                      <strong>Número de Inscrição:</strong>{" "}
+                      {vessel?.registration_number || (
+                        <span className="text-red-500 font-bold">[Não informado]</span>
+                      )}
+                    </p>
+                    <p>
+                      <strong>Tipo / Categoria:</strong> {vessel?.vessel_type || "Embarcação"} —{" "}
+                      {vessel?.category || "Esporte e Recreio"}
+                    </p>
+                    <p>
+                      <strong>Porto de Registro:</strong>{" "}
+                      {vessel?.port_of_registry || "Capitania dos Portos de São Paulo"}
+                    </p>
+                    {vessel?.length_overall && (
+                      <p>
+                        <strong>Comprimento Total:</strong> {vessel.length_overall} m
+                      </p>
+                    )}
                   </div>
 
                   {/* Quadro 3: Preenchimento do Processo */}
                   <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1">
                     <div className="flex items-center justify-between border-b border-slate-200/60 pb-1 mb-1">
-                      <span className="font-bold text-[11px] text-slate-900 uppercase">3. DADOS DO ATENDIMENTO</span>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-50 text-purple-700">Origem: Preenchimento do Processo</span>
+                      <span className="font-bold text-[11px] text-slate-900 uppercase">
+                        3. DADOS DO ATENDIMENTO
+                      </span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-50 text-purple-700">
+                        Origem: Preenchimento do Processo
+                      </span>
                     </div>
-                    <p><strong>Serviço Solicitado:</strong> {serviceTitle}</p>
-                    <p><strong>Protocolo do Processo:</strong> {protocolCode}</p>
+                    <p>
+                      <strong>Serviço Solicitado:</strong> {serviceTitle}
+                    </p>
+                    <p>
+                      <strong>Protocolo do Processo:</strong> {protocolCode}
+                    </p>
                   </div>
 
                   {/* Quadro 4: Funcionário Responsável Selecionado (ITEM 2) */}
                   <div className="p-3 bg-blue-50/40 border border-blue-200 rounded-lg space-y-1">
                     <div className="flex items-center justify-between border-b border-blue-200/60 pb-1 mb-1">
-                      <span className="font-bold text-[11px] text-blue-900 uppercase">4. RESPONSÁVEL TÉCNICO / PREPARADOR DO DOCUMENTO</span>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">Funcionário Selecionado</span>
+                      <span className="font-bold text-[11px] text-blue-900 uppercase">
+                        4. RESPONSÁVEL TÉCNICO / PREPARADOR DO DOCUMENTO
+                      </span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">
+                        Funcionário Selecionado
+                      </span>
                     </div>
-                    <p><strong>Nome do Responsável:</strong> {selectedEmployee.document_name || selectedEmployee.name}</p>
-                    <p><strong>Cargo / Função:</strong> {selectedEmployee.document_role || selectedEmployee.role}</p>
-                    <p><strong>Registro Profissional:</strong> {selectedEmployee.professional_registry || "Registro profissional não cadastrado"}</p>
-                    {selectedEmployee.email && <p><strong>Contato:</strong> {selectedEmployee.email} {selectedEmployee.phone ? `• ${selectedEmployee.phone}` : ""}</p>}
+                    <p>
+                      <strong>Nome do Responsável:</strong>{" "}
+                      {selectedEmployee.document_name || selectedEmployee.name}
+                    </p>
+                    <p>
+                      <strong>Cargo / Função:</strong>{" "}
+                      {selectedEmployee.document_role || selectedEmployee.role}
+                    </p>
+                    <p>
+                      <strong>Registro Profissional:</strong>{" "}
+                      {selectedEmployee.professional_registry ||
+                        "Registro profissional não cadastrado"}
+                    </p>
+                    {selectedEmployee.email && (
+                      <p>
+                        <strong>Contato:</strong> {selectedEmployee.email}{" "}
+                        {selectedEmployee.phone ? `• ${selectedEmployee.phone}` : ""}
+                      </p>
+                    )}
                   </div>
 
                   {/* Fechamento e Assinaturas */}
-                  <p className="pt-4 text-center">
-                    Termos em que pede deferimento.
-                  </p>
+                  <p className="pt-4 text-center">Termos em que pede deferimento.</p>
 
                   <div className="pt-8 grid grid-cols-2 gap-6 text-center text-[11px]">
                     <div className="space-y-1">
                       <div className="w-48 border-t border-slate-400 mx-auto" />
-                      <p className="font-bold">{customer?.fantasy_name || customer?.name || "Requerente"}</p>
+                      <p className="font-bold">
+                        {customer?.fantasy_name || customer?.name || "Requerente"}
+                      </p>
                       <p className="text-[10px] text-slate-500">Requerente / Proprietário</p>
                     </div>
 
                     <div className="space-y-1">
                       <div className="w-48 border-t border-slate-400 mx-auto" />
-                      <p className="font-bold">{selectedEmployee.document_name || selectedEmployee.name}</p>
-                      <p className="text-[10px] text-slate-500">{selectedEmployee.document_role || selectedEmployee.role}</p>
+                      <p className="font-bold">
+                        {selectedEmployee.document_name || selectedEmployee.name}
+                      </p>
+                      <p className="text-[10px] text-slate-500">
+                        {selectedEmployee.document_role || selectedEmployee.role}
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 {/* Rodapé da Prévia */}
                 <div className="pt-6 border-t border-slate-200 text-center text-[10px] font-sans text-slate-400">
-                  Emitido via NavalDocs Pro • Versão {versionNumber} • Documento Gerado para Instrução Processual
+                  Emitido via NavalDocs Pro • Versão {versionNumber} • Documento Gerado para
+                  Instrução Processual
                 </div>
               </div>
             </div>
-
           </div>
 
           {/* ======================================================================= */}
           {/* COLUNA DIREITA (5 COLUNAS): CONFERÊNCIA DE DADOS + SELEÇÃO DE FUNCIONÁRIO */}
           {/* ======================================================================= */}
           <div className="lg:col-span-5 space-y-6">
-            
             {/* SELEÇÃO DO FUNCIONÁRIO RESPONSÁVEL (ITEM 2) */}
             <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs space-y-3">
               <div className="flex items-center justify-between">
@@ -1130,7 +1277,8 @@ function RevisarDocumentoGeradoPage() {
               </div>
 
               <p className="text-xs text-slate-500">
-                Selecione qual colaborador cadastrado em Configurações está preparando este documento:
+                Selecione qual colaborador cadastrado em Configurações está preparando este
+                documento:
               </p>
 
               {employees.length === 0 ? (
@@ -1140,7 +1288,8 @@ function RevisarDocumentoGeradoPage() {
                     Nenhum funcionário cadastrado nesta empresa.
                   </p>
                   <p className="text-[11px] text-amber-800">
-                    Cadastre um responsável documental agora para vincular ao documento sem perder os dados revisados.
+                    Cadastre um responsável documental agora para vincular ao documento sem perder
+                    os dados revisados.
                   </p>
                   <button
                     type="button"
@@ -1173,7 +1322,9 @@ function RevisarDocumentoGeradoPage() {
               <div className="p-2.5 bg-blue-50/60 rounded-xl border border-blue-100 flex items-start gap-2 text-[11px] text-blue-900">
                 <Info className="h-4 w-4 text-[#075BFF] shrink-0 mt-0.5" />
                 <p>
-                  <strong>Atenção:</strong> A seleção do responsável apenas define quem consta na minuta técnica do documento. A assinatura digital pelo <strong>GOV.BR</strong> é uma etapa posterior separada.
+                  <strong>Atenção:</strong> A seleção do responsável apenas define quem consta na
+                  minuta técnica do documento. A assinatura digital pelo <strong>GOV.BR</strong> é
+                  uma etapa posterior separada.
                 </p>
               </div>
 
@@ -1191,13 +1342,12 @@ function RevisarDocumentoGeradoPage() {
                   <p>
                     <span className="text-slate-400">Registro Profissional: </span>
                     <strong className="text-slate-700">
-                      {selectedEmployee.professional_registry || "Não cadastrado (configure em Configurações)"}
+                      {selectedEmployee.professional_registry ||
+                        "Não cadastrado (configure em Configurações)"}
                     </strong>
                   </p>
                   {selectedEmployee.email && (
-                    <p className="truncate text-slate-400">
-                      E-mail: {selectedEmployee.email}
-                    </p>
+                    <p className="truncate text-slate-400">E-mail: {selectedEmployee.email}</p>
                   )}
                 </div>
               </div>
@@ -1237,16 +1387,16 @@ function RevisarDocumentoGeradoPage() {
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-semibold text-slate-900">
-                        {field.label}
-                      </span>
-                      <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
-                        field.source === "cliente"
-                          ? "bg-blue-50 text-[#075BFF]"
-                          : field.source === "embarcacao"
-                          ? "bg-emerald-50 text-emerald-700"
-                          : "bg-purple-50 text-purple-700"
-                      }`}>
+                      <span className="font-semibold text-slate-900">{field.label}</span>
+                      <span
+                        className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
+                          field.source === "cliente"
+                            ? "bg-blue-50 text-[#075BFF]"
+                            : field.source === "embarcacao"
+                              ? "bg-emerald-50 text-emerald-700"
+                              : "bg-purple-50 text-purple-700"
+                        }`}
+                      >
                         {field.sourceLabel}
                       </span>
                     </div>
@@ -1254,9 +1404,7 @@ function RevisarDocumentoGeradoPage() {
                     <div className="flex items-center justify-between">
                       <span className="truncate max-w-[220px]">
                         {field.value || (
-                          <span className="text-red-500 italic font-semibold">
-                            Não preenchido
-                          </span>
+                          <span className="text-red-500 italic font-semibold">Não preenchido</span>
                         )}
                       </span>
                       {field.isMissing && (
@@ -1283,7 +1431,7 @@ function RevisarDocumentoGeradoPage() {
                 className="w-full py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 text-xs font-bold shadow-2xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Download className="h-4 w-4 text-[#075BFF]" />
-                <span>Baixar PDF Oficial</span>
+                <span>Baixar Documento (PDF)</span>
               </button>
 
               <button
@@ -1305,11 +1453,8 @@ function RevisarDocumentoGeradoPage() {
                 <span>Criar Nova Revisão (v{(document?.version || 1) + 1}.0)</span>
               </button>
             </div>
-
           </div>
-
         </div>
-
       </div>
 
       {/* ========================================================================= */}
@@ -1327,7 +1472,8 @@ function RevisarDocumentoGeradoPage() {
                   Documento pronto. Como deseja prosseguir?
                 </DialogTitle>
                 <DialogDescription className="text-xs text-slate-500 mt-0.5">
-                  Escolha se o documento passará por assinatura no GOV.BR ou se será arquivado sem assinatura.
+                  Escolha se o documento passará por assinatura no GOV.BR ou se será arquivado sem
+                  assinatura.
                 </DialogDescription>
               </div>
             </div>
@@ -1339,21 +1485,23 @@ function RevisarDocumentoGeradoPage() {
               <div className="flex items-start gap-2.5">
                 <PenTool className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
                 <div className="space-y-1">
-                  <p className="font-bold text-emerald-950 text-sm">
-                    Opção 1: Assinar pelo GOV.BR
-                  </p>
+                  <p className="font-bold text-emerald-950 text-sm">Opção 1: Assinar pelo GOV.BR</p>
                   <p className="text-emerald-900/80 leading-relaxed text-xs">
-                    Instruções para realizar a assinatura no serviço oficial da Autoridade Certificadora:
+                    Instruções para realizar a assinatura no serviço oficial da Autoridade
+                    Certificadora:
                   </p>
                   <ol className="list-decimal pl-4 space-y-1 text-emerald-900/90 text-[11px] pt-1 leading-relaxed">
-                    <li>Acesse o Assinador oficial em <strong>assinador.iti.br</strong>;</li>
+                    <li>
+                      Acesse o Assinador oficial em <strong>assinador.iti.br</strong>;
+                    </li>
                     <li>Faça login na conta GOV.BR do interessado (nível Prata ou Ouro);</li>
                     <li>Envie o arquivo PDF que acabou de baixar e posicione a assinatura;</li>
                     <li>Conclua a assinatura e baixe o documento com o carimbo oficial;</li>
                     <li>Retorne ao NavalDocs e anexe o arquivo assinado.</li>
                   </ol>
                   <p className="text-[10px] text-emerald-800 font-semibold pt-1">
-                    * O NavalDocs não simula nem assina automaticamente pelo gov.br. O documento só é marcado como assinado após o upload do arquivo assinado.
+                    * O NavalDocs não simula nem assina automaticamente pelo gov.br. O documento só
+                    é marcado como assinado após o upload do arquivo assinado.
                   </p>
                 </div>
               </div>
@@ -1395,7 +1543,9 @@ function RevisarDocumentoGeradoPage() {
                     Opção 2: Guardar PDF sem assinatura
                   </p>
                   <p className="text-slate-600 text-xs leading-relaxed">
-                    Utilize esta opção quando a assinatura não for necessária neste momento (documento meramente informativo, procuração com assinatura presencial ou protocolo físico).
+                    Utilize esta opção quando a assinatura não for necessária neste momento
+                    (documento meramente informativo, procuração com assinatura presencial ou
+                    protocolo físico).
                   </p>
                 </div>
               </div>
@@ -1454,42 +1604,58 @@ function RevisarDocumentoGeradoPage() {
             <div className="space-y-3">
               <p className="font-bold text-slate-800 uppercase text-[11px]">Dados do Cliente</p>
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 mb-1">CPF / CNPJ</label>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                  CPF / CNPJ
+                </label>
                 <input
                   type="text"
                   value={correctionForm.customerCpfCnpj}
-                  onChange={(e) => setCorrectionForm({ ...correctionForm, customerCpfCnpj: e.target.value })}
+                  onChange={(e) =>
+                    setCorrectionForm({ ...correctionForm, customerCpfCnpj: e.target.value })
+                  }
                   placeholder="Ex: 123.456.789-00"
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF]"
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Endereço Completo</label>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                  Endereço Completo
+                </label>
                 <input
                   type="text"
                   value={correctionForm.customerAddress}
-                  onChange={(e) => setCorrectionForm({ ...correctionForm, customerAddress: e.target.value })}
+                  onChange={(e) =>
+                    setCorrectionForm({ ...correctionForm, customerAddress: e.target.value })
+                  }
                   placeholder="Ex: Av. dos Portos, 100 - Bairro Náutico"
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF]"
                 />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Cidade</label>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Cidade
+                  </label>
                   <input
                     type="text"
                     value={correctionForm.customerCity}
-                    onChange={(e) => setCorrectionForm({ ...correctionForm, customerCity: e.target.value })}
+                    onChange={(e) =>
+                      setCorrectionForm({ ...correctionForm, customerCity: e.target.value })
+                    }
                     placeholder="Ex: Santos"
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">UF / Estado</label>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    UF / Estado
+                  </label>
                   <input
                     type="text"
                     value={correctionForm.customerState}
-                    onChange={(e) => setCorrectionForm({ ...correctionForm, customerState: e.target.value })}
+                    onChange={(e) =>
+                      setCorrectionForm({ ...correctionForm, customerState: e.target.value })
+                    }
                     placeholder="Ex: SP"
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF]"
                   />
@@ -1500,21 +1666,29 @@ function RevisarDocumentoGeradoPage() {
             <div className="space-y-3 pt-2 border-t border-slate-100">
               <p className="font-bold text-slate-800 uppercase text-[11px]">Dados da Embarcação</p>
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Número de Inscrição</label>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                  Número de Inscrição
+                </label>
                 <input
                   type="text"
                   value={correctionForm.vesselRegistration}
-                  onChange={(e) => setCorrectionForm({ ...correctionForm, vesselRegistration: e.target.value })}
+                  onChange={(e) =>
+                    setCorrectionForm({ ...correctionForm, vesselRegistration: e.target.value })
+                  }
                   placeholder="Ex: 381P202400192"
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF]"
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Porto de Registro / Capitania</label>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                  Porto de Registro / Capitania
+                </label>
                 <input
                   type="text"
                   value={correctionForm.vesselPort}
-                  onChange={(e) => setCorrectionForm({ ...correctionForm, vesselPort: e.target.value })}
+                  onChange={(e) =>
+                    setCorrectionForm({ ...correctionForm, vesselPort: e.target.value })
+                  }
                   placeholder="Ex: Capitania dos Portos de São Paulo"
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF]"
                 />
@@ -1555,7 +1729,8 @@ function RevisarDocumentoGeradoPage() {
                   Criar nova versão do documento
                 </DialogTitle>
                 <DialogDescription className="text-xs text-slate-500">
-                  Preserva o documento anterior e gera uma nova revisão (v{(document?.version || 1) + 1}.0).
+                  Preserva o documento anterior e gera uma nova revisão (v
+                  {(document?.version || 1) + 1}.0).
                 </DialogDescription>
               </div>
             </div>
@@ -1615,7 +1790,9 @@ function RevisarDocumentoGeradoPage() {
           <form onSubmit={handleCreateQuickStaff}>
             <div className="p-5 space-y-3.5 text-xs">
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-[11px] leading-relaxed">
-                <strong>Nota importante:</strong> Cadastrar alguém como responsável documental não cria login nem concede acesso ao sistema. O funcionário constará apenas nos documentos emitidos.
+                <strong>Nota importante:</strong> Cadastrar alguém como responsável documental não
+                cria login nem concede acesso ao sistema. O funcionário constará apenas nos
+                documentos emitidos.
               </div>
 
               <div>

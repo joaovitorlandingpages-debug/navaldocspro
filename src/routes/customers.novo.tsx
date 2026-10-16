@@ -1,49 +1,58 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DashboardLayout } from "@/routes/dashboard";
-import { 
-  ArrowLeft, 
-  Paperclip, 
-  Calendar, 
-  ChevronDown, 
-  Loader2, 
-  FileUp, 
-  Sparkles, 
-  AlertCircle, 
+import {
+  ArrowLeft,
+  Paperclip,
+  Calendar,
+  ChevronDown,
+  Loader2,
+  FileUp,
+  Sparkles,
+  AlertCircle,
   CheckCircle2,
   Building2,
   User,
-  X
+  X,
 } from "lucide-react";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { 
-  BR_UFS, 
-  maskCPF, 
-  maskCNPJ, 
-  maskCEP, 
-  maskPhone, 
-  maskDate, 
-  isValidCPF, 
-  isValidCNPJ, 
-  fetchAddressByCEP 
+import {
+  BR_UFS,
+  maskCPF,
+  maskCNPJ,
+  maskCEP,
+  maskPhone,
+  maskDate,
+  isValidCPF,
+  isValidCNPJ,
+  fetchAddressByCEP,
 } from "@/lib/br-format";
-import type { 
-  ExtractedCustomerData, 
-  UploadedCustomerFile 
+import type {
+  ExtractedCustomerData,
+  UploadedCustomerFile,
 } from "@/components/customers/CustomerDocumentUploadModal";
-import { 
-  CustomerDuplicateResolutionModal, 
-  ExistingCustomerData 
+import {
+  CustomerDuplicateResolutionModal,
+  ExistingCustomerData,
 } from "@/components/customers/CustomerDuplicateResolutionModal";
 import { safeString } from "@/utils/safe-string";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/customers/novo")({
-  validateSearch: (search: Record<string, unknown>): { from?: string; category?: string; services?: string } => ({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { from?: string; category?: string; services?: string } => ({
     from: (search.from as string) || undefined,
     category: (search.category as string) || undefined,
     services: (search.services as string) || undefined,
@@ -66,7 +75,8 @@ function NovoClientePage() {
 
   // Contexto de retorno aos Serviços
   const fromServicos = search.from === "servicos";
-  const returnCategory = (search.category as "profissional" | "esporte_recreio") || "esporte_recreio";
+  const returnCategory =
+    (search.category as "profissional" | "esporte_recreio") || "esporte_recreio";
   const returnServices = search.services;
 
   // Tipo de cliente (PF ou PJ)
@@ -114,7 +124,11 @@ function NovoClientePage() {
   const [duplicateCustomer, setDuplicateCustomer] = useState<ExistingCustomerData | null>(null);
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false);
-  const [homonymWarning, setHomonymWarning] = useState<{ id: string; name: string; cpf_cnpj: string } | null>(null);
+  const [homonymWarning, setHomonymWarning] = useState<{
+    id: string;
+    name: string;
+    cpf_cnpj: string;
+  } | null>(null);
 
   // Refs para focar nos campos ao corrigir
   const cpfInputRef = useRef<HTMLInputElement>(null);
@@ -141,7 +155,9 @@ function NovoClientePage() {
           .from("customers")
           .select("id, name, cpf_cnpj, email, phone, address, city, state, rg, notes")
           .eq("company_id", profile.company_id)
-          .or(`cpf_cnpj.eq.${cleanDoc},cpf_cnpj.eq.${formatted},cpf_cnpj.eq.${currentDocNumber.trim()}`)
+          .or(
+            `cpf_cnpj.eq.${cleanDoc},cpf_cnpj.eq.${formatted},cpf_cnpj.eq.${currentDocNumber.trim()}`,
+          )
           .limit(1);
 
         if (!error && data && data.length > 0) {
@@ -212,7 +228,7 @@ function NovoClientePage() {
       formData.cnpj ||
       formData.email ||
       formData.telefone ||
-      formData.logradouro
+      formData.logradouro,
     );
   }, [formData]);
 
@@ -287,27 +303,42 @@ function NovoClientePage() {
       setUploadedFiles((prev) => [...prev, ...files]);
     }
 
-    if (extracted.type === "pj" || (extracted.cpf_cnpj && extracted.cpf_cnpj.replace(/\D/g, "").length > 11)) {
-      setClientType("pj");
+    const targetType =
+      extracted.type === "pj" ||
+      (extracted.cpf_cnpj && extracted.cpf_cnpj.replace(/\D/g, "").length > 11)
+        ? "pj"
+        : clientType;
+
+    if (targetType !== clientType) {
+      setClientType(targetType);
     }
 
     setFormData((prev) => ({
       ...prev,
-      nome: extracted.name && clientType === "pf" ? extracted.name : prev.nome,
-      razaoSocial: extracted.name && clientType === "pj" ? extracted.name : prev.razaoSocial,
-      cpf: extracted.cpf_cnpj && clientType === "pf" ? maskCPF(extracted.cpf_cnpj) : prev.cpf,
-      cnpj: extracted.cpf_cnpj && clientType === "pj" ? maskCNPJ(extracted.cpf_cnpj) : prev.cnpj,
-      rg: extracted.rg || prev.rg,
-      dataNascimento: extracted.birth_date ? maskDate(extracted.birth_date) : prev.dataNascimento,
-      email: extracted.email || prev.email,
-      telefone: extracted.phone ? maskPhone(extracted.phone) : prev.telefone,
-      logradouro: extracted.logradouro || prev.logradouro,
-      numero: extracted.numero || prev.numero,
-      bairro: extracted.bairro || prev.bairro,
-      cidade: extracted.cidade || prev.cidade,
-      uf: extracted.uf || prev.uf,
-      cep: extracted.cep ? maskCEP(extracted.cep) : prev.cep,
-      complemento: extracted.complemento || prev.complemento,
+      nome: extracted.name?.trim() && targetType === "pf" ? extracted.name.trim() : prev.nome,
+      razaoSocial:
+        extracted.name?.trim() && targetType === "pj" ? extracted.name.trim() : prev.razaoSocial,
+      cpf:
+        extracted.cpf_cnpj?.trim() && targetType === "pf"
+          ? maskCPF(extracted.cpf_cnpj.trim())
+          : prev.cpf,
+      cnpj:
+        extracted.cpf_cnpj?.trim() && targetType === "pj"
+          ? maskCNPJ(extracted.cpf_cnpj.trim())
+          : prev.cnpj,
+      rg: extracted.rg?.trim() || prev.rg,
+      dataNascimento: extracted.birth_date?.trim()
+        ? maskDate(extracted.birth_date.trim())
+        : prev.dataNascimento,
+      email: extracted.email?.trim() || prev.email,
+      telefone: extracted.phone?.trim() ? maskPhone(extracted.phone.trim()) : prev.telefone,
+      logradouro: extracted.logradouro?.trim() || prev.logradouro,
+      numero: extracted.numero?.trim() || prev.numero,
+      bairro: extracted.bairro?.trim() || prev.bairro,
+      cidade: extracted.cidade?.trim() || prev.cidade,
+      uf: extracted.uf?.trim() || prev.uf,
+      cep: extracted.cep?.trim() ? maskCEP(extracted.cep.trim()) : prev.cep,
+      complemento: extracted.complemento?.trim() || prev.complemento,
     }));
 
     setExtractedBadge(true);
@@ -337,13 +368,17 @@ function NovoClientePage() {
       try {
         const result = JSON.parse(reviewResultStr);
         if (result.targetEntity === "customer") {
-          const filesToAdd: UploadedCustomerFile[] = result.file ? [{
-            file: null as any,
-            id: result.file.id,
-            path: result.file.path,
-            name: result.file.name,
-            size: result.file.size,
-          }] : [];
+          const filesToAdd: UploadedCustomerFile[] = result.file
+            ? [
+                {
+                  file: null as any,
+                  id: result.file.id,
+                  path: result.file.path,
+                  name: result.file.name,
+                  size: result.file.size,
+                },
+              ]
+            : [];
 
           if (result.manual) {
             if (filesToAdd.length > 0) {
@@ -457,7 +492,7 @@ function NovoClientePage() {
           rg: formData.rg.trim() || null,
           notes: formData.nomeRepresentante.trim()
             ? `Representante: ${formData.nomeRepresentante.trim()}${formData.notes ? `\n${formData.notes}` : ""}`
-            : (formData.notes.trim() || null),
+            : formData.notes.trim() || null,
         })
         .select()
         .single();
@@ -484,7 +519,9 @@ function NovoClientePage() {
 
       // 5. Registra log de atividade
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (user) {
           await supabase.from("activity_logs").insert({
             company_id: companyId,
@@ -582,9 +619,7 @@ function NovoClientePage() {
             <FileUp className="h-6 w-6" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-[#0B1739]">
-              Preencher com documentos
-            </h2>
+            <h2 className="text-base font-bold text-[#0B1739]">Preencher com documentos</h2>
             <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
               Anexe os arquivos e revise os dados identificados antes de salvar.
             </p>
@@ -598,7 +633,7 @@ function NovoClientePage() {
               if (typeof window !== "undefined" && window.sessionStorage) {
                 window.sessionStorage.setItem(
                   "ndp_customer_form_draft",
-                  JSON.stringify({ formData, clientType, uploadedFiles })
+                  JSON.stringify({ formData, clientType, uploadedFiles }),
                 );
               }
               navigate({
@@ -606,7 +641,9 @@ function NovoClientePage() {
                 search: {
                   tipo: "cliente",
                   modo: "novo",
-                  returnTo: "/customers/novo" + (typeof window !== "undefined" ? window.location.search : ""),
+                  returnTo:
+                    "/customers/novo" +
+                    (typeof window !== "undefined" ? window.location.search : ""),
                 } as any,
               });
             }}
@@ -626,7 +663,10 @@ function NovoClientePage() {
         <div className="mb-6 p-3.5 rounded-xl bg-blue-50 border border-blue-200/80 flex items-center justify-between text-xs text-blue-900 animate-in fade-in duration-200">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-[#075BFF] shrink-0" />
-            <span>Confira todos os dados extraídos do documento. A leitura automática pode cometer erros. Corrija as informações antes de salvar.</span>
+            <span>
+              Confira todos os dados extraídos do documento. A leitura automática pode cometer
+              erros. Corrija as informações antes de salvar.
+            </span>
           </div>
           <button
             type="button"
@@ -639,12 +679,13 @@ function NovoClientePage() {
       )}
 
       {/* 4. FORMULÁRIO PRINCIPAL */}
-      <form onSubmit={handleSubmit} className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-8 shadow-xs space-y-8">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-8 shadow-xs space-y-8"
+      >
         {/* SEÇÃO: DADOS DO CLIENTE */}
         <div>
-          <h2 className="text-base font-bold text-[#0B1739] mb-4">
-            Dados do cliente
-          </h2>
+          <h2 className="text-base font-bold text-[#0B1739] mb-4">Dados do cliente</h2>
 
           {/* SELETOR: PESSOA FÍSICA / PESSOA JURÍDICA */}
           <div className="bg-slate-100 p-1 rounded-xl inline-flex gap-1 mb-6">
@@ -705,7 +746,10 @@ function NovoClientePage() {
                   <div className="mt-2 p-2.5 rounded-xl bg-blue-50/80 border border-blue-200/80 text-[11px] text-blue-900 flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 text-[#075BFF] shrink-0" />
                     <span>
-                      <strong>Possível homônimo:</strong> Já existe um cliente com este mesmo nome cadastrado ({homonymWarning.name}) com outro documento ({homonymWarning.cpf_cnpj}). O cadastro não foi bloqueado e pode prosseguir normalmente.
+                      <strong>Possível homônimo:</strong> Já existe um cliente com este mesmo nome
+                      cadastrado ({homonymWarning.name}) com outro documento (
+                      {homonymWarning.cpf_cnpj}). O cadastro não foi bloqueado e pode prosseguir
+                      normalmente.
                     </span>
                   </div>
                 )}
@@ -746,7 +790,9 @@ function NovoClientePage() {
                     <div className="mt-2 p-3 rounded-xl bg-amber-50 border border-amber-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-amber-900 animate-in fade-in duration-150">
                       <div className="flex items-center gap-2">
                         <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
-                        <span>Este cliente já está cadastrado: <strong>{duplicateCustomer.name}</strong></span>
+                        <span>
+                          Este cliente já está cadastrado: <strong>{duplicateCustomer.name}</strong>
+                        </span>
                       </div>
                       <button
                         type="button"
@@ -760,7 +806,10 @@ function NovoClientePage() {
                 </div>
 
                 <div>
-                  <label htmlFor="dataNascimento" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  <label
+                    htmlFor="dataNascimento"
+                    className="block text-xs font-semibold text-slate-700 mb-1.5"
+                  >
                     Data de nascimento
                   </label>
                   <div className="relative">
@@ -781,7 +830,10 @@ function NovoClientePage() {
               {/* Grid 2 colunas: E-mail + Telefone / WhatsApp */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="email" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  <label
+                    htmlFor="email"
+                    className="block text-xs font-semibold text-slate-700 mb-1.5"
+                  >
                     E-mail
                   </label>
                   <input
@@ -802,7 +854,10 @@ function NovoClientePage() {
                 </div>
 
                 <div>
-                  <label htmlFor="telefone" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  <label
+                    htmlFor="telefone"
+                    className="block text-xs font-semibold text-slate-700 mb-1.5"
+                  >
                     Telefone / WhatsApp
                   </label>
                   <input
@@ -843,7 +898,9 @@ function NovoClientePage() {
                   <div className="mt-2 p-2.5 rounded-xl bg-blue-50/80 border border-blue-200/80 text-[11px] text-blue-900 flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 text-[#075BFF] shrink-0" />
                     <span>
-                      <strong>Possível homônimo:</strong> Já existe um cadastro com esta razão social ({homonymWarning.name}) com outro CNPJ ({homonymWarning.cpf_cnpj}). O cadastro não foi bloqueado e pode prosseguir normalmente.
+                      <strong>Possível homônimo:</strong> Já existe um cadastro com esta razão
+                      social ({homonymWarning.name}) com outro CNPJ ({homonymWarning.cpf_cnpj}). O
+                      cadastro não foi bloqueado e pode prosseguir normalmente.
                     </span>
                   </div>
                 )}
@@ -896,7 +953,9 @@ function NovoClientePage() {
                     <div className="mt-2 p-3 rounded-xl bg-amber-50 border border-amber-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-amber-900 animate-in fade-in duration-150">
                       <div className="flex items-center gap-2">
                         <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
-                        <span>Este cliente já está cadastrado: <strong>{duplicateCustomer.name}</strong></span>
+                        <span>
+                          Este cliente já está cadastrado: <strong>{duplicateCustomer.name}</strong>
+                        </span>
                       </div>
                       <button
                         type="button"
@@ -966,18 +1025,14 @@ function NovoClientePage() {
 
         {/* SEÇÃO: ENDEREÇO */}
         <div className="pt-4 border-t border-slate-100">
-          <h2 className="text-base font-bold text-[#0B1739] mb-4">
-            Endereço
-          </h2>
+          <h2 className="text-base font-bold text-[#0B1739] mb-4">Endereço</h2>
 
           <div className="space-y-4">
             {/* Grid 3 colunas: CEP + Cidade + UF */}
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
               {/* CEP */}
               <div className="sm:col-span-4">
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  CEP
-                </label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">CEP</label>
                 <div className="relative">
                   <input
                     type="text"
@@ -995,9 +1050,7 @@ function NovoClientePage() {
 
               {/* Cidade */}
               <div className="sm:col-span-5">
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Cidade
-                </label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Cidade</label>
                 <input
                   type="text"
                   value={formData.cidade}
@@ -1009,9 +1062,7 @@ function NovoClientePage() {
 
               {/* UF */}
               <div className="sm:col-span-3">
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  UF
-                </label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">UF</label>
                 <div className="relative">
                   <select
                     value={formData.uf}
@@ -1046,9 +1097,7 @@ function NovoClientePage() {
               </div>
 
               <div className="sm:col-span-3">
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Número
-                </label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Número</label>
                 <input
                   type="text"
                   value={formData.numero}
@@ -1062,9 +1111,7 @@ function NovoClientePage() {
             {/* Grid 2 colunas: Bairro + Complemento */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Bairro
-                </label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Bairro</label>
                 <input
                   type="text"
                   value={formData.bairro}
@@ -1135,8 +1182,6 @@ function NovoClientePage() {
           </div>
         </div>
       </form>
-
-
 
       {/* CONFIRMAÇÃO DE SAÍDA COM DADOS NÃO SALVOS */}
       <ConfirmDialog

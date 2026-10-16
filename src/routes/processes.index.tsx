@@ -1,14 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { 
-  Search, 
-  User, 
-  ArrowRight, 
-  ChevronDown, 
-  Loader2, 
-  AlertCircle, 
+import {
+  Search,
+  User,
+  ArrowRight,
+  ChevronDown,
+  Loader2,
+  AlertCircle,
   X,
   Building2,
-  FolderOpen
+  FolderOpen,
 } from "lucide-react";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -17,7 +17,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/processes/")({
-  validateSearch: (search: Record<string, unknown>): {
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): {
     tab?: "clients" | "vessels";
     q?: string;
     sort?: "asc" | "desc";
@@ -38,9 +40,9 @@ export const Route = createFileRoute("/processes/")({
 // Ícone náutico estilizado oficial do NavalDocs Pro
 function NauticalBoatIcon({ className = "w-6 h-6 text-[#0B1739]" }: { className?: string }) {
   return (
-    <svg 
-      viewBox="0 0 48 32" 
-      fill="none" 
+    <svg
+      viewBox="0 0 48 32"
+      fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
       stroke="currentColor"
@@ -65,8 +67,12 @@ function ProcessesMainPage() {
 
   // Estados de navegação e filtros
   const [activeTab, setActiveTab] = useState<"clients" | "vessels">(searchParams.tab || "clients");
-  const [clientSearch, setClientSearch] = useState(searchParams.tab === "clients" ? (searchParams.q || "") : "");
-  const [vesselSearch, setVesselSearch] = useState(searchParams.tab === "vessels" ? (searchParams.q || "") : "");
+  const [clientSearch, setClientSearch] = useState(
+    searchParams.tab === "clients" ? searchParams.q || "" : "",
+  );
+  const [vesselSearch, setVesselSearch] = useState(
+    searchParams.tab === "vessels" ? searchParams.q || "" : "",
+  );
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">(searchParams.sort || "asc");
 
   // Dados do backend
@@ -75,21 +81,26 @@ function ProcessesMainPage() {
   const [processes, setProcesses] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRetrying, setIsRetrying] = useState(false);
-  const [errorType, setErrorType] = useState<"none" | "no_company" | "permission" | "temporary">("none");
+  const [errorType, setErrorType] = useState<"none" | "no_company" | "permission" | "temporary">(
+    "none",
+  );
   const [errorMessage, setErrorMessage] = useState<string>("");
 
   // Sincronizar parâmetros na URL
-  const updateQueryParams = useCallback((newTab: "clients" | "vessels", query: string, sort: "asc" | "desc") => {
-    navigate({
-      to: "/processes",
-      search: {
-        tab: newTab,
-        q: query.trim() || undefined,
-        sort: sort !== "asc" ? sort : undefined,
-      },
-      replace: true,
-    });
-  }, [navigate]);
+  const updateQueryParams = useCallback(
+    (newTab: "clients" | "vessels", query: string, sort: "asc" | "desc") => {
+      navigate({
+        to: "/processes",
+        search: {
+          tab: newTab,
+          q: query.trim() || undefined,
+          sort: sort !== "asc" ? sort : undefined,
+        },
+        replace: true,
+      });
+    },
+    [navigate],
+  );
 
   // Carregar dados gerais do Supabase com tratamento robusto e resiliente
   const loadData = useCallback(async () => {
@@ -139,7 +150,7 @@ function ProcessesMainPage() {
       // 3. Carregar Processos da empresa
       const procPromise = supabase
         .from("processes")
-        .select("id, title, process_type, customer_id, vessel_id, status, created_at, company_id")
+        .select("id, title, process_type, customer_id, vessel_id, status, created_at, company_id, draft_data")
         .eq("company_id", activeCompanyId);
 
       const [custResult, vesResult, procResult] = await Promise.allSettled([
@@ -161,7 +172,10 @@ function ProcessesMainPage() {
             details: custResult.value.error.details,
             hint: custResult.value.error.hint,
           });
-          if (custResult.value.error.code === "42501" || custResult.value.error.code === "PGRST301") {
+          if (
+            custResult.value.error.code === "42501" ||
+            custResult.value.error.code === "PGRST301"
+          ) {
             setErrorType("permission");
             return;
           }
@@ -197,7 +211,10 @@ function ProcessesMainPage() {
             details: procResult.value.error.details,
             hint: procResult.value.error.hint,
           });
-          if (procResult.value.error.code === "42501" || procResult.value.error.code === "PGRST301") {
+          if (
+            procResult.value.error.code === "42501" ||
+            procResult.value.error.code === "PGRST301"
+          ) {
             setErrorType("permission");
             return;
           }
@@ -249,10 +266,14 @@ function ProcessesMainPage() {
     // Mapear cada cliente com contagem de embarcações vinculadas e contagem de serviços
     const mapped = customers.map((c) => {
       const clientName = c.name || "Cliente sem nome";
-      
-      // Contagem de processos/serviços deste cliente
+
+      // Contagem de processos/serviços deste cliente (considerando processos com múltiplos serviços)
       const clientProcesses = processes.filter((p) => p.customer_id === c.id);
-      const servicesCount = clientProcesses.length;
+      const servicesCount = clientProcesses.reduce((acc, p) => {
+        const dServices = (p.draft_data as any)?.services;
+        const count = Array.isArray(dServices) && dServices.length > 0 ? dServices.length : 1;
+        return acc + count;
+      }, 0);
 
       // Embarcações distintas vinculadas nos processos OU cadastradas no cliente
       const directVesselIds = vessels.filter((v) => v.customer_id === c.id).map((v) => v.id);
@@ -305,10 +326,16 @@ function ProcessesMainPage() {
       const categoryLabel = v.category || "Não informada";
 
       // Proprietário / Cliente atual
-      const currentCustomer = v.customer?.name || (v.customer_id ? "Cliente vinculado" : "Vínculo pendente");
+      const currentCustomer =
+        v.customer?.name || (v.customer_id ? "Cliente vinculado" : "Vínculo pendente");
 
-      // Contagem de serviços vinculados a esta embarcação
-      const servicesCount = processes.filter((p) => p.vessel_id === v.id).length;
+      // Contagem de serviços vinculados a esta embarcação (considerando processos com múltiplos serviços)
+      const vesselProcesses = processes.filter((p) => p.vessel_id === v.id);
+      const servicesCount = vesselProcesses.reduce((acc, p) => {
+        const dServices = (p.draft_data as any)?.services;
+        const count = Array.isArray(dServices) && dServices.length > 0 ? dServices.length : 1;
+        return acc + count;
+      }, 0);
 
       return {
         id: v.id,
@@ -382,7 +409,8 @@ function ProcessesMainPage() {
           Seu usuário ainda não está vinculado a uma empresa.
         </h2>
         <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
-          Para visualizar ou emitir processos náuticos, você precisa estar associado a uma empresa cadastrada no NavalDocs Pro.
+          Para visualizar ou emitir processos náuticos, você precisa estar associado a uma empresa
+          cadastrada no NavalDocs Pro.
         </p>
         <div className="pt-2 flex justify-center gap-3">
           <Link
@@ -407,7 +435,8 @@ function ProcessesMainPage() {
           Você não possui permissão para consultar os processos desta empresa.
         </h2>
         <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
-          Seu perfil de acesso atual não possui privilégios suficientes para listar os processos e clientes desta organização.
+          Seu perfil de acesso atual não possui privilégios suficientes para listar os processos e
+          clientes desta organização.
         </p>
         <div className="pt-2">
           <button
@@ -435,7 +464,8 @@ function ProcessesMainPage() {
           Não foi possível carregar os processos agora.
         </h2>
         <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
-          Ocorreu uma instabilidade na conexão com o servidor. Verifique sua conexão e tente novamente.
+          Ocorreu uma instabilidade na conexão com o servidor. Verifique sua conexão e tente
+          novamente.
         </p>
         <div className="pt-2">
           <button
@@ -456,9 +486,7 @@ function ProcessesMainPage() {
     <div className="max-w-6xl mx-auto py-2 sm:py-6 px-2 sm:px-4 space-y-6">
       {/* 1. CABEÇALHO DA PÁGINA */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-[#0B1739] tracking-tight">
-          Processos
-        </h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-[#0B1739] tracking-tight">Processos</h1>
         <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
           Encontre os serviços pelo cliente ou pela embarcação.
         </p>
@@ -488,12 +516,8 @@ function ProcessesMainPage() {
             <User className="h-6 w-6" />
           </div>
           <div className="min-w-0">
-            <h2 className="text-base sm:text-lg font-bold text-[#0B1739]">
-              Clientes
-            </h2>
-            <p className="text-xs text-slate-500 mt-0.5 truncate">
-              Buscar pelo nome do cliente
-            </p>
+            <h2 className="text-base sm:text-lg font-bold text-[#0B1739]">Clientes</h2>
+            <p className="text-xs text-slate-500 mt-0.5 truncate">Buscar pelo nome do cliente</p>
           </div>
         </button>
 
@@ -519,12 +543,8 @@ function ProcessesMainPage() {
             <NauticalBoatIcon className="h-6 w-6" />
           </div>
           <div className="min-w-0">
-            <h2 className="text-base sm:text-lg font-bold text-[#0B1739]">
-              Embarcações
-            </h2>
-            <p className="text-xs text-slate-500 mt-0.5 truncate">
-              Buscar pelo nome da embarcação
-            </p>
+            <h2 className="text-base sm:text-lg font-bold text-[#0B1739]">Embarcações</h2>
+            <p className="text-xs text-slate-500 mt-0.5 truncate">Buscar pelo nome da embarcação</p>
           </div>
         </button>
       </div>
@@ -538,7 +558,9 @@ function ProcessesMainPage() {
             type="text"
             value={activeTab === "clients" ? clientSearch : vesselSearch}
             onChange={(e) => handleSearchInput(e.target.value)}
-            placeholder={activeTab === "clients" ? "Pesquisar cliente..." : "Pesquisar embarcação..."}
+            placeholder={
+              activeTab === "clients" ? "Pesquisar cliente..." : "Pesquisar embarcação..."
+            }
             className="w-full pl-10 pr-9 py-2 rounded-xl text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF] transition-all"
           />
           {(activeTab === "clients" ? clientSearch : vesselSearch) && (
@@ -595,8 +617,8 @@ function ProcessesMainPage() {
                 <User className="h-6 w-6" />
               </div>
               <p className="font-bold text-slate-800 text-sm">
-                {clientSearch 
-                  ? "Nenhum cliente encontrado com os termos pesquisados" 
+                {clientSearch
+                  ? "Nenhum cliente encontrado com os termos pesquisados"
                   : "Nenhum processo cadastrado nesta empresa."}
               </p>
               <p className="text-xs text-slate-400 max-w-sm mx-auto">
@@ -634,33 +656,35 @@ function ProcessesMainPage() {
           ) : (
             <div className="divide-y divide-slate-100">
               {clientsList.map((c) => {
-                const vesselText = c.vesselsCount === 1 ? "1 embarcação" : `${c.vesselsCount} embarcações`;
-                const serviceText = c.servicesCount === 1 ? "1 serviço" : `${c.servicesCount} serviços`;
+                const vesselText =
+                  c.vesselsCount === 1 ? "1 embarcação" : `${c.vesselsCount} embarcações`;
+                const serviceText =
+                  c.servicesCount === 1 ? "1 serviço" : `${c.servicesCount} serviços`;
 
                 return (
-                  <div 
-                    key={c.id} 
+                  <div
+                    key={c.id}
                     className="p-4 sm:px-6 sm:py-4 grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-4 items-center hover:bg-slate-50/40 transition-colors"
                   >
                     {/* Coluna 1: Cliente (Nome e Tipo) */}
                     <div className="md:col-span-5 min-w-0">
-                      <p className="text-sm font-bold text-[#0B1739] truncate">
-                        {c.name}
-                      </p>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        {c.personTypeLabel}
-                      </p>
+                      <p className="text-sm font-bold text-[#0B1739] truncate">{c.name}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">{c.personTypeLabel}</p>
                     </div>
 
                     {/* Coluna 2: Embarcações Vinculadas */}
                     <div className="md:col-span-3 text-xs text-slate-600 flex items-center justify-between md:block">
-                      <span className="md:hidden text-[11px] font-semibold text-slate-400">Embarcações:</span>
+                      <span className="md:hidden text-[11px] font-semibold text-slate-400">
+                        Embarcações:
+                      </span>
                       <span className="font-medium text-slate-700">{vesselText}</span>
                     </div>
 
                     {/* Coluna 3: Serviços */}
                     <div className="md:col-span-2 text-xs text-slate-600 flex items-center justify-between md:block">
-                      <span className="md:hidden text-[11px] font-semibold text-slate-400">Serviços:</span>
+                      <span className="md:hidden text-[11px] font-semibold text-slate-400">
+                        Serviços:
+                      </span>
                       <span className="font-medium text-slate-700">{serviceText}</span>
                     </div>
 
@@ -685,13 +709,11 @@ function ProcessesMainPage() {
           {/* Rodapé da Tabela de Clientes */}
           <div className="px-5 py-3.5 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-400">
             <span>
-              {clientsList.length === 1 
-                ? "1 cliente encontrado" 
+              {clientsList.length === 1
+                ? "1 cliente encontrado"
                 : `${clientsList.length} clientes encontrados`}
             </span>
-            <span>
-              Selecione um cliente para acessar suas embarcações e serviços.
-            </span>
+            <span>Selecione um cliente para acessar suas embarcações e serviços.</span>
           </div>
         </div>
       ) : (
@@ -715,8 +737,8 @@ function ProcessesMainPage() {
                 <NauticalBoatIcon className="h-6 w-6" />
               </div>
               <p className="font-bold text-slate-800 text-sm">
-                {vesselSearch 
-                  ? "Nenhuma embarcação encontrada com os termos pesquisados" 
+                {vesselSearch
+                  ? "Nenhuma embarcação encontrada com os termos pesquisados"
                   : "Nenhum processo cadastrado nesta empresa."}
               </p>
               <p className="text-xs text-slate-400 max-w-sm mx-auto">
@@ -754,38 +776,43 @@ function ProcessesMainPage() {
           ) : (
             <div className="divide-y divide-slate-100">
               {vesselsList.map((v) => {
-                const serviceText = v.servicesCount === 1 ? "1 serviço" : `${v.servicesCount} serviços`;
+                const serviceText =
+                  v.servicesCount === 1 ? "1 serviço" : `${v.servicesCount} serviços`;
 
                 return (
-                  <div 
-                    key={v.id} 
+                  <div
+                    key={v.id}
                     className="p-4 sm:px-6 sm:py-4 grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-4 items-center hover:bg-slate-50/40 transition-colors"
                   >
                     {/* Coluna 1: Embarcação (Nome e Inscrição) */}
                     <div className="md:col-span-4 min-w-0">
-                      <p className="text-sm font-bold text-[#0B1739] truncate">
-                        {v.name}
-                      </p>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        {v.registrationNumber}
-                      </p>
+                      <p className="text-sm font-bold text-[#0B1739] truncate">{v.name}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">{v.registrationNumber}</p>
                     </div>
 
                     {/* Coluna 2: Cliente Atual */}
                     <div className="md:col-span-3 text-xs text-slate-600 flex items-center justify-between md:block">
-                      <span className="md:hidden text-[11px] font-semibold text-slate-400">Cliente atual:</span>
-                      <span className="truncate block font-medium text-slate-700">{v.customerName}</span>
+                      <span className="md:hidden text-[11px] font-semibold text-slate-400">
+                        Cliente atual:
+                      </span>
+                      <span className="truncate block font-medium text-slate-700">
+                        {v.customerName}
+                      </span>
                     </div>
 
                     {/* Coluna 3: Categoria */}
                     <div className="md:col-span-2 text-xs text-slate-600 flex items-center justify-between md:block">
-                      <span className="md:hidden text-[11px] font-semibold text-slate-400">Categoria:</span>
+                      <span className="md:hidden text-[11px] font-semibold text-slate-400">
+                        Categoria:
+                      </span>
                       <span className="truncate block">{v.category}</span>
                     </div>
 
                     {/* Coluna 4: Serviços */}
                     <div className="md:col-span-1 text-xs text-slate-600 flex items-center justify-between md:block">
-                      <span className="md:hidden text-[11px] font-semibold text-slate-400">Serviços:</span>
+                      <span className="md:hidden text-[11px] font-semibold text-slate-400">
+                        Serviços:
+                      </span>
                       <span className="font-medium text-slate-700">{serviceText}</span>
                     </div>
 
@@ -810,13 +837,11 @@ function ProcessesMainPage() {
           {/* Rodapé da Tabela de Embarcações */}
           <div className="px-5 py-3.5 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-400">
             <span>
-              {vesselsList.length === 1 
-                ? "1 embarcação encontrada" 
+              {vesselsList.length === 1
+                ? "1 embarcação encontrada"
                 : `${vesselsList.length} embarcações encontradas`}
             </span>
-            <span>
-              Selecione uma embarcação para acessar seus serviços.
-            </span>
+            <span>Selecione uma embarcação para acessar seus serviços.</span>
           </div>
         </div>
       )}

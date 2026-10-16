@@ -1,15 +1,15 @@
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DashboardLayout } from "@/routes/dashboard";
-import { 
-  ArrowLeft, 
-  Paperclip, 
-  ChevronDown, 
+import {
+  ArrowLeft,
+  Paperclip,
+  ChevronDown,
   ChevronUp,
-  Loader2, 
-  FileUp, 
-  Sparkles, 
-  AlertCircle, 
+  Loader2,
+  FileUp,
+  Sparkles,
+  AlertCircle,
   AlertTriangle,
   CheckCircle2,
   Ship,
@@ -17,22 +17,31 @@ import {
   Plus,
   Search,
   Check,
-  X
+  X,
 } from "lucide-react";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import type { 
-  ExtractedVesselData, 
-  UploadedVesselFile 
+import type {
+  ExtractedVesselData,
+  UploadedVesselFile,
 } from "@/components/vessels/VesselDocumentUploadModal";
 import { QuickCustomerModal } from "@/components/customers/QuickCustomerModal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/vessels/novo")({
-  validateSearch: (search: Record<string, unknown>): { customerId?: string; from?: string; category?: string; services?: string } => ({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { customerId?: string; from?: string; category?: string; services?: string } => ({
     customerId: (search.customerId as string) || undefined,
     from: (search.from as string) || undefined,
     category: (search.category as string) || undefined,
@@ -90,7 +99,8 @@ function NovaEmbarcacaoPage() {
 
   // Contexto de retorno aos Serviços
   const fromServicos = search.from === "servicos";
-  const returnCategory = (search.category as "profissional" | "esporte_recreio") || "esporte_recreio";
+  const returnCategory =
+    (search.category as "profissional" | "esporte_recreio") || "esporte_recreio";
   const returnServices = search.services;
 
   // Lista de clientes da empresa
@@ -144,7 +154,11 @@ function NovaEmbarcacaoPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const [duplicateVessel, setDuplicateVessel] = useState<{ id: string; name: string; registration_number: string } | null>(null);
+  const [duplicateVessel, setDuplicateVessel] = useState<{
+    id: string;
+    name: string;
+    registration_number: string;
+  } | null>(null);
 
   // Carrega clientes da empresa
   useEffect(() => {
@@ -178,7 +192,10 @@ function NovaEmbarcacaoPage() {
   // Fecha dropdown de cliente ao clicar fora
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (customerDropdownRef.current && !customerDropdownRef.current.contains(event.target as Node)) {
+      if (
+        customerDropdownRef.current &&
+        !customerDropdownRef.current.contains(event.target as Node)
+      ) {
         setIsCustomerDropdownOpen(false);
       }
     }
@@ -198,7 +215,7 @@ function NovaEmbarcacaoPage() {
     return customers.filter(
       (c) =>
         c.name?.toLowerCase().includes(query) ||
-        c.cpf_cnpj?.replace(/\D/g, "").includes(query.replace(/\D/g, ""))
+        c.cpf_cnpj?.replace(/\D/g, "").includes(query.replace(/\D/g, "")),
     );
   }, [customers, customerSearchQuery]);
 
@@ -209,7 +226,7 @@ function NovaEmbarcacaoPage() {
       formData.registration_number ||
       formData.construction_year ||
       formData.length ||
-      selectedCustomerId
+      selectedCustomerId,
     );
   }, [formData, selectedCustomerId]);
 
@@ -262,7 +279,7 @@ function NovaEmbarcacaoPage() {
 
       if (!docOwner.includes(currentClient) && !currentClient.includes(docOwner)) {
         setOwnerDivergenceWarning(
-          `Atenção: O proprietário indicado no documento (${extracted.identified_owner_name}) difere do cliente selecionado (${selectedCustomer.name}). Verifique se trata-se de uma transferência de propriedade.`
+          `Atenção: O proprietário indicado no documento (${extracted.identified_owner_name}) difere do cliente selecionado (${selectedCustomer.name}). Verifique se trata-se de uma transferência de propriedade.`,
         );
       } else {
         setOwnerDivergenceWarning(null);
@@ -271,26 +288,26 @@ function NovaEmbarcacaoPage() {
 
     setFormData((prev) => ({
       ...prev,
-      name: extracted.name || prev.name,
-      registration_number: extracted.registration_number || prev.registration_number,
-      vessel_type: extracted.vessel_type || prev.vessel_type,
-      category: extracted.category || prev.category,
-      construction_year: extracted.construction_year || prev.construction_year,
-      hull_material: extracted.hull_material || prev.hull_material,
-      length: extracted.length || prev.length,
-      boca: extracted.boca || prev.boca,
-      pontal: extracted.pontal || prev.pontal,
-      hull_identifier: extracted.hull_identifier || prev.hull_identifier,
-      gross_tonnage: extracted.gross_tonnage || prev.gross_tonnage,
-      manufacturer: extracted.manufacturer || prev.manufacturer,
-      model: extracted.model || prev.model,
-      engine_power: extracted.engine_power || prev.engine_power,
-      engine_serial_number: extracted.engine_serial_number || prev.engine_serial_number,
-      engine_brand: extracted.engine_brand || prev.engine_brand,
-      engine_count: extracted.engine_count || prev.engine_count,
-      capacity: extracted.capacity || prev.capacity,
-      port_registration: extracted.port_registration || prev.port_registration,
-      navigation_area: extracted.navigation_area || prev.navigation_area,
+      name: extracted.name?.trim() || prev.name,
+      registration_number: extracted.registration_number?.trim() || prev.registration_number,
+      vessel_type: extracted.vessel_type?.trim() || prev.vessel_type,
+      category: extracted.category?.trim() || prev.category,
+      construction_year: extracted.construction_year?.trim() || prev.construction_year,
+      hull_material: extracted.hull_material?.trim() || prev.hull_material,
+      length: extracted.length?.trim() || prev.length,
+      boca: extracted.boca?.trim() || prev.boca,
+      pontal: extracted.pontal?.trim() || prev.pontal,
+      hull_identifier: extracted.hull_identifier?.trim() || prev.hull_identifier,
+      gross_tonnage: extracted.gross_tonnage?.trim() || prev.gross_tonnage,
+      manufacturer: extracted.manufacturer?.trim() || prev.manufacturer,
+      model: extracted.model?.trim() || prev.model,
+      engine_power: extracted.engine_power?.trim() || prev.engine_power,
+      engine_serial_number: extracted.engine_serial_number?.trim() || prev.engine_serial_number,
+      engine_brand: extracted.engine_brand?.trim() || prev.engine_brand,
+      engine_count: extracted.engine_count?.trim() || prev.engine_count,
+      capacity: extracted.capacity?.trim() || prev.capacity,
+      port_registration: extracted.port_registration?.trim() || prev.port_registration,
+      navigation_area: extracted.navigation_area?.trim() || prev.navigation_area,
     }));
 
     setExtractedBadge(true);
@@ -320,13 +337,17 @@ function NovaEmbarcacaoPage() {
       try {
         const result = JSON.parse(reviewResultStr);
         if (result.targetEntity === "vessel") {
-          const filesToAdd: UploadedVesselFile[] = result.file ? [{
-            file: null as any,
-            id: result.file.id,
-            path: result.file.path,
-            name: result.file.name,
-            size: result.file.size,
-          }] : [];
+          const filesToAdd: UploadedVesselFile[] = result.file
+            ? [
+                {
+                  file: null as any,
+                  id: result.file.id,
+                  path: result.file.path,
+                  name: result.file.name,
+                  size: result.file.size,
+                },
+              ]
+            : [];
 
           if (result.manual) {
             if (filesToAdd.length > 0) {
@@ -403,7 +424,9 @@ function NovaEmbarcacaoPage() {
       const normalizedBoca = parseDecimal(formData.boca);
       const normalizedPontal = parseDecimal(formData.pontal);
       const normalizedCapacity = formData.capacity ? parseInt(formData.capacity, 10) || null : null;
-      const normalizedYear = formData.construction_year ? parseInt(formData.construction_year, 10) || null : null;
+      const normalizedYear = formData.construction_year
+        ? parseInt(formData.construction_year, 10) || null
+        : null;
 
       // 3. Inserção no banco de dados
       const { data: newVessel, error: insertError } = await supabase
@@ -454,7 +477,9 @@ function NovaEmbarcacaoPage() {
 
       // 5. Registra log de atividade
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (user) {
           await supabase.from("activity_logs").insert({
             company_id: companyId,
@@ -524,11 +549,12 @@ function NovaEmbarcacaoPage() {
       </div>
 
       {/* 3. BLOCO 1: CLIENTE VINCULADO */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs mb-6" ref={customerDropdownRef}>
+      <div
+        className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs mb-6"
+        ref={customerDropdownRef}
+      >
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-bold text-[#0B1739]">
-            Cliente vinculado
-          </h2>
+          <h2 className="text-base font-bold text-[#0B1739]">Cliente vinculado</h2>
           <button
             type="button"
             id="btn-quick-customer"
@@ -544,7 +570,10 @@ function NovaEmbarcacaoPage() {
           <div className="mb-4 p-4 rounded-xl bg-amber-50 border border-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2 text-amber-800">
               <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
-              <span>Nenhum cliente cadastrado no seu escritório. Cadastre um cliente primeiro para vincular a embarcação.</span>
+              <span>
+                Nenhum cliente cadastrado no seu escritório. Cadastre um cliente primeiro para
+                vincular a embarcação.
+              </span>
             </div>
             <button
               type="button"
@@ -585,11 +614,15 @@ function NovaEmbarcacaoPage() {
                 </span>
               ) : (
                 <span className="text-slate-400">
-                  {isLoadingCustomers ? "Carregando clientes..." : "Selecione o cliente responsável"}
+                  {isLoadingCustomers
+                    ? "Carregando clientes..."
+                    : "Selecione o cliente responsável"}
                 </span>
               )}
             </div>
-            <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${isCustomerDropdownOpen ? "rotate-180" : ""}`} />
+            <ChevronDown
+              className={`h-4 w-4 text-slate-400 transition-transform ${isCustomerDropdownOpen ? "rotate-180" : ""}`}
+            />
           </button>
 
           {errors.customer && (
@@ -679,9 +712,7 @@ function NovaEmbarcacaoPage() {
             <FileUp className="h-6 w-6" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-[#0B1739]">
-              Preencher com documentos
-            </h2>
+            <h2 className="text-base font-bold text-[#0B1739]">Preencher com documentos</h2>
             <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
               Anexe os documentos da embarcação e revise os dados extraídos.
             </p>
@@ -695,7 +726,7 @@ function NovaEmbarcacaoPage() {
               if (typeof window !== "undefined" && window.sessionStorage) {
                 window.sessionStorage.setItem(
                   "ndp_vessel_form_draft",
-                  JSON.stringify({ formData, selectedCustomerId, uploadedFiles })
+                  JSON.stringify({ formData, selectedCustomerId, uploadedFiles }),
                 );
               }
               navigate({
@@ -703,7 +734,8 @@ function NovaEmbarcacaoPage() {
                 search: {
                   tipo: "embarcacao",
                   modo: "novo",
-                  returnTo: "/vessels/novo" + (typeof window !== "undefined" ? window.location.search : ""),
+                  returnTo:
+                    "/vessels/novo" + (typeof window !== "undefined" ? window.location.search : ""),
                 } as any,
               });
             }}
@@ -723,7 +755,10 @@ function NovaEmbarcacaoPage() {
         <div className="mb-6 p-3.5 rounded-xl bg-blue-50 border border-blue-200/80 flex items-center justify-between text-xs text-blue-900 animate-in fade-in duration-200">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-[#075BFF] shrink-0" />
-            <span>Confira todos os dados extraídos do documento. A leitura automática pode cometer erros. Corrija as informações antes de salvar.</span>
+            <span>
+              Confira todos os dados extraídos do documento. A leitura automática pode cometer
+              erros. Corrija as informações antes de salvar.
+            </span>
           </div>
           <button
             type="button"
@@ -747,11 +782,12 @@ function NovaEmbarcacaoPage() {
       )}
 
       {/* 5. BLOCO 3: FORMULÁRIO DADOS DA EMBARCAÇÃO */}
-      <form onSubmit={handleSubmit} className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-8 shadow-xs space-y-6">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-8 shadow-xs space-y-6"
+      >
         <div>
-          <h2 className="text-base font-bold text-[#0B1739] mb-4">
-            Dados da embarcação
-          </h2>
+          <h2 className="text-base font-bold text-[#0B1739] mb-4">Dados da embarcação</h2>
 
           <div className="space-y-4">
             {/* Grid 2 cols: Nome da embarcação + Categoria */}
@@ -788,7 +824,9 @@ function NovaEmbarcacaoPage() {
                     onChange={(e) => handleChange("category", e.target.value)}
                     className="w-full appearance-none px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF] transition-all pr-8"
                   >
-                    <option value="Embarcações de esporte e recreio">Embarcações de esporte e recreio</option>
+                    <option value="Embarcações de esporte e recreio">
+                      Embarcações de esporte e recreio
+                    </option>
                     <option value="Embarcações profissionais">Embarcações profissionais</option>
                   </select>
                   <ChevronDown className="absolute right-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none" />
@@ -843,7 +881,9 @@ function NovaEmbarcacaoPage() {
                 <input
                   type="text"
                   value={formData.construction_year}
-                  onChange={(e) => handleChange("construction_year", e.target.value.replace(/\D/g, "").slice(0, 4))}
+                  onChange={(e) =>
+                    handleChange("construction_year", e.target.value.replace(/\D/g, "").slice(0, 4))
+                  }
                   placeholder="AAAA"
                   maxLength={4}
                   className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF] transition-all"
@@ -918,7 +958,9 @@ function NovaEmbarcacaoPage() {
                 aria-expanded={isComplementaryOpen}
               >
                 <span>Dados complementares</span>
-                <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${isComplementaryOpen ? "rotate-180" : ""}`} />
+                <ChevronDown
+                  className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${isComplementaryOpen ? "rotate-180" : ""}`}
+                />
               </button>
 
               {isComplementaryOpen && (
@@ -1056,7 +1098,9 @@ function NovaEmbarcacaoPage() {
                       <input
                         type="text"
                         value={formData.engine_count}
-                        onChange={(e) => handleChange("engine_count", e.target.value.replace(/\D/g, ""))}
+                        onChange={(e) =>
+                          handleChange("engine_count", e.target.value.replace(/\D/g, ""))
+                        }
                         placeholder="Ex: 1 ou 2"
                         className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF]"
                       />
@@ -1072,7 +1116,9 @@ function NovaEmbarcacaoPage() {
                       <input
                         type="text"
                         value={formData.capacity}
-                        onChange={(e) => handleChange("capacity", e.target.value.replace(/\D/g, ""))}
+                        onChange={(e) =>
+                          handleChange("capacity", e.target.value.replace(/\D/g, ""))
+                        }
                         placeholder="Ex: 8"
                         className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF]"
                       />
@@ -1149,8 +1195,6 @@ function NovaEmbarcacaoPage() {
         }}
       />
 
-
-
       {/* CONFIRMAÇÃO DE SAÍDA COM DADOS NÃO SALVOS */}
       <ConfirmDialog
         open={showExitConfirm}
@@ -1178,7 +1222,10 @@ function NovaEmbarcacaoPage() {
       />
 
       {/* ALERTA DE EMBARCAÇÃO JÁ CADASTRADA (DUPLICIDADE) */}
-      <Dialog open={duplicateVessel !== null} onOpenChange={(open) => !open && setDuplicateVessel(null)}>
+      <Dialog
+        open={duplicateVessel !== null}
+        onOpenChange={(open) => !open && setDuplicateVessel(null)}
+      >
         <DialogContent className="max-w-md p-6 rounded-2xl bg-white border border-slate-150 shadow-xl">
           <DialogHeader>
             <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-2">
@@ -1188,7 +1235,9 @@ function NovaEmbarcacaoPage() {
               Inscrição já cadastrada
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-500 mt-1">
-              Já existe uma embarcação cadastrada com o número de inscrição ({duplicateVessel?.registration_number}) no seu espaço de trabalho: <strong>{duplicateVessel?.name}</strong>.
+              Já existe uma embarcação cadastrada com o número de inscrição (
+              {duplicateVessel?.registration_number}) no seu espaço de trabalho:{" "}
+              <strong>{duplicateVessel?.name}</strong>.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 mt-4">

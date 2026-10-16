@@ -26,27 +26,93 @@ export type ResolveInput = {
 
 export type ResolveResult =
   | { source: "company_default" | "global_default" | "manual"; templateId: string; version: number }
-  | { source: "error"; error: "template_not_resolved" | "template_not_published" | "cross_tenant" | "template_not_found"; message: string };
+  | {
+      source: "error";
+      error:
+        "template_not_resolved" | "template_not_published" | "cross_tenant" | "template_not_found";
+      message: string;
+    };
 
 export async function resolveTemplate(input: ResolveInput): Promise<ResolveResult> {
   const { companyId, category, manualTemplateId } = input;
 
-  // 3) Manual — se veio ID explícito, ele TEM precedência sobre padrões (a UI já escolheu por baixo).
-  //    Mas ainda validamos escopo + status.
+  // 3) Manual — se veio ID explícito ou código/slug, resolve para o registro real
+  //    Garante que slugs como "proc-representacao-naval" sejam buscados pela coluna `code`
+  //    e NUNCA causem erro de cast UUID no Postgres ("invalid input syntax for type uuid").
   if (manualTemplateId) {
-    const { data, error } = await supabase
-      .from("document_templates")
-      .select("id, company_id, status, version")
-      .eq("id", manualTemplateId)
-      .maybeSingle();
-    if (error || !data) return { source: "error", error: "template_not_found", message: `Template ${manualTemplateId} não encontrado.` };
-    if (data.company_id && data.company_id !== companyId) {
-      return { source: "error", error: "cross_tenant", message: "Template pertence a outra empresa." };
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      String(manualTemplateId).trim(),
+    );
+
+    let templateRecord: any = null;
+
+    if (isUuid) {
+      const { data, error } = await supabase
+        .from("document_templates")
+        .select("id, company_id, status, version")
+        .eq("id", manualTemplateId)
+        .maybeSingle();
+
+      if (error) {
+        console.warn("[templateResolver] Erro ao buscar template por UUID:", error);
+      }
+      templateRecord = data;
+    } else {
+      // Busca segura por código/slug de catálogo
+      const codeOrSlug = String(manualTemplateId).trim();
+      
+      // 1. Prioriza template específico da empresa
+      const { data: compData } = await supabase
+        .from("document_templates")
+        .select("id, company_id, status, version")
+        .eq("company_id", companyId)
+        .or(`code.eq."${codeOrSlug}",code.ilike."${codeOrSlug}"`)
+        .limit(1)
+        .maybeSingle();
+
+      if (compData) {
+        templateRecord = compData;
+      } else {
+        // 2. Busca template global correspondente ao código/slug
+        const { data: globalData } = await supabase
+          .from("document_templates")
+          .select("id, company_id, status, version")
+          .or("company_id.is.null,is_global.eq.true")
+          .or(`code.eq."${codeOrSlug}",code.ilike."${codeOrSlug}"`)
+          .limit(1)
+          .maybeSingle();
+
+        templateRecord = globalData;
+      }
     }
-    if (data.status !== "published") {
-      return { source: "error", error: "template_not_published", message: `Template está em status ${data.status}. Publique antes de gerar.` };
+
+    if (!templateRecord) {
+      return {
+        source: "error",
+        error: "template_not_found",
+        message: `Template "${manualTemplateId}" não encontrado no banco de dados.`,
+      };
     }
-    return { source: "manual", templateId: data.id, version: data.version ?? 1 };
+
+    if (templateRecord.company_id && templateRecord.company_id !== companyId) {
+      return {
+        source: "error",
+        error: "cross_tenant",
+        message: "Template pertence a outra empresa.",
+      };
+    }
+
+    // Permite templates ativos/publicados
+    const pubStatus = templateRecord.status || "published";
+    if (pubStatus !== "published" && pubStatus !== "active" && templateRecord.lifecycle_status !== "published") {
+      return {
+        source: "error",
+        error: "template_not_published",
+        message: `Template está em status ${pubStatus}. Publique antes de gerar.`,
+      };
+    }
+
+    return { source: "manual", templateId: templateRecord.id, version: templateRecord.version ?? 1 };
   }
 
   // 1) Padrão da empresa

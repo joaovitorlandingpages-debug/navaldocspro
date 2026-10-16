@@ -1,44 +1,53 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { 
-  ArrowLeft, 
-  User, 
-  Ship, 
-  Folder, 
-  Cog, 
-  FileText, 
-  Clock, 
-  CheckCircle2, 
-  MinusCircle, 
-  AlertTriangle, 
-  ExternalLink, 
-  Eye, 
-  Upload, 
-  Loader2, 
-  Save, 
-  FileCheck2, 
-  Info, 
-  Check, 
-  X, 
-  FileSpreadsheet, 
-  Building2, 
-  Home, 
+import {
+  ArrowLeft,
+  User,
+  Ship,
+  Folder,
+  Cog,
+  FileText,
+  Clock,
+  CheckCircle2,
+  MinusCircle,
+  AlertTriangle,
+  ExternalLink,
+  Eye,
+  Upload,
+  Loader2,
+  Save,
+  FileCheck2,
+  Info,
+  Check,
+  X,
+  FileSpreadsheet,
+  Building2,
+  Home,
   Calendar,
   ShieldAlert,
   ArrowRight,
   HelpCircle,
-  FileBox
+  FileBox,
 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DashboardLayout } from "@/routes/dashboard";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { getServiceDefinition } from "@/services/catalog/servicesCatalogValidation";
 
 export const Route = createFileRoute("/servicos/revisar")({
-  validateSearch: (search: Record<string, unknown>): {
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): {
     category?: "profissional" | "esporte_recreio";
     customerId?: string;
     vesselId?: string;
@@ -73,7 +82,9 @@ function RevisarProcessoPage() {
   const category = search.category || "esporte_recreio";
   const customerId = search.customerId;
   const vesselId = search.vesselId;
-  const rawServices = search.services ? search.services.split(",").filter(Boolean) : ["renovacao-tie"];
+  const rawServices = search.services
+    ? search.services.split(",").filter(Boolean)
+    : ["renovacao-tie"];
 
   // Estados de dados carregados
   const [loading, setLoading] = useState(true);
@@ -122,7 +133,12 @@ function RevisarProcessoPage() {
   const isJetSki = useMemo(() => {
     const typeStr = (vessel?.vessel_type || "").toLowerCase();
     const nameStr = (vessel?.name || "").toLowerCase();
-    return typeStr.includes("moto") || typeStr.includes("jet") || typeStr.includes("aquática") || nameStr.includes("jet");
+    return (
+      typeStr.includes("moto") ||
+      typeStr.includes("jet") ||
+      typeStr.includes("aquática") ||
+      nameStr.includes("jet")
+    );
   }, [vessel]);
 
   // Label da Categoria
@@ -147,11 +163,12 @@ function RevisarProcessoPage() {
     return rawServices.map((key) => {
       const def = getServiceDefinition(key);
       const isVal = def.status === "validated";
-      const svcCategoryLabel = category === "profissional"
-        ? "Embarcações profissionais"
-        : isJetSki
-        ? "Moto aquática"
-        : def.categoryDisplayName || "Esporte e recreio";
+      const svcCategoryLabel =
+        category === "profissional"
+          ? "Embarcações profissionais"
+          : isJetSki
+            ? "Moto aquática"
+            : def.categoryDisplayName || "Esporte e recreio";
 
       return {
         key,
@@ -205,9 +222,14 @@ function RevisarProcessoPage() {
     setIsDraftSaving(true);
     try {
       const primaryServiceTitle = parsedServices[0]?.title || "Serviço Náutico";
+      const otherCount = parsedServices.length - 1;
+      const serviceSummary =
+        otherCount > 0
+          ? `${primaryServiceTitle} (+${otherCount} serviço${otherCount > 1 ? "s" : ""})`
+          : primaryServiceTitle;
       const customerName = customer?.fantasy_name || customer?.name || "Cliente";
       const vesselName = vessel?.name || "Embarcação";
-      const processTitle = `${primaryServiceTitle} - ${vesselName} (${customerName})`;
+      const processTitle = `${serviceSummary} - ${vesselName} (${customerName})`;
 
       const { data: newProcess, error: procError } = await supabase
         .from("processes")
@@ -226,6 +248,7 @@ function RevisarProcessoPage() {
             services: rawServices,
             selected_services: rawServices,
             parsed_services: parsedServices,
+            services_count: rawServices.length,
             is_jet_ski: isJetSki,
             all_services_validated: allServicesValidated,
             created_by_user_id: user?.id,
@@ -283,9 +306,14 @@ function RevisarProcessoPage() {
     setIsSubmitting(true);
     try {
       const primaryServiceTitle = parsedServices[0]?.title || "Serviço Náutico";
+      const otherCount = parsedServices.length - 1;
+      const serviceSummary =
+        otherCount > 0
+          ? `${primaryServiceTitle} (+${otherCount} serviço${otherCount > 1 ? "s" : ""})`
+          : primaryServiceTitle;
       const customerName = customer?.fantasy_name || customer?.name || "Cliente";
       const vesselName = vessel?.name || "Embarcação";
-      const processTitle = `${primaryServiceTitle} - ${vesselName} (${customerName})`;
+      const processTitle = `${serviceSummary} - ${vesselName} (${customerName})`;
 
       const { data: newProcess, error: procError } = await supabase
         .from("processes")
@@ -304,6 +332,7 @@ function RevisarProcessoPage() {
             services: rawServices,
             selected_services: rawServices,
             parsed_services: parsedServices,
+            services_count: rawServices.length,
             is_jet_ski: isJetSki,
             all_services_validated: allServicesValidated,
             created_by_user_id: user?.id,
@@ -337,7 +366,6 @@ function RevisarProcessoPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24 font-sans text-slate-800">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
-        
         {/* ========================================================================= */}
         {/* 1. CABEÇALHO */}
         {/* ========================================================================= */}
@@ -379,7 +407,9 @@ function RevisarProcessoPage() {
               <User className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Cliente</span>
+              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+                Cliente
+              </span>
               <span className="text-sm font-bold text-[#0B1739] truncate block">
                 {customer?.fantasy_name || customer?.name || "Cliente não informado"}
               </span>
@@ -395,7 +425,9 @@ function RevisarProcessoPage() {
               <Ship className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Embarcação</span>
+              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+                Embarcação
+              </span>
               <span className="text-sm font-bold text-[#0B1739] truncate block">
                 {vessel?.name || "Embarcação não informada"}
               </span>
@@ -411,12 +443,15 @@ function RevisarProcessoPage() {
               <Folder className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Categoria</span>
+              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+                Categoria
+              </span>
               <span className="text-sm font-bold text-[#0B1739] truncate block">
                 {categoryDisplayName}
               </span>
               <span className="text-[11px] text-slate-400 block">
-                {rawServices.length} {rawServices.length === 1 ? "serviço selecionado" : "serviços selecionados"}
+                {rawServices.length}{" "}
+                {rawServices.length === 1 ? "serviço selecionado" : "serviços selecionados"}
               </span>
             </div>
           </div>
@@ -426,19 +461,15 @@ function RevisarProcessoPage() {
         {/* GRID DE REVISÃO */}
         {/* ========================================================================= */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
           {/* ======================================================================= */}
           {/* COLUNA ESQUERDA (7 COLUNAS): SERVIÇOS + ARQUIVOS E REQUISITOS */}
           {/* ======================================================================= */}
           <div className="lg:col-span-7 space-y-6">
-            
             {/* CARTÃO 1: SERVIÇOS SELECIONADOS */}
             <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-base font-bold text-[#0B1739]">
-                    Serviços selecionados
-                  </h2>
+                  <h2 className="text-base font-bold text-[#0B1739]">Serviços selecionados</h2>
                   <p className="text-xs text-slate-400 mt-0.5">
                     Relação de serviços incluídos nesta solicitação
                   </p>
@@ -450,7 +481,10 @@ function RevisarProcessoPage() {
 
               <div className="divide-y divide-slate-100">
                 {parsedServices.map((srv, idx) => (
-                  <div key={srv.key + idx} className="py-3.5 first:pt-1 last:pb-1 flex items-center justify-between gap-3">
+                  <div
+                    key={srv.key + idx}
+                    className="py-3.5 first:pt-1 last:pb-1 flex items-center justify-between gap-3"
+                  >
                     <div className="flex items-start gap-3 min-w-0">
                       <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#075BFF] flex items-center justify-center shrink-0 mt-0.5">
                         <Cog className="h-4 w-4" />
@@ -504,9 +538,7 @@ function RevisarProcessoPage() {
             <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-base font-bold text-[#0B1739]">
-                    Arquivos e requisitos
-                  </h2>
+                  <h2 className="text-base font-bold text-[#0B1739]">Arquivos e requisitos</h2>
                   <p className="text-xs text-slate-400 mt-0.5">
                     Balanço da documentação organizada até o momento
                   </p>
@@ -535,7 +567,9 @@ function RevisarProcessoPage() {
                 <div className="p-3.5 rounded-xl border border-emerald-100 bg-emerald-50/50 space-y-1">
                   <div className="flex items-center gap-1.5 text-emerald-700">
                     <CheckCircle2 className="h-4 w-4" />
-                    <span className="text-[11px] font-bold uppercase tracking-wider">Disponíveis</span>
+                    <span className="text-[11px] font-bold uppercase tracking-wider">
+                      Disponíveis
+                    </span>
                   </div>
                   <p className="text-lg font-bold text-emerald-900">2 arquivos</p>
                   <p className="text-[11px] text-emerald-700/80">RG/CNH e Comprovante</p>
@@ -545,7 +579,9 @@ function RevisarProcessoPage() {
                 <div className="p-3.5 rounded-xl border border-amber-100 bg-amber-50/50 space-y-1">
                   <div className="flex items-center gap-1.5 text-amber-700">
                     <AlertTriangle className="h-4 w-4" />
-                    <span className="text-[11px] font-bold uppercase tracking-wider">Pendências</span>
+                    <span className="text-[11px] font-bold uppercase tracking-wider">
+                      Pendências
+                    </span>
                   </div>
                   <p className="text-lg font-bold text-amber-900">1 documento</p>
                   <p className="text-[11px] text-amber-700/80">Documento atual do barco</p>
@@ -555,7 +591,9 @@ function RevisarProcessoPage() {
                 <div className="p-3.5 rounded-xl border border-blue-100 bg-blue-50/50 space-y-1">
                   <div className="flex items-center gap-1.5 text-[#075BFF]">
                     <FileSpreadsheet className="h-4 w-4" />
-                    <span className="text-[11px] font-bold uppercase tracking-wider">Formulários</span>
+                    <span className="text-[11px] font-bold uppercase tracking-wider">
+                      Formulários
+                    </span>
                   </div>
                   <p className="text-lg font-bold text-[#0B1739]">2 modelos</p>
                   <p className="text-[11px] text-blue-600/80">Requerimento e Procuração</p>
@@ -563,22 +601,19 @@ function RevisarProcessoPage() {
               </div>
 
               <p className="text-[11px] text-slate-400 pt-1">
-                Nota: Arquivo disponível não significa aprovação documental definitiva pela autoridade marítima.
+                Nota: Arquivo disponível não significa aprovação documental definitiva pela
+                autoridade marítima.
               </p>
             </div>
-
           </div>
 
           {/* ======================================================================= */}
           {/* COLUNA DIREITA (5 COLUNAS): RESUMO DO PROCESSO + SITUAÇÃO DOS REQUISITOS */}
           {/* ======================================================================= */}
           <div className="lg:col-span-5 space-y-6">
-            
             {/* CARTÃO 3: RESUMO DO PROCESSO */}
             <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-              <h2 className="text-base font-bold text-[#0B1739]">
-                Resumo do processo
-              </h2>
+              <h2 className="text-base font-bold text-[#0B1739]">Resumo do processo</h2>
 
               <div className="space-y-2.5 text-xs">
                 <div className="flex justify-between py-1.5 border-b border-slate-100">
@@ -618,9 +653,7 @@ function RevisarProcessoPage() {
 
                 <div className="flex justify-between py-1.5">
                   <span className="text-slate-500">Data da revisão:</span>
-                  <span className="font-medium text-slate-800">
-                    {reviewDateFormatted}
-                  </span>
+                  <span className="font-medium text-slate-800">{reviewDateFormatted}</span>
                 </div>
               </div>
             </div>
@@ -634,15 +667,14 @@ function RevisarProcessoPage() {
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold text-emerald-900">
-                        Requisitos conferidos
-                      </h3>
+                      <h3 className="text-sm font-bold text-emerald-900">Requisitos conferidos</h3>
                       <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md">
                         Oficial
                       </span>
                     </div>
                     <p className="text-xs text-emerald-800 leading-relaxed">
-                      Todos os serviços selecionados possuem base normativa validada e modelos oficiais conferidos perante a Capitania dos Portos (DPC / Marinha do Brasil).
+                      Todos os serviços selecionados possuem base normativa validada e modelos
+                      oficiais conferidos perante a Capitania dos Portos (DPC / Marinha do Brasil).
                     </p>
                   </div>
                 </div>
@@ -653,7 +685,8 @@ function RevisarProcessoPage() {
                     <span>Última conferência regulatória: Setembro de 2026</span>
                   </p>
                   <p className="text-[11px] text-emerald-700/90 leading-relaxed">
-                    Documentação necessária e formulários prontos para preenchimento, assinaturas e protocolo.
+                    Documentação necessária e formulários prontos para preenchimento, assinaturas e
+                    protocolo.
                   </p>
                 </div>
               </div>
@@ -673,24 +706,26 @@ function RevisarProcessoPage() {
                       </span>
                     </div>
                     <p className="text-xs text-[#B45309] leading-relaxed">
-                      Um ou mais serviços possuem requisitos técnicos ou minutas ainda sob conferência. A lista não é apresentada como definitiva ou oficial.
+                      Um ou mais serviços possuem requisitos técnicos ou minutas ainda sob
+                      conferência. A lista não é apresentada como definitiva ou oficial.
                     </p>
                   </div>
                 </div>
 
                 <div className="pt-2 pl-12 space-y-2 border-t border-amber-200/60">
                   <p className="text-[11px] text-[#B45309] leading-relaxed">
-                    <strong>Trabalho salvo como rascunho:</strong> Para proteger a segurança jurídica e operacional, o protocolo direto está bloqueado até a conferência técnica das exigências da Capitania.
+                    <strong>Trabalho salvo como rascunho:</strong> Para proteger a segurança
+                    jurídica e operacional, o protocolo direto está bloqueado até a conferência
+                    técnica das exigências da Capitania.
                   </p>
                   <p className="text-[11px] text-[#B45309]/80 leading-relaxed">
-                    Você pode salvar o rascunho e dar andamento ao upload prévio de documentos e triagem.
+                    Você pode salvar o rascunho e dar andamento ao upload prévio de documentos e
+                    triagem.
                   </p>
                 </div>
               </div>
             )}
-
           </div>
-
         </div>
 
         {/* ========================================================================= */}
@@ -736,7 +771,11 @@ function RevisarProcessoPage() {
               onClick={handleSaveDraft}
               className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
             >
-              {isDraftSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+              {isDraftSaving ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Save className="h-3.5 w-3.5" />
+              )}
               <span>Salvar processo como rascunho</span>
             </button>
 
@@ -762,7 +801,6 @@ function RevisarProcessoPage() {
             </button>
           </div>
         </div>
-
       </div>
 
       {/* ========================================================================= */}
@@ -806,7 +844,9 @@ function RevisarProcessoPage() {
             {/* Data e Fonte */}
             <div className="flex justify-between py-1.5 border-b border-slate-100">
               <span className="text-slate-500">Última conferência:</span>
-              <span className="font-semibold text-slate-800">{selectedServiceDetail?.validationDateFormatted || "Setembro de 2026"}</span>
+              <span className="font-semibold text-slate-800">
+                {selectedServiceDetail?.validationDateFormatted || "Setembro de 2026"}
+              </span>
             </div>
 
             <div className="py-2 border-b border-slate-100">
@@ -839,7 +879,8 @@ function RevisarProcessoPage() {
                 </p>
                 {selectedServiceDetail?.needsProfessionalReview && (
                   <p className="text-[10px] text-amber-800 font-medium pt-1">
-                    * Requer conferência ou emissão por profissional habilitado (Engenheiro Naval / CREA / Vistoriador).
+                    * Requer conferência ou emissão por profissional habilitado (Engenheiro Naval /
+                    CREA / Vistoriador).
                   </p>
                 )}
               </div>
@@ -847,7 +888,9 @@ function RevisarProcessoPage() {
 
             {/* Documentos necessários */}
             <div className="space-y-1.5 pt-1">
-              <span className="text-slate-700 font-bold block">Documentos necessários exigidos:</span>
+              <span className="text-slate-700 font-bold block">
+                Documentos necessários exigidos:
+              </span>
               <ul className="space-y-1">
                 {selectedServiceDetail?.requiredDocuments?.map((doc: string, dIdx: number) => (
                   <li key={dIdx} className="flex items-start gap-2 text-[11px] text-slate-600">
@@ -860,7 +903,9 @@ function RevisarProcessoPage() {
 
             {/* Documentos que o sistema gera */}
             <div className="space-y-1.5 pt-1">
-              <span className="text-slate-700 font-bold block">Documentos gerados pelo sistema:</span>
+              <span className="text-slate-700 font-bold block">
+                Documentos gerados pelo sistema:
+              </span>
               <ul className="space-y-1">
                 {selectedServiceDetail?.generatedDocuments?.map((doc: string, dIdx: number) => (
                   <li key={dIdx} className="flex items-start gap-2 text-[11px] text-slate-600">
@@ -883,7 +928,6 @@ function RevisarProcessoPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }

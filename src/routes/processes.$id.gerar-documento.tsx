@@ -1,26 +1,26 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { 
-  ArrowLeft, 
-  Search, 
-  User, 
-  Ship, 
-  Folder, 
-  Cog, 
-  FileText, 
-  Clock, 
-  CheckCircle2, 
-  AlertCircle, 
-  Info, 
-  Loader2, 
-  Download, 
-  ExternalLink, 
-  ShieldCheck, 
-  Building2, 
-  FileSpreadsheet, 
-  ChevronRight, 
-  Check, 
-  Sparkles, 
-  PenTool, 
+import {
+  ArrowLeft,
+  Search,
+  User,
+  Ship,
+  Folder,
+  Cog,
+  FileText,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  Info,
+  Loader2,
+  Download,
+  ExternalLink,
+  ShieldCheck,
+  Building2,
+  FileSpreadsheet,
+  ChevronRight,
+  Check,
+  Sparkles,
+  PenTool,
   RefreshCw,
   AlertTriangle,
   FileCheck2,
@@ -29,7 +29,10 @@ import {
   Upload,
   Paperclip,
   CheckSquare,
-  Square
+  Square,
+  Eye,
+  Edit,
+  XCircle,
 } from "lucide-react";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -39,11 +42,29 @@ import { supabase } from "@/integrations/supabase/client";
 import { uploadToBucket } from "@/lib/storage";
 import { buildBrandedDocumentPdf } from "@/services/brandedPdfBuilder";
 import { loadCompanyBranding } from "@/services/companyBranding";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { openStoredFile, downloadStoredFile } from "@/utils/file-preview";
+import {
+  CATALOG_TEMPLATES,
+  CatalogTemplateItem,
+  loadDatabaseTemplates,
+  resolveCatalogTemplate,
+  checkTemplateMissingRequirements,
+  ResolvedTemplateResult,
+} from "@/services/documents/templateCatalogResolver";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/processes/$id/gerar-documento")({
-  validateSearch: (search: Record<string, unknown>): {
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): {
     serviceKey?: string;
     templateId?: string;
     from?: string;
@@ -61,110 +82,9 @@ export const Route = createFileRoute("/processes/$id/gerar-documento")({
   ),
 });
 
-// Modelos Oficiais Cadastrados no Sistema por Categoria
-export interface DocumentTemplateItem {
-  id: string;
-  name: string;
-  code: string;
-  description: string;
-  category: "esporte_recreio" | "moto_aquatica" | "profissional" | "geral";
-  categoryLabel: string;
-  updatedAt: string;
-  status: "aprovado" | "em_revisao";
-  reviewReason?: string;
-  requiredFields: string[];
-  isMandatory: boolean;
-  officialSource: string;
-  validationDate: string;
-}
-
-export const SYSTEM_TEMPLATES: DocumentTemplateItem[] = [
-  {
-    id: "req-padrao-cpes",
-    name: "Requerimento Padrão do Interessado",
-    code: "REQ-001",
-    description: "Requerimento oficial de solicitação de serviços de registro e emissão de TIE/TIEM perante a Capitania dos Portos / Del / Agência.",
-    category: "esporte_recreio",
-    categoryLabel: "Esporte e recreio",
-    updatedAt: "15/09/2026",
-    status: "aprovado",
-    requiredFields: ["Nome do Cliente", "CPF/CNPJ", "Nome da Embarcação", "Inscrição", "Porto de Registro"],
-    isMandatory: true,
-    officialSource: "NORMAM-211/DPC, Anexo 2-A",
-    validationDate: "15/09/2026",
-  },
-  {
-    id: "proc-representacao-naval",
-    name: "Procuração Específica para Capitania dos Portos",
-    code: "PROC-NAV",
-    description: "Instrumento particular de procuração outorgando poderes ao despachante náutico para protocolo e acompanhamento do processo marítimo.",
-    category: "geral",
-    categoryLabel: "Geral",
-    updatedAt: "10/09/2026",
-    status: "aprovado",
-    requiredFields: ["Outorgante (Cliente)", "Outorgado (Responsável)", "Embarcação"],
-    isMandatory: true,
-    officialSource: "Código Civil Art. 653 c/c NORMAM-211/DPC",
-    validationDate: "10/09/2026",
-  },
-  {
-    id: "decl-residencia-naval",
-    name: "Declaração de Residência do Proprietário",
-    code: "DEC-RES",
-    description: "Declaração formal de domicílio sob as penas da lei, para atendimento aos requisitos das Normas da Autoridade Marítima.",
-    category: "geral",
-    categoryLabel: "Geral",
-    updatedAt: "20/08/2026",
-    status: "aprovado",
-    requiredFields: ["Nome do Cliente", "CPF", "Endereço Completo"],
-    isMandatory: false,
-    officialSource: "Lei Federal nº 7.115/1983",
-    validationDate: "20/08/2026",
-  },
-  {
-    id: "req-moto-aquatica",
-    name: "Requerimento Específico para Moto Aquática (Jet Ski)",
-    code: "REQ-JET",
-    description: "Formulário de inscrição, renovação ou transferência com parâmetros técnicos dedicados a motonáutica.",
-    category: "moto_aquatica",
-    categoryLabel: "Moto aquática",
-    updatedAt: "12/09/2026",
-    status: "aprovado",
-    requiredFields: ["Nome do Cliente", "Número do Casco / Chassi", "Marca / Modelo"],
-    isMandatory: true,
-    officialSource: "NORMAM-212/DPC, Anexo 3-B",
-    validationDate: "12/09/2026",
-  },
-  {
-    id: "decl-perda-extravio",
-    name: "Declaração de Perda / Extravio de TIE",
-    code: "DEC-PERD",
-    description: "Declaração formal para solicitação de 2ª via de documento de embarcação extraviado ou danificado.",
-    category: "geral",
-    categoryLabel: "Geral",
-    updatedAt: "05/09/2026",
-    status: "em_revisao",
-    reviewReason: "Modelo em revisão regulatória conforme atualização da NORMAM-211/DPC. Aguardando homologação.",
-    requiredFields: ["Nome do Cliente", "Embarcação", "Motivo"],
-    isMandatory: false,
-    officialSource: "NORMAM-211/DPC, Anexo 2-E",
-    validationDate: "05/09/2026",
-  },
-  {
-    id: "req-comercial-prof",
-    name: "Requerimento de Embarcação Profissional / Comercial",
-    code: "REQ-PROF",
-    description: "Requerimento de inscrição ou vistoria para embarcações de pesca, passageiros ou transporte comercial.",
-    category: "profissional",
-    categoryLabel: "Embarcações profissionais",
-    updatedAt: "01/09/2026",
-    status: "aprovado",
-    requiredFields: ["Razão Social / Nome", "CNPJ / CPF", "Arqueação Bruta", "Área de Navegação"],
-    isMandatory: true,
-    officialSource: "NORMAM-201/DPC, Anexo 2-A",
-    validationDate: "01/09/2026",
-  },
-];
+// Mantido para compatibilidade com outros módulos que importam SYSTEM_TEMPLATES
+export type DocumentTemplateItem = CatalogTemplateItem;
+export const SYSTEM_TEMPLATES: DocumentTemplateItem[] = CATALOG_TEMPLATES;
 
 function GerarDocumentoPage() {
   const { id } = Route.useParams();
@@ -180,10 +100,15 @@ function GerarDocumentoPage() {
   const [vessel, setVessel] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Estados dos Modelos
+  // Modelos do Banco de Dados e Documentos Gerados
+  const [dbTemplates, setDbTemplates] = useState<any[]>([]);
+  const [generatedDocsList, setGeneratedDocsList] = useState<any[]>([]);
+  const [isLoadingGeneratedDocs, setIsLoadingGeneratedDocs] = useState(false);
+
+  // Estados dos Modelos do Catálogo
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>(
-    searchParams.templateId || "req-padrao-cpes"
+    searchParams.templateId || "req-padrao-cpes",
   );
 
   // Funcionário Responsável
@@ -200,13 +125,15 @@ function GerarDocumentoPage() {
   });
 
   // Lista de Funcionários da Empresa (carregados do Lovable Cloud)
-  const [companyStaffList, setCompanyStaffList] = useState<{
-    id: string;
-    name: string;
-    role: string;
-    professional_registry?: string;
-    email?: string;
-  }[]>([]);
+  const [companyStaffList, setCompanyStaffList] = useState<
+    {
+      id: string;
+      name: string;
+      role: string;
+      professional_registry?: string;
+      email?: string;
+    }[]
+  >([]);
 
   const [companyData, setCompanyData] = useState<any | null>(null);
 
@@ -216,16 +143,48 @@ function GerarDocumentoPage() {
   const [quickStaffRole, setQuickStaffRole] = useState("Despachante Náutico");
   const [isSavingQuickStaff, setIsSavingQuickStaff] = useState(false);
 
-  // Estado de Geração
-  const [isGenerating, setIsGenerating] = useState(false);
+  // Modal para cadastro/edição rápida da embarcação (desbloqueio sem sair do fluxo)
+  const [showQuickVesselModal, setShowQuickVesselModal] = useState(false);
+  const [quickVesselName, setQuickVesselName] = useState("");
+  const [quickVesselReg, setQuickVesselReg] = useState("");
+  const [quickVesselType, setQuickVesselType] = useState("Lancha / Recreio");
+  const [isSavingQuickVessel, setIsSavingQuickVessel] = useState(false);
 
-  // Carregamento dos Dados do Processo e Funcionários
+  // Estado de Geração e Falhas Parciais
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationSummary, setGenerationSummary] = useState<{
+    successDocs: any[];
+    failedDocs: Array<{ tpl: CatalogTemplateItem; error: string }>;
+  } | null>(null);
+
+  // Carregar documentos gerados existentes para este processo
+  const loadExistingGeneratedDocs = useCallback(async () => {
+    if (!id || !companyId) return;
+    setIsLoadingGeneratedDocs(true);
+    try {
+      const { data, error } = await supabase
+        .from("generated_documents")
+        .select("*")
+        .eq("company_id", companyId)
+        .eq("process_id", id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setGeneratedDocsList(data || []);
+    } catch (err) {
+      console.error("Erro ao carregar documentos gerados:", err);
+    } finally {
+      setIsLoadingGeneratedDocs(false);
+    }
+  }, [companyId, id]);
+
+  // Carregamento dos Dados do Processo, Empresa, Modelos e Funcionários
   useEffect(() => {
     async function loadData() {
-      const isPreview = typeof window !== 'undefined' && (
-        window.location.search.includes('preview=true') ||
-        window.localStorage.getItem('preview_mode') === 'true'
-      );
+      const isPreview =
+        typeof window !== "undefined" &&
+        (window.location.search.includes("preview=true") ||
+          window.localStorage.getItem("preview_mode") === "true");
       if (!id || (!companyId && !isPreview)) return;
       setIsLoading(true);
 
@@ -234,11 +193,13 @@ function GerarDocumentoPage() {
         if (companyId) {
           const { data } = await supabase
             .from("processes")
-            .select(`
+            .select(
+              `
               *,
               customer:customers!processes_customer_id_fkey(id, name, cpf_cnpj, email, phone, address, city, state),
               vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, category, vessel_type, length, material)
-            `)
+            `,
+            )
             .eq("id", id)
             .eq("company_id", companyId)
             .maybeSingle();
@@ -246,10 +207,10 @@ function GerarDocumentoPage() {
         }
 
         if (!proc) {
-          const isPreview = typeof window !== 'undefined' && (
-            window.location.search.includes('preview=true') ||
-            window.localStorage.getItem('preview_mode') === 'true'
-          );
+          const isPreview =
+            typeof window !== "undefined" &&
+            (window.location.search.includes("preview=true") ||
+              window.localStorage.getItem("preview_mode") === "true");
           if (isPreview) {
             const demoProc = {
               id,
@@ -261,14 +222,27 @@ function GerarDocumentoPage() {
               draft_data: {
                 category: "profissional",
                 category_label: "Embarcações profissionais",
-                services: ["laudo_engenharia", "despacho_maritimo", "inscricao_inicial", "renovacao_tie"],
+                services: [
+                  "laudo_engenharia",
+                  "despacho_maritimo",
+                  "inscricao_inicial",
+                  "renovacao_tie",
+                ],
               },
-              customer: { id: "c-1", name: "Marina Alves de Souza", cpf_cnpj: "123.456.789-00" },
-              vessel: { id: "v-1", name: "Brisa Azul Teste", registration_number: "SP-123456", category: "profissional", vessel_type: "Embarcação Comercial" },
+              customer: { id: "c-1", name: "Marina Alves de Souza", cpf_cnpj: "123.456.789-00", address: "Av. Ana Costa, 100", city: "Santos", state: "SP" },
+              vessel: {
+                id: "v-1",
+                name: "Brisa Azul Teste",
+                registration_number: "SP-123456",
+                category: "profissional",
+                vessel_type: "Embarcação Comercial",
+              },
             };
             setProcessData(demoProc);
             setCustomer(demoProc.customer);
             setVessel(demoProc.vessel);
+            setQuickVesselName(demoProc.vessel.name);
+            setQuickVesselReg(demoProc.vessel.registration_number);
             setIsLoading(false);
             return;
           }
@@ -280,19 +254,40 @@ function GerarDocumentoPage() {
         setProcessData(proc);
         setCustomer(proc.customer || null);
         setVessel(proc.vessel || null);
+        if (proc.vessel) {
+          setQuickVesselName(proc.vessel.name || "");
+          setQuickVesselReg(proc.vessel.registration_number || "");
+          setQuickVesselType(proc.vessel.vessel_type || "Lancha / Recreio");
+        }
 
-        // 2. Carregar dados da empresa e lista de funcionários
+        // 2. Carregar modelos reais do banco de dados (document_templates)
+        const templatesFromDb = await loadDatabaseTemplates(companyId);
+        setDbTemplates(templatesFromDb);
+
+        // 3. Carregar documentos já gerados para este processo
+        const { data: existingDocs } = await supabase
+          .from("generated_documents")
+          .select("*")
+          .eq("company_id", companyId)
+          .eq("process_id", id)
+          .order("created_at", { ascending: false });
+        setGeneratedDocsList(existingDocs || []);
+
+        // 4. Carregar dados da empresa e lista de funcionários
         const { data: comp } = await supabase
           .from("companies")
-          .select("id, name, cnpj, phone, email, contact_address, logo_url, logo_primary_url, document_template_map")
+          .select(
+            "id, name, cnpj, phone, email, contact_address, logo_url, logo_primary_url, document_template_map",
+          )
           .eq("id", companyId)
           .maybeSingle();
 
         if (comp) {
           setCompanyData(comp);
           const docMap = (comp.document_template_map as any) || {};
-          const savedEmployees: any[] = docMap.employees || (comp as any)?.metadata?.employees || [];
-          
+          const savedEmployees: any[] =
+            docMap.employees || (comp as any)?.metadata?.employees || [];
+
           const activeEmployees = savedEmployees
             .filter((emp: any) => emp.status !== "inactive")
             .map((emp: any) => ({
@@ -303,12 +298,14 @@ function GerarDocumentoPage() {
               email: emp.email,
             }));
 
-          // Se a lista estiver vazia mas tivermos o perfil do usuário logado, adicionar como fallback
           if (activeEmployees.length === 0 && profile?.id) {
             activeEmployees.push({
               id: profile.id,
               name: profile.name || user?.email?.split("@")[0] || "Despachante Náutico",
-              role: profile.role === "company_admin" || profile.role === "admin" ? "Administrador / Despachante" : "Operador Náutico",
+              role:
+                profile.role === "company_admin" || profile.role === "admin"
+                  ? "Administrador / Despachante"
+                  : "Operador Náutico",
               professional_registry: undefined,
               email: user?.email,
             });
@@ -329,15 +326,30 @@ function GerarDocumentoPage() {
     loadData();
   }, [companyId, id, navigate, profile, user]);
 
+  // Mapa de resolução: catalogItem.slug -> ResolvedTemplateResult
+  const resolvedTemplatesMap = useMemo(() => {
+    const map = new Map<string, ResolvedTemplateResult>();
+    for (const tpl of CATALOG_TEMPLATES) {
+      const res = resolveCatalogTemplate(tpl, dbTemplates, companyId);
+      map.set(tpl.slug, res);
+    }
+    return map;
+  }, [dbTemplates, companyId]);
+
   // Identificação do Processo
   const processCode = useMemo(() => {
     if (!processData) return "PROC";
-    return processData.protocol_number || `PROC-${String(processData.id).slice(0, 4).toUpperCase()}`;
+    return (
+      processData.protocol_number || `PROC-${String(processData.id).slice(0, 4).toUpperCase()}`
+    );
   }, [processData]);
 
   // Categoria da Embarcação
   const vesselCategory = useMemo(() => {
-    const draftCategory = (processData?.draft_data as any)?.category || processData?.metadata?.category || vessel?.category;
+    const draftCategory =
+      (processData?.draft_data as any)?.category ||
+      processData?.metadata?.category ||
+      vessel?.category;
     if (draftCategory === "profissional") {
       return "profissional";
     }
@@ -351,12 +363,10 @@ function GerarDocumentoPage() {
 
   // Modelos Filtrados e Compatíveis
   const filteredTemplates = useMemo(() => {
-    return SYSTEM_TEMPLATES.filter((tpl) => {
-      // Compatibilidade de categoria (geral é compatível com todas)
+    return CATALOG_TEMPLATES.filter((tpl) => {
       const isCategoryMatch = tpl.category === "geral" || tpl.category === vesselCategory;
-      
-      // Filtro de busca
-      const matchesSearch = searchQuery === "" || 
+      const matchesSearch =
+        searchQuery === "" ||
         tpl.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         tpl.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
         tpl.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -384,7 +394,7 @@ function GerarDocumentoPage() {
         const next = { ...prev };
         filteredTemplates.forEach((tpl) => {
           if (!next[tpl.id]) {
-            if (tpl.status === "em_revisao") {
+            if (tpl.status === "em_revisao" || tpl.isConditional) {
               next[tpl.id] = { mode: "omit" };
             } else {
               next[tpl.id] = { mode: "generate" };
@@ -396,48 +406,141 @@ function GerarDocumentoPage() {
     }
   }, [filteredTemplates]);
 
+  // Mapa de validação individual por documento (bloqueia APENAS os documentos que exigem os campos ausentes)
+  const templateValidationMap = useMemo(() => {
+    const map = new Map<string, { isBlocked: boolean; missingFields: string[] }>();
+    for (const tpl of CATALOG_TEMPLATES) {
+      map.set(tpl.slug, checkTemplateMissingRequirements(tpl, customer, vessel, selectedStaff));
+    }
+    return map;
+  }, [customer, vessel, selectedStaff]);
+
   // Contagens dinâmicas
+  // IMPORTANTE: apenas documentos com mode === "generate", status aprovado, COM UUID resolvido no banco e com dados válidos!
   const templatesToGenerate = useMemo(() => {
-    return filteredTemplates.filter(
-      (tpl) => docSelections[tpl.id]?.mode === "generate" && tpl.status === "aprovado"
-    );
-  }, [filteredTemplates, docSelections]);
+    return filteredTemplates.filter((tpl) => {
+      const isModeGenerate = docSelections[tpl.id]?.mode === "generate";
+      const isApproved = tpl.status === "aprovado";
+      const validation = templateValidationMap.get(tpl.slug);
+      const isFieldsValid = !validation?.isBlocked;
+      const resolution = resolvedTemplatesMap.get(tpl.slug);
+      const isDbResolved = !!resolution?.dbTemplateId;
+
+      return isModeGenerate && isApproved && isFieldsValid && isDbResolved;
+    });
+  }, [filteredTemplates, docSelections, templateValidationMap, resolvedTemplatesMap]);
 
   const templatesAttached = useMemo(() => {
     return filteredTemplates.filter(
-      (tpl) => docSelections[tpl.id]?.mode === "attach" && docSelections[tpl.id]?.attachedFile
+      (tpl) => docSelections[tpl.id]?.mode === "attach" && docSelections[tpl.id]?.attachedFile,
     );
   }, [filteredTemplates, docSelections]);
 
   const templatesOmitted = useMemo(() => {
-    return filteredTemplates.filter(
-      (tpl) => docSelections[tpl.id]?.mode === "omit"
-    );
+    return filteredTemplates.filter((tpl) => docSelections[tpl.id]?.mode === "omit");
   }, [filteredTemplates, docSelections]);
 
   // Modelo Selecionado Atualmente para prévia de campos
   const activeTemplate = useMemo(() => {
     return (
-      SYSTEM_TEMPLATES.find((t) => t.id === selectedTemplateId) ||
+      CATALOG_TEMPLATES.find((t) => t.id === selectedTemplateId) ||
       templatesToGenerate[0] ||
       filteredTemplates[0] ||
-      SYSTEM_TEMPLATES[0]
+      CATALOG_TEMPLATES[0]
     );
   }, [selectedTemplateId, templatesToGenerate, filteredTemplates]);
 
-  // Verificação de Dados Ausentes
+  // Verificação Geral de Dados Ausentes
   const dataValidation = useMemo(() => {
     const missing: string[] = [];
     if (!customer?.name && !customer?.fantasy_name) missing.push("Nome do Cliente");
     if (!customer?.cpf_cnpj && !customer?.document) missing.push("CPF ou CNPJ do Cliente");
     if (!vessel?.name) missing.push("Nome da Embarcação");
-    if (!vessel?.registration_number && vesselCategory !== "esporte_recreio") missing.push("Número de Inscrição");
+    if (!vessel?.registration_number && vesselCategory !== "esporte_recreio")
+      missing.push("Número de Inscrição");
 
     return {
       isValid: missing.length === 0,
       missingFields: missing,
     };
   }, [customer, vessel, vesselCategory]);
+
+  // Salvar/Completar dados rápidos da embarcação para desbloquear geração sem sair do fluxo
+  const handleSaveQuickVessel = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickVesselName.trim() || !companyId) {
+      toast.error("Informe o nome da embarcação.");
+      return;
+    }
+
+    setIsSavingQuickVessel(true);
+    try {
+      const now = new Date().toISOString();
+      let updatedVesselRecord: any = null;
+
+      if (vessel?.id) {
+        // Atualiza a embarcação existente
+        const { data: updated, error: updErr } = await supabase
+          .from("vessels")
+          .update({
+            name: quickVesselName.trim(),
+            registration_number: quickVesselReg.trim() || null,
+            vessel_type: quickVesselType.trim() || vessel.vessel_type || "Lancha / Recreio",
+            updated_at: now,
+          })
+          .eq("id", vessel.id)
+          .eq("company_id", companyId)
+          .select()
+          .single();
+
+        if (updErr) throw updErr;
+        updatedVesselRecord = updated;
+      } else {
+        // Cria nova embarcação associada ao cliente e processo
+        const { data: created, error: crtErr } = await supabase
+          .from("vessels")
+          .insert({
+            company_id: companyId,
+            customer_id: customer?.id || null,
+            name: quickVesselName.trim(),
+            registration_number: quickVesselReg.trim() || null,
+            vessel_type: quickVesselType.trim() || "Lancha / Recreio",
+            category: vesselCategory,
+            status: "active",
+            created_at: now,
+            updated_at: now,
+          })
+          .select()
+          .single();
+
+        if (crtErr) throw crtErr;
+        updatedVesselRecord = created;
+
+        // Vincula a nova embarcação ao processo
+        if (id) {
+          await supabase
+            .from("processes")
+            .update({
+              vessel_id: created.id,
+              updated_at: now,
+            })
+            .eq("id", id)
+            .eq("company_id", companyId);
+        }
+      }
+
+      setVessel(updatedVesselRecord);
+      setShowQuickVesselModal(false);
+      toast.success("Dados da embarcação salvos com sucesso!", {
+        description: "Os modelos que exigiam nome e inscrição foram desbloqueados.",
+      });
+    } catch (err: any) {
+      console.error("Erro ao salvar embarcação rápida:", err);
+      toast.error(err?.message || "Não foi possível atualizar a embarcação.");
+    } finally {
+      setIsSavingQuickVessel(false);
+    }
+  };
 
   // Cadastro Rápido de Funcionário inline
   const handleCreateQuickStaff = async (e: React.FormEvent) => {
@@ -495,7 +598,7 @@ function GerarDocumentoPage() {
   };
 
   // Anexar arquivo externo para um documento que o usuário já possui pronto
-  const handleAttachFileForTemplate = async (tpl: DocumentTemplateItem, file: File) => {
+  const handleAttachFileForTemplate = async (tpl: CatalogTemplateItem, file: File) => {
     if (!companyId || !id || !file) return;
 
     setDocSelections((prev) => ({
@@ -543,8 +646,8 @@ function GerarDocumentoPage() {
         },
       }));
 
-      // Registra no histórico do processo
-      const existingHistory = processData?.metadata?.history || [];
+      // Registra no histórico do processo dentro de draft_data (coluna metadata não existe em processes)
+      const existingHistory = (processData?.draft_data as any)?.history || [];
       const historyEntry = {
         event: "doc_attached_externally",
         description: `Documento anexado externamente: "${tpl.name}" (${file.name})`,
@@ -555,12 +658,12 @@ function GerarDocumentoPage() {
       await supabase
         .from("processes")
         .update({
-          metadata: {
-            ...(processData?.metadata || {}),
+          draft_data: {
+            ...((processData?.draft_data as any) || {}),
             history: [historyEntry, ...existingHistory],
           },
           updated_at: new Date().toISOString(),
-        } as any)
+        })
         .eq("id", id)
         .eq("company_id", companyId);
 
@@ -580,158 +683,188 @@ function GerarDocumentoPage() {
   // Ação de Geração de Documentos Selecionados
   const handleGenerateBatchDocuments = async () => {
     if (!companyId || !id) return;
-    // Proteção explícita contra duplo clique — evita gerar cópias e consumir quota
+
     if (isGenerating) {
       toast.info("Geração em andamento. Aguarde...");
       return;
     }
+
     if (templatesToGenerate.length === 0) {
-      toast.info("Nenhum documento selecionado para geração.", {
-        description: "Selecione ao menos um documento aplicável para gerar o PDF.",
+      toast.info("Nenhum documento apto selecionado para geração.", {
+        description: "Confira se os modelos marcados 'Gerar pelo NavalDocs' estão com todos os campos obrigatórios preenchidos.",
       });
       return;
     }
 
     setIsGenerating(true);
-    const loadingToast = toast.loading(`Gerando ${templatesToGenerate.length} documento(s) selecionado(s)...`);
+    setGenerationSummary(null);
+    const loadingToast = toast.loading(
+      `Gerando ${templatesToGenerate.length} documento(s) selecionado(s)...`,
+    );
+
+    const successDocs: any[] = [];
+    const failedDocs: Array<{ tpl: CatalogTemplateItem; error: string }> = [];
 
     try {
       const branding = await loadCompanyBranding(companyId);
       const now = new Date().toISOString();
       const customerName = customer?.fantasy_name || customer?.name || "Cliente";
       const vesselName = vessel?.name || "Embarcação";
-      const generatedIds: string[] = [];
 
       for (const tpl of templatesToGenerate) {
-        const docTitle = `${tpl.name} - ${vesselName}`;
-        const fileName = `${tpl.code}_${vesselName.replace(/[^a-zA-Z0-9]/g, "_")}_${Date.now()}.pdf`;
-        const storagePath = `${companyId}/${id}/${fileName}`;
+        try {
+          // 1. Resolução estrita do UUID real no banco
+          const resolution = resolvedTemplatesMap.get(tpl.slug);
+          const realTemplateUuid = resolution?.dbTemplateId;
 
-        // 1. Construir texto oficial detalhado do documento
-        const content = [
-          `DOCUMENTO OFICIAL: ${tpl.name.toUpperCase()}`,
-          `CÓDIGO: ${tpl.code} | BASE NORMATIVA: ${tpl.officialSource}`,
-          `PROCESSO Nº: ${processCode}`,
-          `DATA: ${new Date().toLocaleDateString("pt-BR")}`,
-          ``,
-          `1. DADOS DO INTERESSADO / PROPRIETÁRIO`,
-          `Nome / Razão Social: ${customerName}`,
-          `CPF / CNPJ: ${customer?.cpf_cnpj || customer?.document || "Não informado"}`,
-          `Endereço: ${customer?.address || "Não informado"}, ${customer?.city || ""}/${customer?.state || ""}`,
-          `Telefone: ${customer?.phone || "Não informado"} | E-mail: ${customer?.email || "Não informado"}`,
-          ``,
-          `2. DADOS DA EMBARCAÇÃO`,
-          `Nome da Embarcação: ${vesselName}`,
-          `Número de Inscrição: ${vessel?.registration_number || "Em regularização"}`,
-          `Tipo: ${vessel?.vessel_type || "Embarcação"} | Categoria: ${vesselCategory === "profissional" ? "Embarcação Profissional" : "Esporte e Recreio"}`,
-          `Comprimento Total: ${vessel?.length || vessel?.length_overall || "Não informado"}`,
-          `Material do Casco: ${vessel?.material || "Não informado"}`,
-          ``,
-          `3. ESCOPO DO REQUERIMENTO E SERVIÇOS`,
-          `Serviços solicitados: ${(Array.isArray((processData?.draft_data as any)?.services)
-            ? (processData?.draft_data as any)?.services.join(", ")
-            : processData?.process_type || "Atos perante a Autoridade Marítima")}`,
-          ``,
-          `4. DECLARAÇÃO E TERMO DE COMPROMISSO`,
-          `O interessado acima qualificado requer à Capitania dos Portos / Delegacia / Agência da Capitania dos Portos a realização dos serviços especificados, declarando sob as penas da lei a veracidade das informações apresentadas para os devidos fins de direito.`,
-          ``,
-          `5. PREPARADO POR`,
-          `Responsável Técnico: ${selectedStaff.name}`,
-          `Função: ${selectedStaff.role}`,
-          selectedStaff.professional_registry ? `Registro: ${selectedStaff.professional_registry}` : "",
-          `Empresa: ${companyData?.name || currentCompany?.name || "NavalDocs Pro"}`,
-          ``,
-          `Documento preparado via NavalDocs Pro para assinatura externa (GOV.BR ou presencial).`
-        ].filter(Boolean).join("\n");
+          if (!realTemplateUuid) {
+            throw new Error(
+              `Modelo "${tpl.name}" (${tpl.code}) não foi localizado no catálogo do banco de dados. Execute a migração de sincronização.`,
+            );
+          }
 
-        // 2. Gerar bytes do PDF estilizado com branding
-        const { bytes, verificationCode } = await buildBrandedDocumentPdf({
-          docName: docTitle,
-          content,
-          branding,
-        });
+          const docTitle = `${tpl.name} - ${vesselName}`;
+          const fileName = `${tpl.code}_${vesselName.replace(/[^a-zA-Z0-9]/g, "_")}_${Date.now()}.pdf`;
+          const storagePath = `${companyId}/${id}/${fileName}`;
 
-        // 3. Converter para Blob e fazer upload seguro para o bucket 'generated-documents'
-        const pdfBlob = new Blob([bytes], { type: "application/pdf" });
-        await uploadToBucket("generated-documents", storagePath, pdfBlob, {
-          contentType: "application/pdf",
-          upsert: true,
-        });
+          // 2. Construir texto oficial detalhado do documento
+          const content = [
+            `DOCUMENTO OFICIAL: ${tpl.name.toUpperCase()}`,
+            `CÓDIGO: ${tpl.code} | BASE NORMATIVA: ${tpl.officialSource}`,
+            `PROCESSO Nº: ${processCode}`,
+            `DATA: ${new Date().toLocaleDateString("pt-BR")}`,
+            ``,
+            `1. DADOS DO INTERESSADO / PROPRIETÁRIO`,
+            `Nome / Razão Social: ${customerName}`,
+            `CPF / CNPJ: ${customer?.cpf_cnpj || customer?.document || "Não informado"}`,
+            `Endereço: ${customer?.address || "Não informado"}, ${customer?.city || ""}/${customer?.state || ""}`,
+            `Telefone: ${customer?.phone || "Não informado"} | E-mail: ${customer?.email || "Não informado"}`,
+            ``,
+            `2. DADOS DA EMBARCAÇÃO`,
+            `Nome da Embarcação: ${vesselName}`,
+            `Número de Inscrição: ${vessel?.registration_number || "Em regularização"}`,
+            `Tipo: ${vessel?.vessel_type || "Embarcação"} | Categoria: ${vesselCategory === "profissional" ? "Embarcação Profissional" : "Esporte e Recreio"}`,
+            `Comprimento Total: ${vessel?.length || vessel?.length_overall || "Não informado"}`,
+            `Material do Casco: ${vessel?.material || "Não informado"}`,
+            ``,
+            `3. ESCOPO DO REQUERIMENTO E SERVIÇOS`,
+            `Serviços solicitados: ${
+              Array.isArray((processData?.draft_data as any)?.services)
+                ? (processData?.draft_data as any)?.services.join(", ")
+                : processData?.process_type || "Atos perante a Autoridade Marítima"
+            }`,
+            ``,
+            `4. DECLARAÇÃO E TERMO DE COMPROMISSO`,
+            `O interessado acima qualificado requer à Capitania dos Portos / Delegacia / Agência da Capitania dos Portos a realização dos serviços especificados, declarando sob as penas da lei a veracidade das informações apresentadas para os devidos fins de direito.`,
+            ``,
+            `5. PREPARADO POR`,
+            `Responsável Técnico: ${selectedStaff.name}`,
+            `Função: ${selectedStaff.role}`,
+            selectedStaff.professional_registry
+              ? `Registro: ${selectedStaff.professional_registry}`
+              : "",
+            `Empresa: ${companyData?.name || currentCompany?.name || "NavalDocs Pro"}`,
+            ``,
+            `Documento preparado via NavalDocs Pro para assinatura externa (GOV.BR ou presencial).`,
+          ]
+            .filter(Boolean)
+            .join("\n");
 
-        // 4. Metadados completos congelados
-        const documentMetadata = {
-          template_id: tpl.id,
-          template_name: tpl.name,
-          template_code: tpl.code,
-          official_source: tpl.officialSource,
-          validation_date: tpl.validationDate,
-          validation_status: tpl.status,
-          storage_bucket: "generated-documents",
-          storage_path: storagePath,
-          disclaimer: "Documento oficial preparado eletronicamente pelo NavalDocs Pro para assinatura externa (gov.br ou presencial). Não emitido pela Autoridade Marítima.",
-          staff_responsible: {
-            id: selectedStaff.id,
-            name: selectedStaff.name,
-            role: selectedStaff.role,
-            professional_registry: (selectedStaff as any).professional_registry || null,
-            email: (selectedStaff as any).email || null,
-          },
-          client_snapshot: {
-            name: customerName,
-            document: customer?.cpf_cnpj || customer?.document || "Não informado",
-            rg: customer?.rg || "",
-            address: customer?.address || "",
-            city: customer?.city || "",
-            state: customer?.state || "",
-            phone: customer?.phone || "",
-            email: customer?.email || "",
-          },
-          vessel_snapshot: {
-            name: vesselName,
-            registration: vessel?.registration_number || "",
-            type: vessel?.vessel_type || "",
-            length: vessel?.length || vessel?.length_overall || "",
-            material: vessel?.material || "",
-          },
-          company_snapshot: {
-            name: companyData?.name || currentCompany?.name || "Empresa Naval",
-            cnpj: companyData?.cnpj || currentCompany?.cnpj || "",
-            address: companyData?.contact_address || "",
-            logo_url: companyData?.logo_url || companyData?.logo_primary_url || "",
-          },
-          generated_at: now,
-        };
+          // 3. Gerar bytes do PDF estilizado com branding
+          const { bytes, verificationCode } = await buildBrandedDocumentPdf({
+            docName: docTitle,
+            content,
+            branding,
+          });
 
-        // 5. Inserir registro na tabela generated_documents
-        // NUNCA marcar como is_signed: true automaticamente!
-        const { data: newDoc, error: docError } = await supabase
-          .from("generated_documents")
-          .insert({
-            company_id: companyId,
-            process_id: id,
-            customer_id: customer?.id || null,
-            vessel_id: vessel?.id || null,
-            name: docTitle,
-            generated_file_url: `generated-documents/${storagePath}`,
-            generated_by: profile?.id || null,
-            status: "ready_for_signature",
-            signature_status: "pending",
-            verification_code: verificationCode,
-            template_id: tpl.id,
-            version: 1,
-            metadata: documentMetadata,
-          })
-          .select("id")
-          .single();
+          // 4. Converter para Blob e fazer upload seguro para o bucket 'generated-documents'
+          const pdfBlob = new Blob(
+            [
+              bytes.buffer.slice(
+                bytes.byteOffset,
+                bytes.byteOffset + bytes.byteLength,
+              ) as ArrayBuffer,
+            ],
+            { type: "application/pdf" },
+          );
+          await uploadToBucket("generated-documents", storagePath, pdfBlob, {
+            contentType: "application/pdf",
+            upsert: true,
+          });
 
-        if (docError) {
-          throw new Error(docError.message || `Erro ao salvar documento gerado (${tpl.name}).`);
-        }
+          // 5. Metadados completos congelados (preservando responsável, snapshots e códigos)
+          const documentMetadata = {
+            template_slug: tpl.slug,
+            template_code: tpl.code,
+            template_name: tpl.name,
+            template_id_resolved: realTemplateUuid,
+            official_source: tpl.officialSource,
+            validation_date: tpl.validationDate,
+            validation_status: tpl.status,
+            storage_bucket: "generated-documents",
+            storage_path: storagePath,
+            disclaimer:
+              "Documento oficial preparado eletronicamente pelo NavalDocs Pro para assinatura externa (gov.br ou presencial). Não emitido pela Autoridade Marítima.",
+            staff_responsible: {
+              id: selectedStaff.id,
+              name: selectedStaff.name,
+              role: selectedStaff.role,
+              professional_registry: (selectedStaff as any).professional_registry || null,
+              email: (selectedStaff as any).email || null,
+            },
+            client_snapshot: {
+              name: customerName,
+              document: customer?.cpf_cnpj || customer?.document || "Não informado",
+              rg: customer?.rg || "",
+              address: customer?.address || "",
+              city: customer?.city || "",
+              state: customer?.state || "",
+              phone: customer?.phone || "",
+              email: customer?.email || "",
+            },
+            vessel_snapshot: {
+              name: vesselName,
+              registration: vessel?.registration_number || "",
+              type: vessel?.vessel_type || "",
+              length: vessel?.length || vessel?.length_overall || "",
+              material: vessel?.material || "",
+            },
+            company_snapshot: {
+              name: companyData?.name || currentCompany?.name || "Empresa Naval",
+              cnpj: companyData?.cnpj || currentCompany?.cnpj || "",
+              address: companyData?.contact_address || "",
+              logo_url: companyData?.logo_url || companyData?.logo_primary_url || "",
+            },
+            generated_at: now,
+          };
 
-        // 6. Inserir também em uploaded_files para indexação central
-        await supabase
-          .from("uploaded_files")
-          .insert({
+          // 6. Inserir registro na tabela generated_documents com UUID real (NUNCA slug)
+          const { data: newDoc, error: docError } = await supabase
+            .from("generated_documents")
+            .insert({
+              company_id: companyId,
+              process_id: id,
+              customer_id: customer?.id || null,
+              vessel_id: vessel?.id || null,
+              name: docTitle,
+              generated_file_url: `generated-documents/${storagePath}`,
+              generated_by: profile?.id || null,
+              status: "ready_for_signature",
+              signature_status: "pending",
+              verification_code: verificationCode,
+              template_id: realTemplateUuid, // UUID REAL DO BANCO
+              version: 1,
+              metadata: documentMetadata,
+            })
+            .select("id, name, generated_file_url, created_at, status")
+            .single();
+
+          if (docError) {
+            throw new Error(docError.message || `Erro ao salvar documento gerado (${tpl.name}).`);
+          }
+
+          // 7. Inserir também em uploaded_files para indexação central
+          await supabase.from("uploaded_files").insert({
             company_id: companyId,
             process_id: id,
             customer_id: customer?.id || null,
@@ -745,63 +878,86 @@ function GerarDocumentoPage() {
             metadata: {
               document_id: newDoc?.id,
               template_code: tpl.code,
+              template_slug: tpl.slug,
               template_name: tpl.name,
               verification_code: verificationCode,
               generated_at: now,
             },
           });
 
-        if (newDoc?.id) {
-          generatedIds.push(newDoc.id);
+          successDocs.push({
+            ...newDoc,
+            templateName: tpl.name,
+            templateCode: tpl.code,
+          });
+        } catch (itemErr: any) {
+          console.error(`Falha ao gerar documento ${tpl.name}:`, itemErr);
+          failedDocs.push({
+            tpl,
+            error: itemErr?.message || "Erro desconhecido na geração do PDF.",
+          });
         }
       }
 
-      // Adicionar eventos no histórico do processo
-      const existingHistory = (processData?.draft_data as any)?.history || processData?.metadata?.history || [];
-      const historyEntries = templatesToGenerate.map((tpl) => ({
-        event: "doc_generated",
-        description: `Documento gerado: "${tpl.name}" por ${selectedStaff.name}`,
-        user: selectedStaff.name,
-        date: now,
-      }));
+      // 8. Atualizar histórico do processo dentro de draft_data (coluna metadata não existe em processes)
+      if (successDocs.length > 0) {
+        const existingHistory = (processData?.draft_data as any)?.history || [];
+        const historyEntries = successDocs.map((doc) => ({
+          event: "doc_generated",
+          description: `Documento gerado: "${doc.name}" por ${selectedStaff.name}`,
+          user: selectedStaff.name,
+          date: now,
+        }));
 
-      const updatedDraftData = {
-        ...((processData?.draft_data as any) || {}),
-        history: [...historyEntries, ...existingHistory],
-      };
+        await supabase
+          .from("processes")
+          .update({
+            draft_data: {
+              ...((processData?.draft_data as any) || {}),
+              history: [...historyEntries, ...existingHistory],
+            },
+            updated_at: now,
+          })
+          .eq("id", id)
+          .eq("company_id", companyId);
+      }
 
-      await supabase
-        .from("processes")
-        .update({
-          draft_data: updatedDraftData,
-          metadata: {
-            ...(processData?.metadata || {}),
-            history: [...historyEntries, ...existingHistory],
-          },
-          updated_at: now,
-        } as any)
-        .eq("id", id)
-        .eq("company_id", companyId);
+      // Recarrega a lista persistida de documentos gerados
+      await loadExistingGeneratedDocs();
 
-      toast.dismiss(loadingToast);
-      toast.success(
-        generatedIds.length === 1
-          ? "Documento gerado e armazenado com sucesso!"
-          : `${generatedIds.length} documentos gerados e armazenados com sucesso!`,
-        {
-          description: "Os arquivos PDF foram criados, salvos no storage e estão prontos para download e visualização.",
-        }
-      );
-
-      // Redireciona para a lista de documentos gerados deste processo
-      navigate({
-        to: "/processes/$id/documentos-gerados",
-        params: { id },
+      setGenerationSummary({
+        successDocs,
+        failedDocs,
       });
-    } catch (err: any) {
-      console.error("Erro ao gerar documentos selecionados:", err);
+
       toast.dismiss(loadingToast);
-      toast.error(err?.message || "Falha ao gerar documentos. Tente novamente.");
+
+      if (failedDocs.length === 0) {
+        toast.success(
+          successDocs.length === 1
+            ? "Documento gerado e armazenado com sucesso!"
+            : `${successDocs.length} documentos gerados e armazenados com sucesso!`,
+          {
+            description:
+              "Os arquivos PDF foram criados, salvos no storage e estão listados abaixo prontos para visualização e download.",
+          },
+        );
+      } else if (successDocs.length > 0) {
+        toast.warning(
+          `${successDocs.length} documento(s) gerado(s), mas ${failedDocs.length} falharam.`,
+          {
+            description: "Verifique os detalhes na tela e tente novamente apenas os que falharam.",
+          },
+        );
+      } else {
+        toast.error("Nenhum documento pôde ser gerado.", {
+          description: failedDocs[0]?.error || "Ocorreu um erro no processamento do lote.",
+        });
+      }
+    } catch (err: any) {
+      console.error("Erro geral na geração de documentos:", err);
+      toast.dismiss(loadingToast);
+      toast.error(err?.message || "Falha ao gerar documentos.");
     } finally {
       setIsGenerating(false);
     }
@@ -811,7 +967,9 @@ function GerarDocumentoPage() {
     return (
       <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-6 font-sans">
         <Loader2 className="h-8 w-8 text-[#075BFF] animate-spin mb-3" />
-        <p className="text-sm font-semibold text-slate-700">Carregando modelos e dados do serviço...</p>
+        <p className="text-sm font-semibold text-slate-700">
+          Carregando modelos e dados do serviço...
+        </p>
       </div>
     );
   }
@@ -819,7 +977,6 @@ function GerarDocumentoPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24 font-sans text-slate-800">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
-        
         {/* ========================================================================= */}
         {/* 1. CABEÇALHO */}
         {/* ========================================================================= */}
@@ -851,7 +1008,9 @@ function GerarDocumentoPage() {
               <User className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Cliente</span>
+              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+                Cliente
+              </span>
               <span className="text-sm font-bold text-[#0B1739] truncate block">
                 {customer?.fantasy_name || customer?.name || "Cliente não informado"}
               </span>
@@ -859,16 +1018,30 @@ function GerarDocumentoPage() {
           </div>
 
           {/* Embarcação */}
-          <div className="flex items-center gap-3 pt-3 sm:pt-0 sm:px-3">
-            <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 shrink-0">
-              <Ship className="h-5 w-5" />
+          <div className="flex items-center justify-between gap-3 pt-3 sm:pt-0 sm:px-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 shrink-0">
+                <Ship className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+                  Embarcação
+                </span>
+                <span className="text-sm font-bold text-[#0B1739] truncate block">
+                  {vessel?.name || "Embarcação não informada"}
+                </span>
+              </div>
             </div>
-            <div className="min-w-0">
-              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Embarcação</span>
-              <span className="text-sm font-bold text-[#0B1739] truncate block">
-                {vessel?.name || "Embarcação não informada"}
-              </span>
-            </div>
+
+            {/* Ação rápida para editar/completar embarcação */}
+            <button
+              type="button"
+              onClick={() => setShowQuickVesselModal(true)}
+              title="Completar dados cadastrais da embarcação"
+              className="p-1.5 rounded-lg text-[#075BFF] hover:bg-blue-50 transition-colors cursor-pointer shrink-0"
+            >
+              <Edit className="h-4 w-4" />
+            </button>
           </div>
 
           {/* Serviço */}
@@ -877,7 +1050,9 @@ function GerarDocumentoPage() {
               <Cog className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Serviço</span>
+              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+                Serviço
+              </span>
               <span className="text-sm font-bold text-[#0B1739] truncate block">
                 {processData?.title || "Renovação do TIE"}
               </span>
@@ -890,7 +1065,9 @@ function GerarDocumentoPage() {
               <FileCheck2 className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">Processo</span>
+              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+                Processo
+              </span>
               <span className="text-sm font-bold text-[#0B1739] font-mono truncate block">
                 {processCode}
               </span>
@@ -899,15 +1076,73 @@ function GerarDocumentoPage() {
         </div>
 
         {/* ========================================================================= */}
+        {/* BANNER DE RESULTADO DA ÚLTIMA GERAÇÃO (CASO DISPONÍVEL) */}
+        {/* ========================================================================= */}
+        {generationSummary && (
+          <div
+            className={`p-5 rounded-2xl border ${
+              generationSummary.failedDocs.length === 0
+                ? "bg-emerald-50/70 border-emerald-200"
+                : "bg-amber-50/70 border-amber-200"
+            } space-y-3 animate-in fade-in duration-200`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                {generationSummary.failedDocs.length === 0 ? (
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+                ) : (
+                  <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
+                )}
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">
+                    {generationSummary.failedDocs.length === 0
+                      ? `Lote concluído com sucesso: ${generationSummary.successDocs.length} documento(s) gerado(s)`
+                      : `Resultado do lote: ${generationSummary.successDocs.length} gerado(s), ${generationSummary.failedDocs.length} com falha`}
+                  </h3>
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    Todos os documentos bem-sucedidos estão salvos e vinculados a este processo.
+                  </p>
+                </div>
+              </div>
+
+              {generationSummary.failedDocs.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleGenerateBatchDocuments}
+                  disabled={isGenerating}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors cursor-pointer"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  <span>Repetir apenas os que falharam</span>
+                </button>
+              )}
+            </div>
+
+            {/* Lista dos que falharam, se houver */}
+            {generationSummary.failedDocs.length > 0 && (
+              <div className="p-3 bg-white rounded-xl border border-amber-200 space-y-1.5 text-xs">
+                <span className="font-bold text-amber-900 block">Documentos não gerados:</span>
+                <ul className="space-y-1">
+                  {generationSummary.failedDocs.map((f, i) => (
+                    <li key={i} className="flex items-center justify-between gap-2 text-amber-800">
+                      <span className="font-medium">• {f.tpl.name}:</span>
+                      <span className="text-[11px] font-mono text-red-600">{f.error}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ========================================================================= */}
         {/* GRID PRINCIPAL: 2 COLUNAS */}
         {/* ========================================================================= */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
           {/* ======================================================================= */}
           {/* COLUNA ESQUERDA (7 COLUNAS): MODELOS DISPONÍVEIS + DADOS UTILIZADOS */}
           {/* ======================================================================= */}
           <div className="lg:col-span-7 space-y-6">
-            
             {/* SEÇÃO 2: DOCUMENTOS APLICÁVEIS AO SERVIÇO */}
             <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -916,7 +1151,8 @@ function GerarDocumentoPage() {
                     Documentos aplicáveis ao serviço
                   </h2>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Escolha individualmente quais documentos gerar pelo sistema ou anexar já preenchidos.
+                    Escolha individualmente quais documentos gerar pelo sistema ou anexar já
+                    preenchidos.
                   </p>
                 </div>
 
@@ -960,33 +1196,50 @@ function GerarDocumentoPage() {
               ) : (
                 <div className="space-y-4">
                   {filteredTemplates.map((tpl) => {
-                    const selection = docSelections[tpl.id] || { mode: tpl.status === "em_revisao" ? "omit" : "generate" };
+                    const selection = docSelections[tpl.id] || {
+                      mode: tpl.status === "em_revisao" ? "omit" : "generate",
+                    };
                     const isApproved = tpl.status === "aprovado";
                     const isGeneratingThis = selection.mode === "generate";
                     const isAttachingThis = selection.mode === "attach";
                     const isOmittedThis = selection.mode === "omit";
+
+                    // Validação granular para este modelo específico
+                    const validation = templateValidationMap.get(tpl.slug);
+                    const isBlockedForRequiredFields = !!validation?.isBlocked;
+                    const missingForThisDoc = validation?.missingFields || [];
+
+                    // Resolução do banco de dados para este modelo
+                    const resolution = resolvedTemplatesMap.get(tpl.slug);
+                    const isResolvedInDb = !!resolution?.dbTemplateId;
 
                     return (
                       <div
                         key={tpl.id}
                         className={`p-4 sm:p-5 rounded-2xl border transition-all ${
                           isGeneratingThis
-                            ? "border-[#075BFF] bg-blue-50/15 shadow-2xs"
+                            ? isBlockedForRequiredFields || !isResolvedInDb
+                              ? "border-amber-300 bg-amber-50/20 shadow-2xs"
+                              : "border-[#075BFF] bg-blue-50/15 shadow-2xs"
                             : isAttachingThis
-                            ? "border-emerald-300 bg-emerald-50/15 shadow-2xs"
-                            : "border-slate-200/90 bg-white opacity-85"
+                              ? "border-emerald-300 bg-emerald-50/15 shadow-2xs"
+                              : "border-slate-200/90 bg-white opacity-85"
                         }`}
                       >
                         {/* Cabeçalho do Documento com Badges */}
                         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5">
                           <div className="flex items-start gap-3 min-w-0">
-                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
-                              isGeneratingThis
-                                ? "bg-[#075BFF] text-white"
-                                : isAttachingThis
-                                ? "bg-emerald-600 text-white"
-                                : "bg-slate-100 text-slate-500"
-                            }`}>
+                            <div
+                              className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
+                                isGeneratingThis
+                                  ? isBlockedForRequiredFields || !isResolvedInDb
+                                    ? "bg-amber-500 text-white"
+                                    : "bg-[#075BFF] text-white"
+                                  : isAttachingThis
+                                    ? "bg-emerald-600 text-white"
+                                    : "bg-slate-100 text-slate-500"
+                              }`}
+                            >
                               <FileText className="h-4 w-4" />
                             </div>
                             <div className="min-w-0">
@@ -997,14 +1250,31 @@ function GerarDocumentoPage() {
                                 <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-mono font-bold">
                                   {tpl.code}
                                 </span>
+                                {isResolvedInDb ? (
+                                  <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[9px] font-semibold border border-emerald-200">
+                                    Catálogo vinculado
+                                  </span>
+                                ) : (
+                                  <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 text-[9px] font-semibold">
+                                    Aguardando sincronização
+                                  </span>
+                                )}
                               </div>
                               <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                                 {tpl.description}
                               </p>
                               <div className="flex items-center gap-2 mt-1.5 flex-wrap text-[11px] text-slate-400">
-                                <span>Fonte Oficial: <strong className="text-slate-600 font-mono">{tpl.officialSource}</strong></span>
+                                <span>
+                                  Fonte Oficial:{" "}
+                                  <strong className="text-slate-600 font-mono">
+                                    {tpl.officialSource}
+                                  </strong>
+                                </span>
                                 <span>•</span>
-                                <span>Conferência: <strong className="text-slate-600">{tpl.validationDate}</strong></span>
+                                <span>
+                                  Conferência:{" "}
+                                  <strong className="text-slate-600">{tpl.validationDate}</strong>
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -1026,13 +1296,59 @@ function GerarDocumentoPage() {
                               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-[#075BFF] border border-blue-200/60">
                                 Obrigatório
                               </span>
+                            ) : tpl.isConditional ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200/60">
+                                Condicional
+                              </span>
                             ) : (
                               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600">
-                                Opcional / Condicional
+                                Opcional
                               </span>
                             )}
                           </div>
                         </div>
+
+                        {/* Aviso Explicativo de Regra Condicional */}
+                        {tpl.isConditional && (
+                          <div className="mt-3 p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 flex items-start gap-2">
+                            <Info className="h-4 w-4 text-[#075BFF] shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-bold text-slate-900">
+                                Regra Condicional:
+                              </span>
+                              <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
+                                {tpl.conditionText ||
+                                  "Este documento só deve ser utilizado quando a condição específica se aplicar ao caso."}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Aviso Granular: Bloqueio por Campos Obrigatórios Ausentes */}
+                        {isBlockedForRequiredFields && isGeneratingThis && (
+                          <div className="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-in fade-in duration-150">
+                            <div className="flex items-start gap-2">
+                              <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                              <div>
+                                <span className="font-bold block">
+                                  Campos obrigatórios ausentes para gerar este documento:
+                                </span>
+                                <span className="text-[11px] text-amber-800">
+                                  {missingForThisDoc.join(", ")}.
+                                </span>
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => setShowQuickVesselModal(true)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[11px] transition-colors cursor-pointer shrink-0"
+                            >
+                              <Edit className="h-3 w-3" />
+                              <span>Completar dados agora</span>
+                            </button>
+                          </div>
+                        )}
 
                         {/* Aviso se Modelo Estiver em Revisão */}
                         {!isApproved && tpl.reviewReason && (
@@ -1062,7 +1378,9 @@ function GerarDocumentoPage() {
                               }}
                               className={`p-2.5 rounded-xl border text-left transition-all text-xs flex items-center justify-between cursor-pointer ${
                                 isGeneratingThis
-                                  ? "border-[#075BFF] bg-[#075BFF] text-white font-bold shadow-2xs"
+                                  ? isBlockedForRequiredFields
+                                    ? "border-amber-500 bg-amber-500 text-white font-bold shadow-2xs"
+                                    : "border-[#075BFF] bg-[#075BFF] text-white font-bold shadow-2xs"
                                   : "border-slate-200 hover:border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
                               } ${!isApproved ? "opacity-40 cursor-not-allowed" : ""}`}
                             >
@@ -1129,7 +1447,8 @@ function GerarDocumentoPage() {
                                         {selection.attachedFile.name}
                                       </span>
                                       <span className="text-[10px] text-emerald-700 font-semibold">
-                                        Arquivo anexado como documento oficial do processo (dispensa geração)
+                                        Arquivo anexado como documento oficial do processo (dispensa
+                                        geração)
                                       </span>
                                     </div>
                                   </div>
@@ -1154,7 +1473,9 @@ function GerarDocumentoPage() {
                                     <span>Anexar documento já pronto / assinado</span>
                                   </div>
                                   <p className="text-[11px] text-slate-600">
-                                    Se você já possui este documento preenchido e assinado fora do sistema, anexe o PDF. Ele será incorporado ao dossiê sem consumir nova geração.
+                                    Se você já possui este documento preenchido e assinado fora do
+                                    sistema, anexe o PDF. Ele será incorporado ao dossiê sem
+                                    consumir nova geração.
                                   </p>
 
                                   <div className="flex items-center gap-2">
@@ -1194,10 +1515,14 @@ function GerarDocumentoPage() {
                               <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
                               <div className="space-y-1">
                                 <p className="font-bold">
-                                  Atenção: Este documento é exigido obrigatoriamente pela Capitania dos Portos.
+                                  Atenção: Este documento é exigido obrigatoriamente pela Capitania
+                                  dos Portos.
                                 </p>
                                 <p className="text-[11px] text-amber-800 leading-relaxed">
-                                  Se você já possui o documento preenchido e assinado fora do sistema, a opção recomendada é <strong>"Já tenho: anexar arquivo"</strong>. Dispensar este item manterá a pendência documental ativa no processo.
+                                  Se você já possui o documento preenchido e assinado fora do
+                                  sistema, a opção recomendada é{" "}
+                                  <strong>"Já tenho: anexar arquivo"</strong>. Dispensar este item
+                                  manterá a pendência documental ativa no processo.
                                 </p>
                               </div>
                             </div>
@@ -1210,31 +1535,69 @@ function GerarDocumentoPage() {
               )}
             </div>
 
-            {/* SEÇÃO 4: DADOS UTILIZADOS */}
+            {/* SEÇÃO 4: DADOS UTILIZADOS NO DOCUMENTO */}
             <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-              <h2 className="text-base font-bold text-[#0B1739]">
-                Dados utilizados no documento
-              </h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-bold text-[#0B1739]">Dados utilizados no documento</h2>
+                <button
+                  type="button"
+                  onClick={() => setShowQuickVesselModal(true)}
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#075BFF] hover:underline cursor-pointer"
+                >
+                  <Edit className="h-3.5 w-3.5" />
+                  <span>Editar dados cadastrais</span>
+                </button>
+              </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                 {/* Cliente */}
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Dados do Cliente</span>
-                  <p className="font-bold text-[#0B1739] truncate">{customer?.fantasy_name || customer?.name}</p>
-                  <p className="text-slate-500 truncate">{customer?.cpf_cnpj || customer?.document || "Documento não informado"}</p>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                    Dados do Cliente
+                  </span>
+                  <p className="font-bold text-[#0B1739] truncate">
+                    {customer?.fantasy_name || customer?.name}
+                  </p>
+                  <p className="text-slate-500 truncate">
+                    {customer?.cpf_cnpj || customer?.document || "Documento não informado"}
+                  </p>
                 </div>
 
                 {/* Embarcação */}
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Dados da Embarcação</span>
-                  <p className="font-bold text-[#0B1739] truncate">{vessel?.name}</p>
-                  <p className="text-slate-500 truncate">Inscrição: {vessel?.registration_number || "Aguardando"}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                      Dados da Embarcação
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowQuickVesselModal(true)}
+                      className="text-[10px] text-[#075BFF] font-semibold hover:underline cursor-pointer"
+                    >
+                      Alterar
+                    </button>
+                  </div>
+                  <p className="font-bold text-[#0B1739] truncate">
+                    {vessel?.name || <span className="text-amber-600 font-semibold">Nome não informado</span>}
+                  </p>
+                  <p className="text-slate-500 truncate">
+                    Inscrição:{" "}
+                    {vessel?.registration_number ? (
+                      vessel.registration_number
+                    ) : (
+                      <span className="text-amber-600 font-semibold">Ausente no cadastro</span>
+                    )}
+                  </p>
                 </div>
 
                 {/* Empresa / Logo */}
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Identidade da Empresa</span>
-                  <p className="font-bold text-[#0B1739] truncate">{currentCompany?.name || "NavalDocs Despachante"}</p>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                    Identidade da Empresa
+                  </span>
+                  <p className="font-bold text-[#0B1739] truncate">
+                    {currentCompany?.name || "NavalDocs Despachante"}
+                  </p>
                   <p className="text-emerald-600 font-semibold flex items-center gap-1">
                     <CheckCircle2 className="h-3.5 w-3.5" />
                     <span>Logo e dados oficiais configurados</span>
@@ -1243,40 +1606,53 @@ function GerarDocumentoPage() {
 
                 {/* Porto de Registro */}
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Jurisdição / Capitania</span>
-                  <p className="font-bold text-[#0B1739] truncate">{vessel?.port_of_registry || "Capitania dos Portos de São Paulo"}</p>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                    Jurisdição / Capitania
+                  </span>
+                  <p className="font-bold text-[#0B1739] truncate">
+                    {vessel?.port_of_registry || "Capitania dos Portos de São Paulo"}
+                  </p>
                   <p className="text-slate-500">Área de Atendimento da CPES</p>
                 </div>
               </div>
 
               {!dataValidation.isValid && (
-                <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 space-y-1">
-                  <div className="flex items-center gap-1.5 font-bold">
-                    <AlertTriangle className="h-4 w-4 text-amber-600" />
-                    <span>Campos cadastrais com atenção:</span>
+                <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 font-bold">
+                      <AlertTriangle className="h-4 w-4 text-amber-600" />
+                      <span>Atenção: Campos cadastrais pendentes</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowQuickVesselModal(true)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[11px] transition-colors cursor-pointer"
+                    >
+                      <Edit className="h-3 w-3" />
+                      <span>Completar dados da embarcação</span>
+                    </button>
                   </div>
                   <ul className="list-disc list-inside text-[11px] text-amber-700 pl-1">
                     {dataValidation.missingFields.map((f, i) => (
                       <li key={i}>{f} ausente no cadastro</li>
                     ))}
                   </ul>
+                  <p className="text-[11px] text-amber-800">
+                    Documentos que não exigem a embarcação (como <strong>Declaração de Residência</strong>) continuam liberados para geração.
+                  </p>
                 </div>
               )}
             </div>
-
           </div>
 
           {/* ======================================================================= */}
           {/* COLUNA DIREITA (5 COLUNAS): FUNCIONÁRIO + RESUMO DA GERAÇÃO */}
           {/* ======================================================================= */}
           <div className="lg:col-span-5 space-y-6">
-            
             {/* SEÇÃO 3: FUNCIONÁRIO RESPONSÁVEL */}
             <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-base font-bold text-[#0B1739]">
-                  Funcionário responsável
-                </h2>
+                <h2 className="text-base font-bold text-[#0B1739]">Funcionário responsável</h2>
                 <button
                   type="button"
                   onClick={() => setShowQuickStaffModal(true)}
@@ -1293,7 +1669,8 @@ function GerarDocumentoPage() {
                     Nenhum funcionário ativo cadastrado na sua empresa.
                   </p>
                   <p className="text-[11px] text-amber-800">
-                    Cadastre o operador ou despachante responsável para constar formalmente nos documentos gerados.
+                    Cadastre o operador ou despachante responsável para constar formalmente nos
+                    documentos gerados.
                   </p>
                   <button
                     type="button"
@@ -1315,7 +1692,7 @@ function GerarDocumentoPage() {
                       const staff = companyStaffList.find((s) => s.id === e.target.value);
                       if (staff) setSelectedStaff(staff);
                     }}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:bg-white focus:ring-2 focus:ring-blue-500/20"
                   >
                     {companyStaffList.map((st) => (
                       <option key={st.id} value={st.id}>
@@ -1325,29 +1702,35 @@ function GerarDocumentoPage() {
                   </select>
                 </div>
               )}
-
-              <p className="text-[11px] text-slate-400">
-                O nome e cargo do funcionário serão fixados no snapshot imutável de cada documento gerado.
-              </p>
             </div>
 
-            {/* SEÇÃO 5: RESUMO DA GERAÇÃO */}
+            {/* SEÇÃO 5: RESUMO E BOTÃO DE GERAÇÃO */}
             <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-              <h2 className="text-base font-bold text-[#0B1739]">
-                Resumo da emissão
-              </h2>
+              <h2 className="text-base font-bold text-[#0B1739]">Resumo da geração</h2>
 
-              <div className="bg-slate-50 border border-slate-200/70 rounded-xl p-4 space-y-3 text-xs">
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-                    Documentos a serem gerados ({templatesToGenerate.length}):
+              <div className="space-y-3 text-xs">
+                <div className="flex justify-between py-1 border-b border-slate-100">
+                  <span className="text-slate-500">Documentos a gerar:</span>
+                  <span className="font-bold text-[#075BFF]">
+                    {templatesToGenerate.length} selecionado(s)
+                  </span>
+                </div>
+
+                <div className="space-y-1.5">
+                  <span className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider block">
+                    Lista do lote:
                   </span>
                   {templatesToGenerate.length === 0 ? (
-                    <span className="text-slate-400 italic">Nenhum documento selecionado para gerar</span>
+                    <span className="text-slate-400 italic">
+                      Nenhum documento apto selecionado para gerar
+                    </span>
                   ) : (
                     <ul className="space-y-1">
                       {templatesToGenerate.map((t) => (
-                        <li key={t.id} className="font-bold text-[#0B1739] flex items-center justify-between">
+                        <li
+                          key={t.id}
+                          className="font-bold text-[#0B1739] flex items-center justify-between"
+                        >
                           <span className="truncate">{t.name}</span>
                           <span className="font-mono text-[10px] font-bold text-blue-700 bg-blue-100/60 px-1.5 py-0.5 rounded ml-2">
                             {t.code}
@@ -1365,7 +1748,10 @@ function GerarDocumentoPage() {
                     </span>
                     <ul className="space-y-1">
                       {templatesAttached.map((t) => (
-                        <li key={t.id} className="text-xs text-slate-700 flex items-center justify-between">
+                        <li
+                          key={t.id}
+                          className="text-xs text-slate-700 flex items-center justify-between"
+                        >
                           <span className="truncate">{t.name}</span>
                           <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded">
                             Anexo externo
@@ -1381,8 +1767,16 @@ function GerarDocumentoPage() {
                   <span className="font-medium text-slate-700">{selectedStaff.name}</span>
                 </div>
                 <div className="flex justify-between py-1">
+                  <span className="text-slate-400">Natureza:</span>
+                  <span className="font-medium text-slate-700">
+                    {activeTemplate.nature === "official_form"
+                      ? "Formulário Oficial da Marinha"
+                      : "Documento Elaborado pela Plataforma"}
+                  </span>
+                </div>
+                <div className="flex justify-between py-1">
                   <span className="text-slate-400">Formato:</span>
-                  <span className="font-semibold text-red-600">PDF Oficial (A4)</span>
+                  <span className="font-semibold text-slate-800">PDF A4 (Formatação Oficial)</span>
                 </div>
               </div>
 
@@ -1393,7 +1787,9 @@ function GerarDocumentoPage() {
                   <span>Fluxo de assinatura GOV.BR</span>
                 </div>
                 <p className="text-[11px] text-slate-600 leading-relaxed">
-                  Os documentos gerados são disponibilizados para download e assinatura externa via GOV.BR ou presencial. O sistema <strong>não marca como assinado</strong> automaticamente na geração.
+                  Os documentos gerados são disponibilizados para download e assinatura externa via
+                  GOV.BR ou presencial. O sistema <strong>não marca como assinado</strong>{" "}
+                  automaticamente na geração.
                 </p>
               </div>
 
@@ -1415,20 +1811,106 @@ function GerarDocumentoPage() {
                     <Sparkles className="h-4 w-4" />
                     <span>
                       {templatesToGenerate.length === 0
-                        ? "Nenhum documento selecionado para geração"
+                        ? "Nenhum documento apto selecionado"
                         : templatesToGenerate.length === 1
-                        ? "Gerar 1 documento selecionado"
-                        : `Gerar ${templatesToGenerate.length} documentos selecionados`}
+                          ? "Gerar 1 documento selecionado"
+                          : `Gerar ${templatesToGenerate.length} documentos selecionados`}
                     </span>
                   </>
                 )}
               </button>
             </div>
-
           </div>
-
         </div>
 
+        {/* ========================================================================= */}
+        {/* SEÇÃO 6: DOCUMENTOS GERADOS PERSISTIDOS NESTE PROCESSO */}
+        {/* ========================================================================= */}
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileCheck2 className="h-5 w-5 text-[#075BFF]" />
+              <h2 className="text-base font-bold text-[#0B1739]">
+                Documentos gerados no processo ({generatedDocsList.length})
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={loadExistingGeneratedDocs}
+              disabled={isLoadingGeneratedDocs}
+              className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isLoadingGeneratedDocs ? "animate-spin" : ""}`} />
+              <span>Atualizar</span>
+            </button>
+          </div>
+
+          {isLoadingGeneratedDocs ? (
+            <div className="p-8 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin text-[#075BFF]" />
+              <span>Carregando documentos persistidos...</span>
+            </div>
+          ) : generatedDocsList.length === 0 ? (
+            <div className="p-8 text-center border border-dashed border-slate-200 rounded-xl space-y-2">
+              <FileText className="h-8 w-8 text-slate-300 mx-auto" />
+              <p className="text-xs font-semibold text-slate-600">
+                Nenhum documento gerado para este processo ainda.
+              </p>
+              <p className="text-[11px] text-slate-400">
+                Selecione os modelos acima e clique em "Gerar" para criar os arquivos PDF oficiais.
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {generatedDocsList.map((doc) => (
+                <div
+                  key={doc.id}
+                  className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                >
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div className="w-8 h-9 rounded-lg bg-red-500 text-white flex flex-col items-center justify-center font-bold shrink-0 shadow-2xs select-none">
+                      <span className="text-[9px] font-black tracking-tighter leading-none mt-0.5">
+                        PDF
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="text-xs font-bold text-slate-900 truncate">{doc.name}</h4>
+                      <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-500 mt-0.5">
+                        <span>
+                          Gerado em: {new Date(doc.created_at).toLocaleString("pt-BR")}
+                        </span>
+                        <span>•</span>
+                        <span className="inline-flex items-center gap-1 font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/60">
+                          <Clock className="h-3 w-3" />
+                          <span>Aguardando assinatura GOV.BR</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => openStoredFile(doc)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold cursor-pointer shadow-2xs"
+                    >
+                      <Eye className="h-3.5 w-3.5 text-[#075BFF]" />
+                      <span>Visualizar</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => downloadStoredFile(doc)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-bold cursor-pointer shadow-2xs"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      <span>Baixar</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* MODAL: CADASTRO RÁPIDO DE FUNCIONÁRIO */}
@@ -1483,7 +1965,9 @@ function GerarDocumentoPage() {
               <div className="p-3 bg-blue-50/70 border border-blue-100 rounded-xl text-[11px] text-blue-900 flex items-start gap-2">
                 <Info className="h-4 w-4 text-[#075BFF] shrink-0 mt-0.5" />
                 <p>
-                  <strong>Responsabilidade documental:</strong> Este cadastro habilita o funcionário a constar como preparador nos documentos da empresa. Ele não cria login nem concede acesso ao sistema.
+                  <strong>Responsabilidade documental:</strong> Este cadastro habilita o funcionário
+                  a constar como preparador nos documentos da empresa. Ele não cria login nem
+                  concede acesso ao sistema.
                 </p>
               </div>
             </div>
@@ -1501,7 +1985,11 @@ function GerarDocumentoPage() {
                 disabled={isSavingQuickStaff}
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-bold cursor-pointer disabled:opacity-50"
               >
-                {isSavingQuickStaff ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                {isSavingQuickStaff ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Check className="h-3.5 w-3.5" />
+                )}
                 <span>Salvar e selecionar</span>
               </button>
             </DialogFooter>
@@ -1509,6 +1997,95 @@ function GerarDocumentoPage() {
         </DialogContent>
       </Dialog>
 
+      {/* MODAL: COMPLETAR / EDITAR DADOS DA EMBARCAÇÃO INLINE */}
+      <Dialog open={showQuickVesselModal} onOpenChange={setShowQuickVesselModal}>
+        <DialogContent className="max-w-md p-6 rounded-2xl bg-white border border-slate-200">
+          <form onSubmit={handleSaveQuickVessel}>
+            <DialogHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#075BFF] flex items-center justify-center shrink-0">
+                  <Ship className="h-5 w-5" />
+                </div>
+                <div>
+                  <DialogTitle className="text-base font-bold text-[#0B1739]">
+                    Dados da embarcação
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-slate-500 mt-0.5">
+                    Preencha os campos para desbloquear a geração dos requerimentos náuticos.
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4 text-xs">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700">
+                  Nome da embarcação <strong className="text-red-500">*</strong>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={quickVesselName}
+                  onChange={(e) => setQuickVesselName(e.target.value)}
+                  placeholder="Ex: Mar Azul II"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700">
+                  Número de inscrição (TIE / TIEM)
+                </label>
+                <input
+                  type="text"
+                  value={quickVesselReg}
+                  onChange={(e) => setQuickVesselReg(e.target.value)}
+                  placeholder="Ex: 381-123456-7 (ou deixe em branco se for inscrição inicial)"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+                <p className="text-[10px] text-slate-400">
+                  Para processos de Registro Inicial, utilize o padrão provisório ou preencha o número oficial da Capitania.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700">
+                  Tipo / Categoria
+                </label>
+                <input
+                  type="text"
+                  value={quickVesselType}
+                  onChange={(e) => setQuickVesselType(e.target.value)}
+                  placeholder="Ex: Lancha / Bote / Moto Aquática"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setShowQuickVesselModal(false)}
+                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={isSavingQuickVessel}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-bold cursor-pointer disabled:opacity-50"
+              >
+                {isSavingQuickVessel ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Check className="h-3.5 w-3.5" />
+                )}
+                <span>Salvar e atualizar</span>
+              </button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
