@@ -22,6 +22,8 @@ export async function buildBrandedDocumentPdf(opts: {
   branding: CompanyBranding | null;
   verificationCode?: string;
   watermarkOptions?: WatermarkCustomOptions;
+  signerName?: string;
+  signerRole?: string;
 }): Promise<{ bytes: Uint8Array; verificationCode: string }> {
   const { PDFDocument, StandardFonts, rgb, degrees } = await import("pdf-lib");
   const pdfDoc = await PDFDocument.create();
@@ -79,7 +81,8 @@ export async function buildBrandedDocumentPdf(opts: {
     }
   };
 
-  const watermarkTargetUrl = opts.watermarkOptions?.logoUrl || b?.watermark_url || b?.logo_primary_url;
+  const watermarkTargetUrl =
+    opts.watermarkOptions?.logoUrl || b?.watermark_url || b?.logo_primary_url;
 
   const [logoImg, watermarkImg, rawWatermarkImg, signatureImg, stampImg] = await Promise.all([
     embedImage(b?.logo_primary_url),
@@ -93,57 +96,43 @@ export async function buildBrandedDocumentPdf(opts: {
 
   const verificationCode =
     opts.verificationCode ||
-    Array.from({ length: 8 }, () =>
-      "ABCDEFGHJKMNPQRSTUVWXYZ23456789"[Math.floor(Math.random() * 31)],
+    Array.from(
+      { length: 8 },
+      () => "ABCDEFGHJKMNPQRSTUVWXYZ23456789"[Math.floor(Math.random() * 31)],
     ).join("");
 
   const W = 595.28;
   const H = 841.89;
-  const LEFT = 54;
+  const LEFT = 50;
   const RIGHT_X = W - LEFT;
   const CONTENT_W = W - LEFT * 2;
 
-  // Header/footer dimensions vary per template
-  const headerHeight =
-    template === "minimalista" || template === "protocolo" || template === "corporate-clean"
-      ? 52
-      : template === "capa-executiva"
-      ? 110
-      : template === "executivo" || template === "moderno"
-      ? 92
-      : template === "azul-profundo"
-      ? 88
-      : template === "luxo" || template === "naval-premium" || template === "relatorio-tecnico"
-      ? 86
-      : template === "institucional" || template === "oficial"
-      ? 80
-      : template === "premium-branco"
-      ? 74
-      : template === "escritorio" || template === "timbrado"
-      ? 66
-      : 72;
-  const TOP_MARGIN = headerHeight + 30;
-  const BOTTOM_MARGIN = 80;
-
   const sanitize = (text: string) =>
-    String(text)
+    String(text || "")
+      .replace(/\r/g, "")
+      .replace(/\u00A0/g, " ")
+      .replace(/\t/g, " ")
       .replace(/[–—]/g, "-")
       .replace(/[“”]/g, '"')
       .replace(/[‘’]/g, "'")
       .replace(/•/g, "-")
-      .replace(/[^\x09\x0A\x0D\x20-\xFF]/g, "");
+      .replace(/[º°]/g, "o.")
+      .replace(/ª/g, "a.")
+      .replace(/[^\x0A\x20-\x7E\xA0-\xFF]/g, "");
 
-  const measure = (text: string, size: number, f = font) => f.widthOfTextAtSize(sanitize(text), size);
+  const measure = (text: string, size: number, f = font) =>
+    f.widthOfTextAtSize(sanitize(text), size);
 
   const wrap = (text: string, size: number, maxWidth: number, f = font): string[] => {
     const lines: string[] = [];
     const paragraphs = sanitize(text).split("\n");
     for (const para of paragraphs) {
-      if (!para.trim()) {
+      const cleanPara = para.trim();
+      if (!cleanPara) {
         lines.push("");
         continue;
       }
-      const words = para.split(/\s+/);
+      const words = cleanPara.split(/\s+/);
       let current = "";
       for (const w of words) {
         const test = current ? current + " " + w : w;
@@ -156,6 +145,27 @@ export async function buildBrandedDocumentPdf(opts: {
     }
     return lines;
   };
+
+  // Header dimension calculation: responsive to long company and document names
+  const rawCompanyName = sanitize(b?.company_name || "").toUpperCase();
+  const rawDocName = sanitize(opts.docName).toUpperCase();
+  const maxCompanyHeaderW = 230; // Área Esquerda: de LEFT(50) até 280
+  const maxDocHeaderW = 230;     // Área Direita: de 315 até RIGHT_X(545) — Moat central livre de 35pt
+
+  const headerCompLines = wrap(rawCompanyName || "EMPRESA NAVAL", 10.5, maxCompanyHeaderW, bold);
+  const headerDocLines = wrap(rawDocName, 8, maxDocHeaderW, bold);
+
+  const maxHeaderLines = Math.max(headerCompLines.length, headerDocLines.length);
+  const baseHeaderHeight =
+    template === "capa-executiva" ? 110 :
+    template === "executivo" || template === "moderno" ? 92 :
+    template === "azul-profundo" || template === "luxo" || template === "naval-premium" ? 88 :
+    template === "minimalista" || template === "protocolo" ? 56 :
+    72;
+
+  const headerHeight = Math.max(baseHeaderHeight, 62 + maxHeaderLines * 12);
+  const TOP_MARGIN = headerHeight + 22;
+  const BOTTOM_MARGIN = 55;
 
   const pages: any[] = [];
   let page = pdfDoc.addPage([W, H]);
@@ -175,12 +185,35 @@ export async function buildBrandedDocumentPdf(opts: {
   // ---------- TITLE BLOCK ----------
   const renderTitle = () => {
     const title = sanitize(opts.docName).toUpperCase();
+
+    const drawWrappedTitle = (
+      fontSize: number,
+      maxW: number,
+      color = ink,
+      align: "left" | "center" = "left",
+      startX: number = LEFT
+    ) => {
+      const lines = wrap(title, fontSize, maxW, bold);
+      for (const line of lines) {
+        const lineW = measure(line, fontSize, bold);
+        const xPos = align === "center" ? (W - lineW) / 2 : startX;
+        page.drawText(line, { x: xPos, y: y - fontSize, size: fontSize, font: bold, color });
+        y -= (fontSize + 4);
+      }
+    };
     if (template === "executivo") {
       // Caixa do título com filete dourado
       const boxH = 70;
       page.drawRectangle({ x: LEFT, y: y - boxH, width: CONTENT_W, height: boxH, color: lightBg });
       page.drawRectangle({ x: LEFT, y: y - boxH, width: 4, height: boxH, color: primary });
-      page.drawText(title, { x: LEFT + 18, y: y - 28, size: 18, font: bold, color: ink, maxWidth: CONTENT_W - 36 });
+      page.drawText(title, {
+        x: LEFT + 18,
+        y: y - 28,
+        size: 18,
+        font: bold,
+        color: ink,
+        maxWidth: CONTENT_W - 36,
+      });
       page.drawText(`Emitido em ${new Date().toLocaleString("pt-BR")}`, {
         x: LEFT + 18,
         y: y - 50,
@@ -190,18 +223,39 @@ export async function buildBrandedDocumentPdf(opts: {
       });
       y -= boxH + 18;
     } else if (template === "laudo") {
-      page.drawText("DOCUMENTO TÉCNICO", { x: LEFT, y: y - 10, size: 8, font: bold, color: primary });
+      page.drawText("DOCUMENTO TÉCNICO", {
+        x: LEFT,
+        y: y - 10,
+        size: 8,
+        font: bold,
+        color: primary,
+      });
       y -= 22;
       page.drawText(title, { x: LEFT, y: y - 18, size: 17, font: bold, color: ink });
       y -= 28;
-      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 1.4, color: primary });
+      page.drawLine({
+        start: { x: LEFT, y },
+        end: { x: RIGHT_X, y },
+        thickness: 1.4,
+        color: primary,
+      });
       y -= 6;
-      page.drawLine({ start: { x: LEFT, y }, end: { x: LEFT + 80, y }, thickness: 1.4, color: gold });
+      page.drawLine({
+        start: { x: LEFT, y },
+        end: { x: LEFT + 80, y },
+        thickness: 1.4,
+        color: gold,
+      });
       y -= 20;
     } else if (template === "minimalista") {
       page.drawText(title, { x: LEFT, y: y - 16, size: 16, font: bold, color: ink });
       y -= 26;
-      page.drawLine({ start: { x: LEFT, y }, end: { x: LEFT + 60, y }, thickness: 1, color: primary });
+      page.drawLine({
+        start: { x: LEFT, y },
+        end: { x: LEFT + 60, y },
+        thickness: 1,
+        color: primary,
+      });
       y -= 18;
     } else if (template === "checklist") {
       page.drawRectangle({ x: LEFT, y: y - 36, width: CONTENT_W, height: 36, color: primary });
@@ -215,23 +269,44 @@ export async function buildBrandedDocumentPdf(opts: {
     } else if (template === "escritorio") {
       page.drawText(title, { x: LEFT, y: y - 16, size: 15, font: bold, color: ink });
       y -= 22;
-      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 1.2, color: primary });
+      page.drawLine({
+        start: { x: LEFT, y },
+        end: { x: RIGHT_X, y },
+        thickness: 1.2,
+        color: primary,
+      });
       y -= 4;
       page.drawText(`Emitido em ${new Date().toLocaleString("pt-BR")}`, {
-        x: LEFT, y: y - 10, size: 8.5, font: italic, color: muted,
+        x: LEFT,
+        y: y - 10,
+        size: 8.5,
+        font: italic,
+        color: muted,
       });
       y -= 22;
     } else if (template === "institucional") {
       const tw = measure(title, 18, bold);
       page.drawText(title, { x: (W - tw) / 2, y: y - 20, size: 18, font: bold, color: ink });
       y -= 30;
-      page.drawLine({ start: { x: (W - 120) / 2, y }, end: { x: (W + 120) / 2, y }, thickness: 1, color: secondary });
+      page.drawLine({
+        start: { x: (W - 120) / 2, y },
+        end: { x: (W + 120) / 2, y },
+        thickness: 1,
+        color: secondary,
+      });
       y -= 22;
     } else if (template === "moderno") {
       const boxH = 60;
       page.drawRectangle({ x: LEFT, y: y - boxH, width: CONTENT_W, height: boxH, color: lightBg });
       page.drawRectangle({ x: LEFT, y: y - boxH, width: CONTENT_W, height: 3, color: primary });
-      page.drawText(title, { x: LEFT + 18, y: y - 32, size: 17, font: bold, color: ink, maxWidth: CONTENT_W - 36 });
+      page.drawText(title, {
+        x: LEFT + 18,
+        y: y - 32,
+        size: 17,
+        font: bold,
+        color: ink,
+        maxWidth: CONTENT_W - 36,
+      });
       y -= boxH + 18;
     } else if (template === "luxo") {
       page.drawText(title, { x: LEFT, y: y - 20, size: 18, font: bold, color: ink });
@@ -244,78 +319,135 @@ export async function buildBrandedDocumentPdf(opts: {
       const tw = measure(title, 17, bold);
       page.drawText(title, { x: (W - tw) / 2, y: y - 18, size: 17, font: bold, color: primary });
       y -= 26;
-      page.drawLine({ start: { x: (W - 90) / 2, y }, end: { x: (W + 90) / 2, y }, thickness: 1, color: gold });
+      page.drawLine({
+        start: { x: (W - 90) / 2, y },
+        end: { x: (W + 90) / 2, y },
+        thickness: 1,
+        color: gold,
+      });
       y -= 20;
     } else if (template === "azul-profundo") {
       page.drawText(title, { x: LEFT, y: y - 20, size: 18, font: bold, color: ink });
       y -= 28;
-      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 0.8, color: secondary });
+      page.drawLine({
+        start: { x: LEFT, y },
+        end: { x: RIGHT_X, y },
+        thickness: 0.8,
+        color: secondary,
+      });
       y -= 20;
     } else if (template === "oficial") {
       page.drawText(title, { x: LEFT, y: y - 18, size: 17, font: bold, color: ink });
       y -= 26;
-      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 1, color: secondary });
+      page.drawLine({
+        start: { x: LEFT, y },
+        end: { x: RIGHT_X, y },
+        thickness: 1,
+        color: secondary,
+      });
       y -= 4;
-      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 0.4, color: secondary });
+      page.drawLine({
+        start: { x: LEFT, y },
+        end: { x: RIGHT_X, y },
+        thickness: 0.4,
+        color: secondary,
+      });
       y -= 18;
     } else if (template === "engenharia-naval") {
-      page.drawText("MEMORIAL TÉCNICO", { x: LEFT, y: y - 10, size: 8, font: bold, color: secondary });
+      page.drawText("MEMORIAL TÉCNICO", {
+        x: LEFT,
+        y: y - 10,
+        size: 8,
+        font: bold,
+        color: secondary,
+      });
       y -= 22;
       page.drawText(title, { x: LEFT, y: y - 18, size: 16, font: bold, color: ink });
       y -= 28;
-      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 1.4, color: secondary });
+      page.drawLine({
+        start: { x: LEFT, y },
+        end: { x: RIGHT_X, y },
+        thickness: 1.4,
+        color: secondary,
+      });
       y -= 18;
     } else if (template === "protocolo") {
       const protocolo = `PROTOCOLO ${new Date().getFullYear()}/${verificationCode.slice(0, 4)}`;
       const pw = measure(protocolo, 8, bold);
-      page.drawRectangle({ x: RIGHT_X - pw - 12, y: y - 14, width: pw + 12, height: 16, color: lightBg, borderColor: secondary, borderWidth: 0.5 });
-      page.drawText(protocolo, { x: RIGHT_X - pw - 6, y: y - 10, size: 8, font: bold, color: secondary });
+      page.drawRectangle({
+        x: RIGHT_X - pw - 12,
+        y: y - 14,
+        width: pw + 12,
+        height: 16,
+        color: lightBg,
+        borderColor: secondary,
+        borderWidth: 0.5,
+      });
+      page.drawText(protocolo, {
+        x: RIGHT_X - pw - 6,
+        y: y - 10,
+        size: 8,
+        font: bold,
+        color: secondary,
+      });
       page.drawText(title, { x: LEFT, y: y - 16, size: 15, font: bold, color: ink });
       y -= 30;
-      page.drawLine({ start: { x: LEFT, y }, end: { x: LEFT + 50, y }, thickness: 1, color: secondary });
+      page.drawLine({
+        start: { x: LEFT, y },
+        end: { x: LEFT + 50, y },
+        thickness: 1,
+        color: secondary,
+      });
       y -= 18;
     } else if (template === "capa-executiva") {
-      // Title rendered inside header already; here add subtitle line
-      page.drawText("DOCUMENTO OFICIAL", { x: LEFT, y: y - 8, size: 8, font: bold, color: muted });
+      // Title rendered inside header already; here add subtitle identifying document origin
+      page.drawText("ELABORADO PELA PLATAFORMA", { x: LEFT, y: y - 8, size: 8, font: bold, color: muted });
       y -= 20;
-      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 0.6, color: lightBorder });
+      page.drawLine({
+        start: { x: LEFT, y },
+        end: { x: RIGHT_X, y },
+        thickness: 0.6,
+        color: lightBorder,
+      });
       y -= 18;
     } else if (template === "relatorio-tecnico") {
-      page.drawText("RELATÓRIO TÉCNICO", { x: LEFT, y: y - 10, size: 8.5, font: bold, color: primary });
+      page.drawText("RELATÓRIO TÉCNICO", {
+        x: LEFT,
+        y: y - 10,
+        size: 8.5,
+        font: bold,
+        color: primary,
+      });
       y -= 22;
       page.drawText(title, { x: LEFT, y: y - 18, size: 17, font: bold, color: ink });
       y -= 26;
-      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 1.2, color: primary });
+      page.drawLine({
+        start: { x: LEFT, y },
+        end: { x: RIGHT_X, y },
+        thickness: 1.2,
+        color: primary,
+      });
       y -= 4;
-      page.drawLine({ start: { x: LEFT, y }, end: { x: LEFT + 60, y }, thickness: 1.2, color: gold });
+      page.drawLine({
+        start: { x: LEFT, y },
+        end: { x: LEFT + 60, y },
+        thickness: 1.2,
+        color: gold,
+      });
       y -= 18;
     } else if (template === "corporate-clean") {
       page.drawRectangle({ x: LEFT, y: y - 22, width: 4, height: 22, color: primary });
       page.drawText(title, { x: LEFT + 14, y: y - 16, size: 16, font: bold, color: ink });
       y -= 32;
       page.drawText(`Emitido em ${new Date().toLocaleDateString("pt-BR")}`, {
-        x: LEFT + 14, y, size: 8.5, font: italic, color: muted,
+        x: LEFT + 14,
+        y,
+        size: 8.5,
+        font: italic,
+        color: muted,
       });
       y -= 18;
     } else if (template === "timbrado") {
-      page.drawText(title, { x: LEFT, y: y - 18, size: 17, font: bold, color: ink });
-      y -= 24;
-      page.drawText(`Documento emitido em ${new Date().toLocaleString("pt-BR")}`, {
-        x: LEFT, y, size: 9, font: italic, color: secondary,
-      });
-      y -= 16;
-      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 0.6, color: secondary });
-      y -= 18;
-    } else if (template === "naval-premium") {
-      const tw = measure(title, 18, bold);
-      page.drawText(title, { x: (W - tw) / 2, y: y - 20, size: 18, font: bold, color: ink });
-      y -= 30;
-      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 1.4, color: gold });
-      y -= 3;
-      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 0.5, color: primary });
-      y -= 18;
-    } else {
-      // classico
       page.drawText(title, { x: LEFT, y: y - 18, size: 17, font: bold, color: ink });
       y -= 24;
       page.drawText(`Documento emitido em ${new Date().toLocaleString("pt-BR")}`, {
@@ -323,10 +455,47 @@ export async function buildBrandedDocumentPdf(opts: {
         y,
         size: 9,
         font: italic,
-        color: muted,
+        color: secondary,
+      });
+      y -= 16;
+      page.drawLine({
+        start: { x: LEFT, y },
+        end: { x: RIGHT_X, y },
+        thickness: 0.6,
+        color: secondary,
       });
       y -= 18;
-      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 0.5, color: lightBorder });
+    } else if (template === "naval-premium") {
+      const tw = measure(title, 18, bold);
+      page.drawText(title, { x: (W - tw) / 2, y: y - 20, size: 18, font: bold, color: ink });
+      y -= 30;
+      page.drawLine({ start: { x: LEFT, y }, end: { x: RIGHT_X, y }, thickness: 1.4, color: gold });
+      y -= 3;
+      page.drawLine({
+        start: { x: LEFT, y },
+        end: { x: RIGHT_X, y },
+        thickness: 0.5,
+        color: primary,
+      });
+      y -= 18;
+    } else {
+      // classico
+      drawWrappedTitle(16, CONTENT_W, ink);
+      y -= 4;
+      page.drawText(`Documento emitido em ${new Date().toLocaleString("pt-BR")}`, {
+        x: LEFT,
+        y: y - 8,
+        size: 9,
+        font: italic,
+        color: muted,
+      });
+      y -= 20;
+      page.drawLine({
+        start: { x: LEFT, y },
+        end: { x: RIGHT_X, y },
+        thickness: 0.5,
+        color: lightBorder,
+      });
       y -= 16;
     }
   };
@@ -367,9 +536,16 @@ export async function buildBrandedDocumentPdf(opts: {
   const drawHeading = (text: string) => {
     flushTwoColumnRow();
     sectionIndex += 1;
-    ensureSpace(headingSize + 14);
+    ensureSpace(headingSize + 20);
+    y -= 10;
     if (template === "laudo") {
-      page.drawRectangle({ x: LEFT, y: y - headingSize - 8, width: 22, height: headingSize + 8, color: primary });
+      page.drawRectangle({
+        x: LEFT,
+        y: y - headingSize - 8,
+        width: 22,
+        height: headingSize + 8,
+        color: primary,
+      });
       page.drawText(String(sectionIndex), {
         x: LEFT + 6,
         y: y - headingSize - 2,
@@ -386,13 +562,30 @@ export async function buildBrandedDocumentPdf(opts: {
       });
       y -= headingSize + 14;
     } else if (template === "checklist") {
-      page.drawText("> " + sanitize(text), { x: LEFT, y: y - headingSize, size: headingSize, font: bold, color: primary });
+      page.drawText("> " + sanitize(text), {
+        x: LEFT,
+        y: y - headingSize,
+        size: headingSize,
+        font: bold,
+        color: primary,
+      });
       y -= headingSize + 8;
     } else {
-      page.drawText(sanitize(text), { x: LEFT, y: y - headingSize, size: headingSize, font: bold, color: primary });
-      y -= headingSize + 4;
-      page.drawLine({ start: { x: LEFT, y }, end: { x: LEFT + 40, y }, thickness: 0.8, color: gold });
-      y -= 10;
+      page.drawText(sanitize(text), {
+        x: LEFT,
+        y: y - headingSize,
+        size: headingSize,
+        font: bold,
+        color: primary,
+      });
+      y -= headingSize + 3;
+      page.drawLine({
+        start: { x: LEFT, y },
+        end: { x: RIGHT_X, y },
+        thickness: 0.6,
+        color: lightBorder,
+      });
+      y -= 8;
     }
   };
 
@@ -446,7 +639,13 @@ export async function buildBrandedDocumentPdf(opts: {
       borderWidth: 0.45,
     });
     page.drawRectangle({ x, y: rowTop - 34, width: 3, height: 34, color: primary, opacity: 0.85 });
-    page.drawText(sanitize(label).toUpperCase(), { x: x + 9, y: rowTop - 12, size: 6.8, font: bold, color: muted });
+    page.drawText(sanitize(label).toUpperCase(), {
+      x: x + 9,
+      y: rowTop - 12,
+      size: 6.8,
+      font: bold,
+      color: muted,
+    });
     const valueText = wrap(value, 8.6, colW - 18).slice(0, 2);
     valueText.forEach((line, idx) => {
       page.drawText(line, { x: x + 9, y: rowTop - 24 - idx * 9, size: 8.6, font, color: ink });
@@ -469,16 +668,32 @@ export async function buildBrandedDocumentPdf(opts: {
       return;
     }
     flushTwoColumnRow();
-    ensureSpace(bodySize + lineGap);
-    page.drawText(sanitize(label) + ":", { x: LEFT, y, size: bodySize, font: bold, color: ink });
-    const lw = measure(label + ": ", bodySize, bold);
-    const valueLines = wrap(value, bodySize, CONTENT_W - lw);
-    page.drawText(valueLines[0] || "", { x: LEFT + lw, y, size: bodySize, font, color: ink });
-    y -= bodySize + lineGap;
-    for (let i = 1; i < valueLines.length; i++) {
+    const cleanLabel = sanitize(label).trim();
+    const cleanValue = sanitize(value).trim();
+    const lw = measure(cleanLabel + ":", bodySize, bold) + 6;
+
+    // Se o rótulo for longo (>140pt) ou o valor for longo (>65 chars), quebra em bloco com recuo
+    if (lw > 140 || cleanValue.length > 65) {
+      ensureSpace(bodySize * 2 + lineGap * 2 + 4);
+      page.drawText(cleanLabel + ":", { x: LEFT, y, size: bodySize, font: bold, color: ink });
+      y -= (bodySize + 3);
+      const valueLines = wrap(cleanValue, bodySize, CONTENT_W - 14);
+      for (const valLn of valueLines) {
+        ensureSpace(bodySize + lineGap);
+        page.drawText(valLn, { x: LEFT + 14, y, size: bodySize, font, color: ink });
+        y -= (bodySize + lineGap);
+      }
+    } else {
       ensureSpace(bodySize + lineGap);
-      page.drawText(valueLines[i], { x: LEFT + lw, y, size: bodySize, font, color: ink });
-      y -= bodySize + lineGap;
+      page.drawText(cleanLabel + ":", { x: LEFT, y, size: bodySize, font: bold, color: ink });
+      const valueLines = wrap(cleanValue, bodySize, CONTENT_W - lw);
+      page.drawText(valueLines[0] || "", { x: LEFT + lw, y, size: bodySize, font, color: ink });
+      y -= (bodySize + lineGap);
+      for (let i = 1; i < valueLines.length; i++) {
+        ensureSpace(bodySize + lineGap);
+        page.drawText(valueLines[i], { x: LEFT + 14, y, size: bodySize, font, color: ink });
+        y -= (bodySize + lineGap);
+      }
     }
   };
 
@@ -488,14 +703,17 @@ export async function buildBrandedDocumentPdf(opts: {
     const ln = rawLines[i];
     const trimmed = ln.trim();
     if (!trimmed) {
-      y -= 6;
+      y -= 8;
       continue;
     }
-    const isAllCapsHeading = /^[A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9 ()\/\-]+$/.test(trimmed) && trimmed.length <= 60 && trimmed.length >= 3;
+    const isNumberedHeading = /^[0-9]+\.\s+[A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9 ()/\-.,:]{3,90}$/.test(trimmed);
+    const isSectionHeading = /^[A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9 ()/\-.,]{3,70}:$/.test(trimmed);
+    const isCapsTitle = !/[a-z]/.test(trimmed) && trimmed.length >= 4 && trimmed.length <= 80 && !trimmed.includes(": ");
     const isBullet = /^[-•*]\s+/.test(trimmed);
     const kv = trimmed.match(/^([^:]{1,40}):\s+(.+)$/);
-    if (isAllCapsHeading && !kv) {
-      drawHeading(trimmed);
+
+    if (isNumberedHeading || isSectionHeading || (isCapsTitle && !kv)) {
+      drawHeading(trimmed.replace(/:$/, ""));
     } else if (isBullet) {
       drawBullet(trimmed);
     } else if (kv) {
@@ -507,34 +725,55 @@ export async function buildBrandedDocumentPdf(opts: {
   flushTwoColumnRow();
 
   // ---------- SIGNATURE BLOCK ----------
-  if (signatureImg || b?.technical_responsible_name || stampImg) {
-    ensureSpace(140);
-    y -= 30;
-    if (signatureImg) {
-      const sw = 150;
-      const sh = (signatureImg.height / signatureImg.width) * sw;
-      page.drawImage(signatureImg, { x: LEFT, y: y - sh, width: sw, height: sh });
-      y -= sh + 4;
-    }
-    page.drawLine({ start: { x: LEFT, y }, end: { x: LEFT + 230, y }, thickness: 0.6, color: secondary });
+  const signerText = opts.signerName || b?.technical_responsible_name || "Assinatura do Responsável";
+  const signerSub = opts.signerRole || b?.technical_responsible_registry || "";
+
+  ensureSpace(70);
+  y -= 18;
+  if (signatureImg) {
+    const sw = 130;
+    const sh = (signatureImg.height / signatureImg.width) * sw;
+    page.drawImage(signatureImg, { x: LEFT, y: y - sh, width: sw, height: sh });
+    y -= sh + 4;
+  }
+  page.drawLine({
+    start: { x: LEFT, y },
+    end: { x: LEFT + 240, y },
+    thickness: 0.6,
+    color: secondary,
+  });
+  y -= 10;
+  const signerLines = signerText.split("\n");
+  for (const sLine of signerLines) {
+    page.drawText(sanitize(sLine), {
+      x: LEFT,
+      y,
+      size: 9.5,
+      font: bold,
+      color: ink,
+    });
     y -= 12;
-    if (b?.technical_responsible_name)
-      page.drawText(sanitize(b.technical_responsible_name), { x: LEFT, y, size: 9.5, font: bold, color: ink });
-    if (b?.technical_responsible_registry) {
-      y -= 11;
-      page.drawText(sanitize(b.technical_responsible_registry), { x: LEFT, y, size: 8.5, font, color: muted });
-    }
-    if (stampImg) {
-      const sw = 95;
-      const sh = (stampImg.height / stampImg.width) * sw;
-      page.drawImage(stampImg, {
-        x: W - LEFT - sw,
-        y: y - 10,
-        width: sw,
-        height: sh,
-        opacity: 0.92,
-      });
-    }
+  }
+  if (signerSub) {
+    page.drawText(sanitize(signerSub), {
+      x: LEFT,
+      y,
+      size: 8.5,
+      font,
+      color: muted,
+    });
+    y -= 10;
+  }
+  if (stampImg) {
+    const sw = 85;
+    const sh = (stampImg.height / stampImg.width) * sw;
+    page.drawImage(stampImg, {
+      x: W - LEFT - sw,
+      y: y + 10,
+      width: sw,
+      height: sh,
+      opacity: 0.92,
+    });
   }
 
   // ---------- HEADER / FOOTER / WATERMARK PER PAGE ----------
@@ -545,16 +784,35 @@ export async function buildBrandedDocumentPdf(opts: {
     } else if (template === "engenharia-naval" || template === "laudo") {
       p.drawRectangle({ x: 0, y: 0, width: 6, height: H, color: secondary, opacity: 0.16 });
     } else if (template === "naval-premium") {
-      p.drawRectangle({ x: W - 16, y: 0, width: 16, height: H, color: primary, opacity: 0.10 });
+      p.drawRectangle({ x: W - 16, y: 0, width: 16, height: H, color: primary, opacity: 0.1 });
     }
     // Header
     if (template === "executivo") {
       // Gradient simulation: 3 stacked bands
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: secondary });
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight / 2, color: primary, opacity: 0.55 });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: W,
+        height: headerHeight,
+        color: secondary,
+      });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: W,
+        height: headerHeight / 2,
+        color: primary,
+        opacity: 0.55,
+      });
       p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: 3, color: gold });
     } else if (template === "naval-azul") {
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: rgb(0.05, 0.12, 0.27) });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: W,
+        height: headerHeight,
+        color: rgb(0.05, 0.12, 0.27),
+      });
       p.drawRectangle({ x: 0, y: H - headerHeight - 3, width: W, height: 3, color: gold });
     } else if (template === "minimalista") {
       p.drawLine({
@@ -564,8 +822,20 @@ export async function buildBrandedDocumentPdf(opts: {
         color: lightBorder,
       });
     } else if (template === "laudo") {
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: lightBg });
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: 6, height: headerHeight, color: primary });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: W,
+        height: headerHeight,
+        color: lightBg,
+      });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: 6,
+        height: headerHeight,
+        color: primary,
+      });
       p.drawLine({
         start: { x: 0, y: H - headerHeight },
         end: { x: W, y: H - headerHeight },
@@ -573,7 +843,13 @@ export async function buildBrandedDocumentPdf(opts: {
         color: lightBorder,
       });
     } else if (template === "checklist") {
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: lightBg });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: W,
+        height: headerHeight,
+        color: lightBg,
+      });
       p.drawLine({
         start: { x: 0, y: H - headerHeight - 2 },
         end: { x: W, y: H - headerHeight - 2 },
@@ -581,7 +857,13 @@ export async function buildBrandedDocumentPdf(opts: {
         color: primary,
       });
     } else if (template === "escritorio") {
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: rgb(0.98, 0.98, 0.99) });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: W,
+        height: headerHeight,
+        color: rgb(0.98, 0.98, 0.99),
+      });
       p.drawRectangle({ x: 0, y: H - headerHeight - 2, width: W, height: 2, color: primary });
       p.drawLine({
         start: { x: 0, y: H - headerHeight },
@@ -590,58 +872,210 @@ export async function buildBrandedDocumentPdf(opts: {
         color: lightBorder,
       });
     } else if (template === "institucional") {
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: rgb(0.06, 0.13, 0.28) });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: W,
+        height: headerHeight,
+        color: rgb(0.06, 0.13, 0.28),
+      });
     } else if (template === "moderno") {
       // Gradient bands primary -> secondary
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: primary });
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: secondary, opacity: 0.45 });
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: W / 2, height: headerHeight, color: primary, opacity: 0.3 });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: W,
+        height: headerHeight,
+        color: primary,
+      });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: W,
+        height: headerHeight,
+        color: secondary,
+        opacity: 0.45,
+      });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: W / 2,
+        height: headerHeight,
+        color: primary,
+        opacity: 0.3,
+      });
     } else if (template === "luxo") {
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: rgb(0.04, 0.09, 0.2) });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: W,
+        height: headerHeight,
+        color: rgb(0.04, 0.09, 0.2),
+      });
       p.drawRectangle({ x: 0, y: H - headerHeight - 2, width: W, height: 2, color: gold });
       p.drawRectangle({ x: 0, y: H - headerHeight - 6, width: W, height: 1, color: gold });
     } else if (template === "premium-branco") {
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: rgb(1, 1, 1) });
-      p.drawLine({ start: { x: LEFT, y: H - headerHeight + 2 }, end: { x: RIGHT_X, y: H - headerHeight + 2 }, thickness: 1.4, color: gold });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: W,
+        height: headerHeight,
+        color: rgb(1, 1, 1),
+      });
+      p.drawLine({
+        start: { x: LEFT, y: H - headerHeight + 2 },
+        end: { x: RIGHT_X, y: H - headerHeight + 2 },
+        thickness: 1.4,
+        color: gold,
+      });
     } else if (template === "azul-profundo") {
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: rgb(0.024, 0.125, 0.273) });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: W,
+        height: headerHeight,
+        color: rgb(0.024, 0.125, 0.273),
+      });
     } else if (template === "oficial") {
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: secondary });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: W,
+        height: headerHeight,
+        color: secondary,
+      });
       p.drawRectangle({ x: 0, y: H - headerHeight - 2, width: W, height: 2, color: primary });
     } else if (template === "engenharia-naval") {
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: lightBg });
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: 8, height: headerHeight, color: secondary });
-      p.drawLine({ start: { x: 0, y: H - headerHeight }, end: { x: W, y: H - headerHeight }, thickness: 0.6, color: secondary });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: W,
+        height: headerHeight,
+        color: lightBg,
+      });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: 8,
+        height: headerHeight,
+        color: secondary,
+      });
+      p.drawLine({
+        start: { x: 0, y: H - headerHeight },
+        end: { x: W, y: H - headerHeight },
+        thickness: 0.6,
+        color: secondary,
+      });
     } else if (template === "protocolo") {
-      p.drawLine({ start: { x: LEFT, y: H - headerHeight }, end: { x: RIGHT_X, y: H - headerHeight }, thickness: 0.8, color: secondary });
+      p.drawLine({
+        start: { x: LEFT, y: H - headerHeight },
+        end: { x: RIGHT_X, y: H - headerHeight },
+        thickness: 0.8,
+        color: secondary,
+      });
     } else if (template === "capa-executiva") {
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: primary });
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: secondary, opacity: 0.5 });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: W,
+        height: headerHeight,
+        color: primary,
+      });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: W,
+        height: headerHeight,
+        color: secondary,
+        opacity: 0.5,
+      });
       p.drawRectangle({ x: 0, y: H - headerHeight - 3, width: W, height: 3, color: gold });
       if (idx === 0) {
         const title = sanitize(opts.docName).toUpperCase();
         const tw = measure(title, 20, bold);
-        p.drawText(title, { x: (W - tw) / 2, y: H - headerHeight / 2 - 6, size: 20, font: bold, color: rgb(1, 1, 1), maxWidth: W - 80 });
+        p.drawText(title, {
+          x: (W - tw) / 2,
+          y: H - headerHeight / 2 - 6,
+          size: 20,
+          font: bold,
+          color: rgb(1, 1, 1),
+          maxWidth: W - 80,
+        });
       }
     } else if (template === "relatorio-tecnico") {
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: secondary });
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: primary, opacity: 0.55 });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: W,
+        height: headerHeight,
+        color: secondary,
+      });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: W,
+        height: headerHeight,
+        color: primary,
+        opacity: 0.55,
+      });
       p.drawRectangle({ x: 0, y: H - headerHeight - 2, width: W, height: 2, color: gold });
     } else if (template === "corporate-clean") {
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: rgb(1, 1, 1) });
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: 80, height: headerHeight, color: primary });
-      p.drawLine({ start: { x: 0, y: H - headerHeight }, end: { x: W, y: H - headerHeight }, thickness: 0.4, color: lightBorder });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: W,
+        height: headerHeight,
+        color: rgb(1, 1, 1),
+      });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: 80,
+        height: headerHeight,
+        color: primary,
+      });
+      p.drawLine({
+        start: { x: 0, y: H - headerHeight },
+        end: { x: W, y: H - headerHeight },
+        thickness: 0.4,
+        color: lightBorder,
+      });
     } else if (template === "timbrado") {
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: primary });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: W,
+        height: headerHeight,
+        color: primary,
+      });
       p.drawRectangle({ x: 0, y: H - headerHeight - 6, width: W, height: 4, color: secondary });
     } else if (template === "naval-premium") {
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: rgb(0.024, 0.094, 0.22) });
-      p.drawRectangle({ x: W - 90, y: H - headerHeight, width: 90, height: headerHeight, color: primary, opacity: 0.7 });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: W,
+        height: headerHeight,
+        color: rgb(0.024, 0.094, 0.22),
+      });
+      p.drawRectangle({
+        x: W - 90,
+        y: H - headerHeight,
+        width: 90,
+        height: headerHeight,
+        color: primary,
+        opacity: 0.7,
+      });
       p.drawRectangle({ x: 0, y: H - headerHeight - 2, width: W, height: 2, color: gold });
       p.drawRectangle({ x: 0, y: H - headerHeight - 6, width: W, height: 1, color: gold });
     } else {
       // classico
-      p.drawRectangle({ x: 0, y: H - headerHeight, width: W, height: headerHeight, color: primary });
+      p.drawRectangle({
+        x: 0,
+        y: H - headerHeight,
+        width: W,
+        height: headerHeight,
+        color: primary,
+      });
     }
 
     const onDarkHeader =
@@ -659,10 +1093,14 @@ export async function buildBrandedDocumentPdf(opts: {
       template === "naval-premium";
     const headerTextColor = onDarkHeader ? rgb(1, 1, 1) : ink;
 
-    // Logo or company name (logo ~30% larger; elegant text fallback)
+    // Header text rendering: separated into strictly non-overlapping Left and Right areas
+    const maxLeftAreaW = 230; // Área da empresa: de LEFT (50) até 280
+    const rightAreaMaxW = 230; // Área do documento: alinhado à direita de RIGHT_X (545) até 315 (moat central livre de 35pt)
+
+    // Lado Esquerdo: Logo ou Nome da Empresa
     if (logoImg) {
-      const maxLh = headerHeight - 12;
-      const lw = Math.min(150, (logoImg.width / logoImg.height) * maxLh);
+      const maxLh = headerHeight - 18;
+      const lw = Math.min(115, (logoImg.width / logoImg.height) * maxLh);
       const lh = (logoImg.height / logoImg.width) * lw;
       p.drawImage(logoImg, {
         x: LEFT,
@@ -671,43 +1109,43 @@ export async function buildBrandedDocumentPdf(opts: {
         height: lh,
       });
       if (b?.company_name) {
-        p.drawText(sanitize(b.company_name), {
-          x: LEFT + lw + 14,
-          y: H - headerHeight / 2 - 4,
-          size: 11,
+        const cLines = wrap(sanitize(b.company_name).toUpperCase(), 10, maxLeftAreaW - lw - 10, bold);
+        const compBlockH = cLines.length * 12;
+        let cy = H - (headerHeight - compBlockH) / 2 - 9;
+        for (const cln of cLines) {
+          p.drawText(cln, { x: LEFT + lw + 10, y: cy, size: 10, font: bold, color: headerTextColor });
+          cy -= 12;
+        }
+      }
+    } else if (rawCompanyName) {
+      const compBlockH = headerCompLines.length * 13;
+      let cy = H - (headerHeight - compBlockH) / 2 - 10;
+      for (const cln of headerCompLines) {
+        p.drawText(cln, {
+          x: LEFT,
+          y: cy,
+          size: headerCompLines.length > 1 ? 10.5 : 12,
           font: bold,
           color: headerTextColor,
         });
+        cy -= 13;
       }
-    } else if (b?.company_name) {
-      const name = sanitize(b.company_name.toUpperCase());
-      p.drawText(name, {
-        x: LEFT,
-        y: H - headerHeight / 2 - 2,
-        size: 15,
+    }
+
+    // Lado Direito: Identificação do Documento (rigorosamente delimitada e alinhada à direita)
+    const docBlockH = headerDocLines.length * 10;
+    let dy = H - (headerHeight - docBlockH) / 2 - 8;
+    for (const dln of headerDocLines) {
+      const dw = measure(dln, 8, bold);
+      p.drawText(dln, {
+        x: RIGHT_X - dw,
+        y: dy,
+        size: 8,
         font: bold,
         color: headerTextColor,
       });
-      const nw = measure(name, 15, bold);
-      p.drawLine({
-        start: { x: LEFT, y: H - headerHeight / 2 - 8 },
-        end: { x: LEFT + Math.min(nw, 180), y: H - headerHeight / 2 - 8 },
-        thickness: 0.6,
-        color: onDarkHeader ? gold : primary,
-      });
+      dy -= 10;
     }
-
-    // Doc name in header (right)
-    const docLabel = sanitize(opts.docName);
-    const dlw = measure(docLabel, 9, bold);
-    p.drawText(docLabel, {
-      x: Math.max(W - LEFT - dlw, LEFT + 200),
-      y: H - headerHeight / 2 - 4,
-      size: 9,
-      font: bold,
-      color: headerTextColor,
-      maxWidth: 240,
-    });
 
     // Watermark personalizada (respeita opacidade, escala, posição e páginas)
     const wmOpt = opts.watermarkOptions;
@@ -716,7 +1154,7 @@ export async function buildBrandedDocumentPdf(opts: {
 
     if (isWatermarkEnabled && isPageAllowed) {
       if (finalWatermarkImg) {
-        const scaleFraction = wmOpt?.scale ?? 0.60;
+        const scaleFraction = wmOpt?.scale ?? 0.6;
         const targetOpacity = wmOpt?.opacity ?? 0.05;
         const ww = Math.min(CONTENT_W * scaleFraction, W - 40);
         const wh = (finalWatermarkImg.height / finalWatermarkImg.width) * ww;
@@ -733,7 +1171,7 @@ export async function buildBrandedDocumentPdf(opts: {
           y: targetY,
           width: ww,
           height: wh,
-          opacity: Math.max(0.01, Math.min(0.20, targetOpacity)),
+          opacity: Math.max(0.01, Math.min(0.2, targetOpacity)),
         });
       } else if (b?.company_name) {
         const wmText = sanitize(b.company_name.toUpperCase());
@@ -762,10 +1200,24 @@ export async function buildBrandedDocumentPdf(opts: {
       .filter(Boolean)
       .join("  •  ");
     if (contactBits) {
-      p.drawText(sanitize(contactBits), { x: LEFT, y: 48, size: 7, font, color: muted, maxWidth: CONTENT_W - 150 });
+      p.drawText(sanitize(contactBits), {
+        x: LEFT,
+        y: 48,
+        size: 7,
+        font,
+        color: muted,
+        maxWidth: CONTENT_W - 150,
+      });
     }
     if (b?.pdf_footer_text) {
-      p.drawText(sanitize(b.pdf_footer_text), { x: LEFT, y: 36, size: 6.5, font: italic, color: muted, maxWidth: CONTENT_W - 150 });
+      p.drawText(sanitize(b.pdf_footer_text), {
+        x: LEFT,
+        y: 36,
+        size: 6.5,
+        font: italic,
+        color: muted,
+        maxWidth: CONTENT_W - 150,
+      });
     }
     // Verification code pill (right)
     const codeText = `Cód. verificação: ${verificationCode}`;

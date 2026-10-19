@@ -44,12 +44,12 @@ export const CATALOG_TEMPLATES: CatalogTemplateItem[] = [
     name: "Requerimento Padrão do Interessado",
     code: "REQ-001",
     description:
-      "Requerimento oficial padronizado pela Autoridade Marítima para solicitação de serviços de registro e emissão de TIE/TIEM perante a Capitania dos Portos / Del / Agência.",
+      "Requerimento padronizado elaborado pela plataforma com base na NORMAM-211/DPC, Anexo 2-E para solicitação de serviços de registro, transferência e emissão de TIE/TIEM perante a Capitania dos Portos / Del / Agência.",
     category: "esporte_recreio",
     categoryLabel: "Esporte e recreio",
-    updatedAt: "16/10/2026",
+    updatedAt: "17/10/2026",
     status: "aprovado",
-    nature: "official_form",
+    nature: "platform_generated",
     requiredFields: [
       "Nome do Cliente",
       "CPF/CNPJ do Cliente",
@@ -58,7 +58,7 @@ export const CATALOG_TEMPLATES: CatalogTemplateItem[] = [
     ],
     isMandatory: true,
     isConditional: false,
-    officialSource: "NORMAM-211/DPC, Anexo 2-A • Capitania dos Portos (CPES/DPC)",
+    officialSource: "NORMAM-211/DPC, Anexo 2-E • Diretoria de Portos e Costas (DPC)",
     validationDate: "16/10/2026",
     aliases: {
       codes: ["req-padrao-cpes", "REQ-001", "REQ_INSCR", "REQ_PADRAO"],
@@ -81,7 +81,7 @@ export const CATALOG_TEMPLATES: CatalogTemplateItem[] = [
     updatedAt: "16/10/2026",
     status: "aprovado",
     nature: "platform_generated",
-    requiredFields: ["Nome do Cliente", "CPF/CNPJ do Cliente", "Responsável"],
+    requiredFields: ["Nome do Cliente", "CPF/CNPJ do Cliente", "Responsável", "Outorgado"],
     isMandatory: true,
     isConditional: false,
     officialSource: "Código Civil Brasileiro (Lei 10.406/02, art. 653) c/c NORMAM-211/DPC",
@@ -139,7 +139,7 @@ export const CATALOG_TEMPLATES: CatalogTemplateItem[] = [
     categoryLabel: "Moto aquática",
     updatedAt: "16/10/2026",
     status: "aprovado",
-    nature: "official_form",
+    nature: "platform_generated",
     requiredFields: ["Nome do Cliente", "CPF/CNPJ do Cliente", "Nome da Embarcação"],
     isMandatory: true,
     isConditional: false,
@@ -188,12 +188,12 @@ export const CATALOG_TEMPLATES: CatalogTemplateItem[] = [
     name: "Requerimento de Embarcação Profissional / Comercial",
     code: "REQ-PROF",
     description:
-      "Requerimento oficial de inscrição ou regularização para embarcações de pesca, passageiros ou transporte comercial de carga perante a Capitania dos Portos.",
+      "Requerimento elaborado pela plataforma com base na NORMAM-201/DPC, Anexo 2-A para inscrição, regularização ou transferência de embarcações comerciais e profissionais perante a Capitania dos Portos.",
     category: "profissional",
     categoryLabel: "Embarcações profissionais",
     updatedAt: "16/10/2026",
     status: "aprovado",
-    nature: "official_form",
+    nature: "platform_generated",
     requiredFields: ["Nome do Cliente", "CPF/CNPJ do Cliente", "Nome da Embarcação"],
     isMandatory: true,
     isConditional: false,
@@ -371,6 +371,7 @@ export function checkTemplateMissingRequirements(
   customer: any,
   vessel: any,
   staff: any,
+  company?: any,
 ): { isBlocked: boolean; missingFields: string[] } {
   const missing: string[] = [];
 
@@ -380,6 +381,11 @@ export function checkTemplateMissingRequirements(
   const hasStaff = !!(staff?.name && staff?.name !== "Não informado");
   const hasVesselName = !!vessel?.name;
   const hasVesselRegistration = !!(vessel?.registration_number && vessel.registration_number.trim() !== "");
+
+  // Outorgado da Procuração: verificação estrita de PF vs PJ
+  const isProcuradorPF = !!company?.procurador_nome;
+  const hasProcuradorPFCpf = !!company?.procurador_cpf;
+  const hasCompanyPJDoc = !!(company?.cnpj && (company?.contact_address || company?.address));
 
   for (const field of tpl.requiredFields) {
     if (field === "Nome do Cliente" && !hasCustomerName) {
@@ -392,13 +398,24 @@ export function checkTemplateMissingRequirements(
       missing.push("Endereço Completo");
     }
     if (field === "Responsável" && !hasStaff) {
-      missing.push("Funcionário / Despachante Responsável");
+      missing.push("Funcionário / Operador Responsável");
     }
     if (field === "Nome da Embarcação" && !hasVesselName) {
       missing.push("Nome da Embarcação");
     }
     if (field === "Número de Inscrição" && !hasVesselRegistration) {
       missing.push("Número de Inscrição da Embarcação");
+    }
+    if (field === "Outorgado") {
+      if (isProcuradorPF) {
+        if (!hasProcuradorPFCpf) {
+          missing.push("CPF do Procurador Outorgado (obrigatório para Pessoa Física)");
+        }
+      } else {
+        if (!hasCompanyPJDoc) {
+          missing.push("CNPJ e Endereço da Sede (obrigatórios para Outorgada Pessoa Jurídica)");
+        }
+      }
     }
   }
 

@@ -410,10 +410,10 @@ function GerarDocumentoPage() {
   const templateValidationMap = useMemo(() => {
     const map = new Map<string, { isBlocked: boolean; missingFields: string[] }>();
     for (const tpl of CATALOG_TEMPLATES) {
-      map.set(tpl.slug, checkTemplateMissingRequirements(tpl, customer, vessel, selectedStaff));
+      map.set(tpl.slug, checkTemplateMissingRequirements(tpl, customer, vessel, selectedStaff, companyData));
     }
     return map;
-  }, [customer, vessel, selectedStaff]);
+  }, [customer, vessel, selectedStaff, companyData]);
 
   // Contagens dinâmicas
   // IMPORTANTE: apenas documentos com mode === "generate", status aprovado, COM UUID resolvido no banco e com dados válidos!
@@ -680,6 +680,32 @@ function GerarDocumentoPage() {
     }
   };
 
+  // Tabela de tradução: slug interno → rótulo legível para o PDF
+  const SERVICE_LABELS: Record<string, string> = {
+    laudo_engenharia:       'Laudo de Engenharia Naval',
+    despacho_maritimo:      'Despacho Marítimo',
+    inscricao_inicial:      'Inscrição Inicial',
+    renovacao_tie:          'Renovação de TIE/TIEM',
+    transferencia:          'Transferência de Propriedade',
+    segunda_via:            '2ª Via de Documento',
+    vistoria:               'Vistoria Náutica',
+    regularizacao:          'Regularização',
+    cancelamento:           'Cancelamento de Inscrição',
+    alteracao_dados:        'Alteração de Dados Cadastrais',
+    habilitacao_amador:     'Habilitação de Amador',
+    renovacao_habilitacao:  'Renovação de Habilitação',
+    geral:                  'Serviço Geral',
+  };
+
+  const translateServices = (services: unknown): string => {
+    if (Array.isArray(services) && services.length > 0) {
+      return services
+        .map((s: string) => SERVICE_LABELS[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))
+        .join('; ');
+    }
+    return 'Inscrição / Regularização / Transferência';
+  };
+
   // Ação de Geração de Documentos Selecionados
   const handleGenerateBatchDocuments = async () => {
     if (!companyId || !id) return;
@@ -713,6 +739,14 @@ function GerarDocumentoPage() {
 
       for (const tpl of templatesToGenerate) {
         try {
+          // 0. Validação estrita de campos obrigatórios (não permite emissão silenciosa)
+          const fieldValidation = checkTemplateMissingRequirements(tpl, customer, vessel, selectedStaff, companyData);
+          if (fieldValidation.isBlocked) {
+            throw new Error(
+              `O modelo "${tpl.name}" possui campos obrigatórios não preenchidos: ${fieldValidation.missingFields.join(", ")}. Preencha todos os campos antes de gerar.`
+            );
+          }
+
           // 1. Resolução estrita do UUID real no banco
           const resolution = resolvedTemplatesMap.get(tpl.slug);
           const realTemplateUuid = resolution?.dbTemplateId;
@@ -727,54 +761,148 @@ function GerarDocumentoPage() {
           const fileName = `${tpl.code}_${vesselName.replace(/[^a-zA-Z0-9]/g, "_")}_${Date.now()}.pdf`;
           const storagePath = `${companyId}/${id}/${fileName}`;
 
-          // 2. Construir texto oficial detalhado do documento
-          const content = [
-            `DOCUMENTO OFICIAL: ${tpl.name.toUpperCase()}`,
-            `CÓDIGO: ${tpl.code} | BASE NORMATIVA: ${tpl.officialSource}`,
-            `PROCESSO Nº: ${processCode}`,
-            `DATA: ${new Date().toLocaleDateString("pt-BR")}`,
-            ``,
-            `1. DADOS DO INTERESSADO / PROPRIETÁRIO`,
-            `Nome / Razão Social: ${customerName}`,
-            `CPF / CNPJ: ${customer?.cpf_cnpj || customer?.document || "Não informado"}`,
-            `Endereço: ${customer?.address || "Não informado"}, ${customer?.city || ""}/${customer?.state || ""}`,
-            `Telefone: ${customer?.phone || "Não informado"} | E-mail: ${customer?.email || "Não informado"}`,
-            ``,
-            `2. DADOS DA EMBARCAÇÃO`,
-            `Nome da Embarcação: ${vesselName}`,
-            `Número de Inscrição: ${vessel?.registration_number || "Em regularização"}`,
-            `Tipo: ${vessel?.vessel_type || "Embarcação"} | Categoria: ${vesselCategory === "profissional" ? "Embarcação Profissional" : "Esporte e Recreio"}`,
-            `Comprimento Total: ${vessel?.length || vessel?.length_overall || "Não informado"}`,
-            `Material do Casco: ${vessel?.material || "Não informado"}`,
-            ``,
-            `3. ESCOPO DO REQUERIMENTO E SERVIÇOS`,
-            `Serviços solicitados: ${
-              Array.isArray((processData?.draft_data as any)?.services)
-                ? (processData?.draft_data as any)?.services.join(", ")
-                : processData?.process_type || "Atos perante a Autoridade Marítima"
-            }`,
-            ``,
-            `4. DECLARAÇÃO E TERMO DE COMPROMISSO`,
-            `O interessado acima qualificado requer à Capitania dos Portos / Delegacia / Agência da Capitania dos Portos a realização dos serviços especificados, declarando sob as penas da lei a veracidade das informações apresentadas para os devidos fins de direito.`,
-            ``,
-            `5. PREPARADO POR`,
-            `Responsável Técnico: ${selectedStaff.name}`,
-            `Função: ${selectedStaff.role}`,
-            selectedStaff.professional_registry
-              ? `Registro: ${selectedStaff.professional_registry}`
-              : "",
-            `Empresa: ${companyData?.name || currentCompany?.name || "NavalDocs Pro"}`,
-            ``,
-            `Documento preparado via NavalDocs Pro para assinatura externa (GOV.BR ou presencial).`,
-          ]
-            .filter(Boolean)
-            .join("\n");
+          // 2. Construir texto oficial detalhado do documento conforme sua natureza e regras normativas
+          let content = "";
 
-          // 3. Gerar bytes do PDF estilizado com branding
+          if (tpl.slug === "proc-representacao-naval") {
+            const isPF = !!(companyData?.procurador_nome || companyData?.procurador_cpf);
+            const outorgadoLines = isPF
+              ? [
+                  `OUTORGADO (PESSOA FÍSICA):`,
+                  `Nome do Procurador: ${companyData?.procurador_nome || selectedStaff.name}`,
+                  `Nacionalidade: ${companyData?.procurador_nacionalidade || "Brasileira"}    Estado Civil: Casado(a)`,
+                  `RG: ${companyData?.procurador_rg || "Não informado"}    CPF: ${companyData?.procurador_cpf || "Não informado"}`,
+                  companyData?.procurador_crea ? `Registro Profissional / Habilitação: ${companyData.procurador_crea}` : "",
+                  `Endereço Profissional: ${companyData?.procurador_endereco || companyData?.contact_address || "Não informado"}`,
+                  `Telefone: ${companyData?.procurador_telefone || companyData?.contact_phone || "Não informado"} | E-mail: ${companyData?.procurador_email || companyData?.contact_email || "Não informado"}`,
+                  `Sociedade Vinculada: ${companyData?.name || currentCompany?.name || "NavalDocs Pro"} (CNPJ: ${companyData?.cnpj || currentCompany?.cnpj || "Não informado"})`,
+                ]
+              : [
+                  `OUTORGADA (PESSOA JURÍDICA):`,
+                  `Razão Social: ${companyData?.name || currentCompany?.name || "NavalDocs Pro"}`,
+                  `CNPJ: ${companyData?.cnpj || currentCompany?.cnpj || "Não informado"}`,
+                  `Sede Social: ${companyData?.contact_address || "Não informado"}`,
+                  `Telefone: ${companyData?.contact_phone || companyData?.phone || "Não informado"} | E-mail: ${companyData?.contact_email || companyData?.email || "Não informado"}`,
+                  `Representação Legal: Representada neste ato por seus administradores ou procuradores com poderes específicos para a prática de atos perante a Autoridade Marítima.`,
+                ];
+
+            content = [
+              `INSTRUMENTO PARTICULAR DE PROCURAÇÃO: ${tpl.name.toUpperCase()}`,
+              `CÓDIGO: ${tpl.code} | BASE LEGAL: ${tpl.officialSource}`,
+              `PROCESSO Nº: ${processCode}`,
+              `DATA: ${new Date().toLocaleDateString("pt-BR")}`,
+              ``,
+              `OUTORGANTE:`,
+              `Nome / Razão Social: ${customerName}`,
+              `CPF / CNPJ: ${customer?.cpf_cnpj || customer?.document || "Não informado"}    RG: ${customer?.rg || "Não informado"}`,
+              `Endereço: ${customer?.address || "Não informado"}, ${customer?.city || ""}/${customer?.state || ""}`,
+              `Telefone: ${customer?.phone || "Não informado"} | E-mail: ${customer?.email || "Não informado"}`,
+              ``,
+              ...outorgadoLines.filter(Boolean),
+              ``,
+              `PODERES ESPECÍFICOS DE REPRESENTAÇÃO NÁUTICA:`,
+              `Por este instrumento particular de mandato, o(a) Outorgante nomeia e constitui o(a) Outorgado(a) como seu(sua) bastante procurador(a) para o fim específico de representá-lo(a) perante a Capitania dos Portos, Delegacias e Agências da Marinha do Brasil, podendo requerer, protocolar, instruir e dar andamento a processos administrativos da embarcação "${vesselName}" (Inscrição: ${vessel?.registration_number || "Em regularização"}), juntar e desentranhar documentos, prestar declarações, assinar termos e praticar os atos necessários ao fiel cumprimento deste mandato.`,
+              ``,
+              `PREPARADO POR (OPERADOR DO SISTEMA): ${selectedStaff.name} (${selectedStaff.role})`,
+              `Documento elaborado na plataforma NavalDocs Pro para conferência e assinatura externa (GOV.BR ou presencial) pelo(a) Outorgante.`,
+            ]
+              .filter(Boolean)
+              .join("\n");
+          } else if (tpl.slug === "decl-residencia-naval") {
+            content = [
+              `DECLARAÇÃO DE RESIDÊNCIA ELABORADA PELA PLATAFORMA: ${tpl.name.toUpperCase()}`,
+              `CÓDIGO: ${tpl.code} | BASE LEGAL: ${tpl.officialSource}`,
+              `PROCESSO Nº: ${processCode}`,
+              `DATA: ${new Date().toLocaleDateString("pt-BR")}`,
+              ``,
+              `DECLARANTE:`,
+              `Nome / Razão Social: ${customerName}`,
+              `CPF / CNPJ: ${customer?.cpf_cnpj || customer?.document || "Não informado"}    RG: ${customer?.rg || "Não informado"}`,
+              ``,
+              `DECLARAÇÃO DE DOMICÍLIO:`,
+              `Eu, ${customerName}, acima qualificado(a), DECLARO para os devidos fins de direito, em especial para instrução de processo náutico perante a Autoridade Marítima (Capitania dos Portos / Delegacia / Agência) referente à embarcação "${vesselName}", sob as penas da Lei Federal nº 7.115/1983 e do art. 299 do Código Penal (Falsidade Ideológica), que resido e sou domiciliado(a) no seguinte endereço:`,
+              ``,
+              `Endereço Declarado: ${customer?.address || "Não informado"}, ${customer?.city || ""}/${customer?.state || ""}`,
+              ``,
+              `Por ser a expressão da verdade, firmo a presente declaração sob minha responsabilidade jurídica.`,
+              ``,
+              `PREPARADO POR (OPERADOR DO SISTEMA): ${selectedStaff.name} (${selectedStaff.role})`,
+              `Documento elaborado na plataforma NavalDocs Pro para conferência e assinatura externa (GOV.BR ou presencial) pelo(a) Declarante.`,
+            ]
+              .filter(Boolean)
+              .join("\n");
+          } else {
+            // Requerimento Padrão do Interessado
+            const isProf = vesselCategory === "profissional" || tpl.code === "REQ-PROF";
+            const isJet = vesselCategory === "moto_aquatica" || tpl.code === "REQ-JET";
+            const normamScope = isProf
+              ? "NORMAM-201/DPC, ANEXO 2-A"
+              : isJet
+              ? "NORMAM-212/DPC, ANEXO 3-B"
+              : "NORMAM-211/DPC, ANEXO 2-E";
+            const normamSource = isProf
+              ? "NORMAM-201/DPC, Anexo 2-A (Embarcações Comerciais e Profissionais)"
+              : isJet
+              ? "NORMAM-212/DPC, Anexo 3-B (Motonáutica)"
+              : "NORMAM-211/DPC, Anexo 2-E (Embarcações de Esporte e Recreio)";
+
+            content = [
+              `REQUERIMENTO ELABORADO PELA PLATAFORMA: ${tpl.name.toUpperCase()}`,
+              `CÓDIGO: ${tpl.code} | BASE NORMATIVA: ${normamSource}`,
+              `PROCESSO Nº: ${processCode}`,
+              `DATA: ${new Date().toLocaleDateString("pt-BR")}`,
+              ``,
+              `1. DADOS DO REQUERENTE / INTERESSADO`,
+              `Nome / Razão Social: ${customerName}`,
+              `CPF / CNPJ: ${customer?.cpf_cnpj || customer?.document || "Não informado"}    RG: ${customer?.rg || "Não informado"}`,
+              `Endereço: ${customer?.address || "Não informado"}, ${customer?.city || ""}/${customer?.state || ""}`,
+              `Telefone: ${customer?.phone || "Não informado"} | E-mail: ${customer?.email || "Não informado"}`,
+              ``,
+              `2. DADOS DA EMBARCAÇÃO`,
+              `Nome da Embarcação: ${vesselName}`,
+              `Número de Inscrição: ${vessel?.registration_number || "Em regularização"}`,
+              `Tipo: ${vessel?.vessel_type || "Embarcação"} | Categoria: ${isProf ? "Embarcação Profissional" : isJet ? "Moto Aquática" : "Esporte e Recreio"}`,
+              `Comprimento Total: ${vessel?.length || vessel?.length_overall || "Não informado"} m | Casco: ${vessel?.material || "Não informado"}`,
+              ``,
+              `3. ESCOPO DA SOLICITAÇÃO (${normamScope})`,
+              `Serviços Requeridos: ${translateServices((processData?.draft_data as any)?.services) || processData?.process_type || 'Inscrição / Regularização / Transferência'}`,
+              ``,
+              `4. TERMO DE COMPROMISSO E DECLARAÇÃO`,
+              `Vem respeitosamente requerer a V. Sa. a realização dos serviços náuticos supracitados, declarando sob as penas da lei a inteira veracidade das informações e documentos apresentados, em estrita observância à Lei nº 9.537/1997 (LESTA) e às normas da Autoridade Marítima (${isProf ? "NORMAM-201/DPC" : isJet ? "NORMAM-212/DPC" : "NORMAM-211/DPC"}).`,
+              ``,
+              `5. ELABORADO POR`,
+              `Responsável Técnico: ${selectedStaff.name} (${selectedStaff.role})`,
+              selectedStaff.professional_registry ? `Registro Profissional: ${selectedStaff.professional_registry}` : "",
+              `Empresa: ${companyData?.name || currentCompany?.name || "NavalDocs Pro"}`,
+              ``,
+              `Requerimento elaborado pela plataforma NavalDocs Pro para protocolo perante a Capitania dos Portos / Del / Agência, com assinatura externa (GOV.BR ou presencial) pelo Requerente.`,
+            ]
+              .filter(Boolean)
+              .join("\n");
+          }
+
+          // 3. Gerar bytes do PDF estilizado com branding e assinatura adequada
+          const signerInfo = tpl.slug === "proc-representacao-naval"
+            ? {
+                signerName: `${customerName}\n(Outorgante)`,
+                signerRole: `CPF/CNPJ: ${customer?.cpf_cnpj || customer?.document || ""}`,
+              }
+            : tpl.slug === "decl-residencia-naval"
+            ? {
+                signerName: `${customerName}\n(Declarante)`,
+                signerRole: `CPF/CNPJ: ${customer?.cpf_cnpj || customer?.document || ""}`,
+              }
+            : {
+                signerName: `${customerName}\n(Requerente / Interessado)`,
+                signerRole: `CPF/CNPJ: ${customer?.cpf_cnpj || customer?.document || ""}`,
+              };
+
           const { bytes, verificationCode } = await buildBrandedDocumentPdf({
             docName: docTitle,
             content,
             branding,
+            signerName: signerInfo.signerName,
+            signerRole: signerInfo.signerRole,
           });
 
           // 4. Converter para Blob e fazer upload seguro para o bucket 'generated-documents'
@@ -804,7 +932,7 @@ function GerarDocumentoPage() {
             storage_bucket: "generated-documents",
             storage_path: storagePath,
             disclaimer:
-              "Documento oficial preparado eletronicamente pelo NavalDocs Pro para assinatura externa (gov.br ou presencial). Não emitido pela Autoridade Marítima.",
+              "Documento elaborado eletronicamente pelo NavalDocs Pro para assinatura externa (gov.br ou presencial). Não emitido pela Autoridade Marítima.",
             staff_responsible: {
               id: selectedStaff.id,
               name: selectedStaff.name,
