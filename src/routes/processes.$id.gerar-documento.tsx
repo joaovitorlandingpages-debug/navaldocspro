@@ -277,7 +277,7 @@ function GerarDocumentoPage() {
         const { data: comp } = await supabase
           .from("companies")
           .select(
-            "id, name, cnpj, phone, email, contact_address, logo_url, logo_primary_url, document_template_map",
+            "id, name, cnpj, phone, email, contact_phone, contact_email, contact_address, logo_url, logo_primary_url, document_template_map, procurador_nome, procurador_cpf, procurador_rg, procurador_orgao_expedidor, procurador_nacionalidade, procurador_endereco, procurador_telefone, procurador_email, procurador_crea",
           )
           .eq("id", companyId)
           .maybeSingle();
@@ -766,6 +766,47 @@ function GerarDocumentoPage() {
 
           if (tpl.slug === "proc-representacao-naval") {
             const isPF = !!(companyData?.procurador_nome || companyData?.procurador_cpf);
+
+            const resolvedCompanyEmail =
+              companyData?.contact_email ||
+              companyData?.email ||
+              companyData?.procurador_email ||
+              (currentCompany as any)?.contact_email ||
+              (currentCompany as any)?.email ||
+              branding?.contact_email ||
+              selectedStaff?.email ||
+              user?.email ||
+              "";
+
+            const resolvedCompanyPhone =
+              companyData?.contact_phone ||
+              companyData?.phone ||
+              companyData?.procurador_telefone ||
+              (currentCompany as any)?.contact_phone ||
+              (currentCompany as any)?.phone ||
+              branding?.contact_phone ||
+              "";
+
+            const resolvedProcuradorEmail =
+              companyData?.procurador_email ||
+              companyData?.contact_email ||
+              companyData?.email ||
+              (currentCompany as any)?.contact_email ||
+              (currentCompany as any)?.email ||
+              branding?.contact_email ||
+              selectedStaff?.email ||
+              user?.email ||
+              "";
+
+            const resolvedProcuradorPhone =
+              companyData?.procurador_telefone ||
+              companyData?.contact_phone ||
+              companyData?.phone ||
+              (currentCompany as any)?.contact_phone ||
+              (currentCompany as any)?.phone ||
+              branding?.contact_phone ||
+              "";
+
             const outorgadoLines = isPF
               ? [
                   `OUTORGADO (PESSOA FÍSICA):`,
@@ -774,7 +815,7 @@ function GerarDocumentoPage() {
                   `RG: ${companyData?.procurador_rg || "Não informado"}    CPF: ${companyData?.procurador_cpf || "Não informado"}`,
                   companyData?.procurador_crea ? `Registro Profissional / Habilitação: ${companyData.procurador_crea}` : "",
                   `Endereço Profissional: ${companyData?.procurador_endereco || companyData?.contact_address || "Não informado"}`,
-                  `Telefone: ${companyData?.procurador_telefone || companyData?.contact_phone || "Não informado"} | E-mail: ${companyData?.procurador_email || companyData?.contact_email || "Não informado"}`,
+                  `Telefone: ${resolvedProcuradorPhone || "Não informado"} | E-mail: ${resolvedProcuradorEmail || "Não informado"}`,
                   `Sociedade Vinculada: ${companyData?.name || currentCompany?.name || "NavalDocs Pro"} (CNPJ: ${companyData?.cnpj || currentCompany?.cnpj || "Não informado"})`,
                 ]
               : [
@@ -782,7 +823,7 @@ function GerarDocumentoPage() {
                   `Razão Social: ${companyData?.name || currentCompany?.name || "NavalDocs Pro"}`,
                   `CNPJ: ${companyData?.cnpj || currentCompany?.cnpj || "Não informado"}`,
                   `Sede Social: ${companyData?.contact_address || "Não informado"}`,
-                  `Telefone: ${companyData?.contact_phone || companyData?.phone || "Não informado"} | E-mail: ${companyData?.contact_email || companyData?.email || "Não informado"}`,
+                  `Telefone: ${resolvedCompanyPhone || "Não informado"} | E-mail: ${resolvedCompanyEmail || "Não informado"}`,
                   `Representação Legal: Representada neste ato por seus administradores ou procuradores com poderes específicos para a prática de atos perante a Autoridade Marítima.`,
                 ];
 

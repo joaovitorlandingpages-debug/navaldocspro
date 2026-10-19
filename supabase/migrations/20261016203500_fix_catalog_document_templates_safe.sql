@@ -14,6 +14,8 @@
 -- ====================================================================
 
 DO $$
+DECLARE
+  v_tpl_id uuid;
 BEGIN
 
   -- A. CORREÇÃO DE SEGURANÇA: Se algum modelo particular de empresa foi tornado global indevidamente, restaura
@@ -23,8 +25,16 @@ BEGIN
    WHERE company_id IS NOT NULL
      AND is_global = true;
 
-  -- 1. REQUERIMENTO PADRÃO DO INTERESSADO (NORMAM-211/DPC, Anexo 2-A)
-  IF NOT EXISTS (SELECT 1 FROM public.document_templates WHERE code = 'req-padrao-cpes' AND company_id IS NULL) THEN
+  -- 1. REQUERIMENTO PADRÃO DO INTERESSADO (NORMAM-211/DPC, Anexo 2-E)
+  v_tpl_id := NULL;
+  SELECT id INTO v_tpl_id
+    FROM public.document_templates
+   WHERE company_id IS NULL
+     AND (code IN ('REQ-001', 'req-padrao-cpes', 'REQ_PADRAO', 'REQ_CPES'))
+   ORDER BY (code = 'REQ-001') DESC, (code = 'req-padrao-cpes') DESC
+   LIMIT 1;
+
+  IF v_tpl_id IS NULL THEN
     INSERT INTO public.document_templates (
       name,
       code,
@@ -43,7 +53,7 @@ BEGIN
       base_content
     ) VALUES (
       'Requerimento Padrão do Interessado',
-      'req-padrao-cpes',
+      'REQ-001',
       'esporte_recreio',
       'inscricao_inicial',
       'out',
@@ -52,7 +62,7 @@ BEGIN
       true,
       'published',
       'ativo',
-      'Requerimento oficial padronizado pela Autoridade Marítima (NORMAM-211/DPC, Anexo 2-A) para solicitação de serviços de registro e emissão de TIE/TIEM.',
+      'Requerimento oficial padronizado pela Autoridade Marítima (NORMAM-211/DPC, Anexo 2-E) para solicitação de serviços de registro, transferência e emissão de TIE/TIEM.',
       'Nacional',
       1,
       '[
@@ -73,7 +83,7 @@ BEGIN
         {"key": "sistema.local", "label": "Cidade/UF", "required": false},
         {"key": "sistema.data_atual", "label": "Data", "required": false}
       ]'::jsonb,
-      'REQUERIMENTO DO INTERESSADO
+      'REQUERIMENTO DO INTERESSADO (NORMAM-211/DPC, ANEXO 2-E)
 À CAPITANIA DOS PORTOS / DELEGACIA / AGÊNCIA
 
 1. DADOS DO REQUERENTE
@@ -109,7 +119,7 @@ Assinatura do Requerente ou Procurador Legal'
            lifecycle_status = 'published',
            validation_status = 'ativo',
            document_type_io = 'out',
-           description = 'Requerimento oficial padronizado pela Autoridade Marítima (NORMAM-211/DPC, Anexo 2-A) para solicitação de serviços de registro e emissão de TIE/TIEM.',
+           description = 'Requerimento oficial padronizado pela Autoridade Marítima (NORMAM-211/DPC, Anexo 2-E) para solicitação de serviços de registro, transferência e emissão de TIE/TIEM.',
            fields_config = '[
              {"key": "cliente.nome", "label": "Nome do Interessado", "required": true},
              {"key": "cliente.cpf", "label": "CPF / CNPJ", "required": true},
@@ -128,7 +138,7 @@ Assinatura do Requerente ou Procurador Legal'
              {"key": "sistema.local", "label": "Cidade/UF", "required": false},
              {"key": "sistema.data_atual", "label": "Data", "required": false}
            ]'::jsonb,
-           base_content = 'REQUERIMENTO DO INTERESSADO
+           base_content = 'REQUERIMENTO DO INTERESSADO (NORMAM-211/DPC, ANEXO 2-E)
 À CAPITANIA DOS PORTOS / DELEGACIA / AGÊNCIA
 
 1. DADOS DO REQUERENTE
@@ -154,13 +164,21 @@ Declaro, sob as penas da lei, que as informações prestadas e os documentos ane
 _______________________________________________________
 {{cliente.nome}}
 Assinatura do Requerente ou Procurador Legal',
+           code = 'REQ-001',
            updated_at = now()
-     WHERE code = 'req-padrao-cpes'
-       AND company_id IS NULL;
+     WHERE id = v_tpl_id;
   END IF;
 
   -- 2. PROCURAÇÃO ESPECÍFICA PARA CAPITANIA DOS PORTOS (Código Civil art. 653 c/c NORMAM-211/DPC)
-  IF NOT EXISTS (SELECT 1 FROM public.document_templates WHERE code = 'proc-representacao-naval' AND company_id IS NULL) THEN
+  v_tpl_id := NULL;
+  SELECT id INTO v_tpl_id
+    FROM public.document_templates
+   WHERE company_id IS NULL
+     AND (code IN ('PROC-NAV', 'proc-representacao-naval', 'PROC_PART_NAVAL', 'PROC_SIMPLES_NAVAL'))
+   ORDER BY (code = 'PROC-NAV') DESC, (code = 'proc-representacao-naval') DESC
+   LIMIT 1;
+
+  IF v_tpl_id IS NULL THEN
     INSERT INTO public.document_templates (
       name,
       code,
@@ -179,7 +197,7 @@ Assinatura do Requerente ou Procurador Legal',
       base_content
     ) VALUES (
       'Procuração Específica para Capitania dos Portos',
-      'proc-representacao-naval',
+      'PROC-NAV',
       'geral',
       'geral',
       'out',
@@ -262,13 +280,21 @@ Pelo presente instrumento particular de procuração, o(a) Outorgante nomeia e c
 _______________________________________________________
 {{cliente.nome}}
 Outorgante',
+           code = 'PROC-NAV',
            updated_at = now()
-     WHERE code = 'proc-representacao-naval'
-       AND company_id IS NULL;
+     WHERE id = v_tpl_id;
   END IF;
 
   -- 3. DECLARAÇÃO DE RESIDÊNCIA DO PROPRIETÁRIO (Lei Federal nº 7.115/1983 c/c NORMAM-211/DPC)
-  IF NOT EXISTS (SELECT 1 FROM public.document_templates WHERE code = 'decl-residencia-naval' AND company_id IS NULL) THEN
+  v_tpl_id := NULL;
+  SELECT id INTO v_tpl_id
+    FROM public.document_templates
+   WHERE company_id IS NULL
+     AND (code IN ('DEC-RES', 'decl-residencia-naval', 'DECL_RES_NAVAL'))
+   ORDER BY (code = 'DEC-RES') DESC, (code = 'decl-residencia-naval') DESC
+   LIMIT 1;
+
+  IF v_tpl_id IS NULL THEN
     INSERT INTO public.document_templates (
       name,
       code,
@@ -287,7 +313,7 @@ Outorgante',
       base_content
     ) VALUES (
       'Declaração de Residência do Proprietário',
-      'decl-residencia-naval',
+      'DEC-RES',
       'geral',
       'geral',
       'out',
@@ -352,13 +378,21 @@ Por ser a expressão da verdade, firmo a presente declaração.
 _______________________________________________________
 {{cliente.nome}}
 Declarante',
+           code = 'DEC-RES',
            updated_at = now()
-     WHERE code = 'decl-residencia-naval'
-       AND company_id IS NULL;
+     WHERE id = v_tpl_id;
   END IF;
 
   -- 4. REQUERIMENTO ESPECÍFICO PARA MOTO AQUÁTICA (JET SKI) (NORMAM-212/DPC, Anexo 3-B)
-  IF NOT EXISTS (SELECT 1 FROM public.document_templates WHERE code = 'req-moto-aquatica' AND company_id IS NULL) THEN
+  v_tpl_id := NULL;
+  SELECT id INTO v_tpl_id
+    FROM public.document_templates
+   WHERE company_id IS NULL
+     AND (code IN ('REQ-JET', 'req-moto-aquatica', 'REQ_INSCR'))
+   ORDER BY (code = 'REQ-JET') DESC, (code = 'req-moto-aquatica') DESC
+   LIMIT 1;
+
+  IF v_tpl_id IS NULL THEN
     INSERT INTO public.document_templates (
       name,
       code,
@@ -377,7 +411,7 @@ Declarante',
       base_content
     ) VALUES (
       'Requerimento Específico para Moto Aquática (Jet Ski)',
-      'req-moto-aquatica',
+      'REQ-JET',
       'moto_aquatica',
       'inscricao_moto_aquatica',
       'out',
@@ -468,13 +502,21 @@ Declaro ter pleno conhecimento de que a condução de moto aquática em águas s
 _______________________________________________________
 {{cliente.nome}}
 Proprietário / Requerente',
+           code = 'REQ-JET',
            updated_at = now()
-     WHERE code = 'req-moto-aquatica'
-       AND company_id IS NULL;
+     WHERE id = v_tpl_id;
   END IF;
 
   -- 5. REQUERIMENTO DE EMBARCAÇÃO PROFISSIONAL / COMERCIAL (NORMAM-201/DPC, Anexo 2-A)
-  IF NOT EXISTS (SELECT 1 FROM public.document_templates WHERE code = 'req-comercial-prof' AND company_id IS NULL) THEN
+  v_tpl_id := NULL;
+  SELECT id INTO v_tpl_id
+    FROM public.document_templates
+   WHERE company_id IS NULL
+     AND (code IN ('REQ-PROF', 'req-comercial-prof', 'REQ_COM_PROF'))
+   ORDER BY (code = 'REQ-PROF') DESC, (code = 'req-comercial-prof') DESC
+   LIMIT 1;
+
+  IF v_tpl_id IS NULL THEN
     INSERT INTO public.document_templates (
       name,
       code,
@@ -493,7 +535,7 @@ Proprietário / Requerente',
       base_content
     ) VALUES (
       'Requerimento de Embarcação Profissional / Comercial',
-      'req-comercial-prof',
+      'REQ-PROF',
       'profissional',
       'inscricao_comercial',
       'out',
@@ -592,13 +634,21 @@ Vem respeitosamente requerer a V. Sa. a realização dos atos administrativos ca
 _______________________________________________________
 {{cliente.nome}}
 Armador / Representante Legal',
+           code = 'REQ-PROF',
            updated_at = now()
-     WHERE code = 'req-comercial-prof'
-       AND company_id IS NULL;
+     WHERE id = v_tpl_id;
   END IF;
 
   -- 6. DECLARAÇÃO DE PERDA / EXTRAVIO DE DOCUMENTO NÁUTICO (PRESERVADO EM REVISÃO - NÃO PUBLICAR)
-  IF NOT EXISTS (SELECT 1 FROM public.document_templates WHERE code = 'decl-perda-extravio' AND company_id IS NULL) THEN
+  v_tpl_id := NULL;
+  SELECT id INTO v_tpl_id
+    FROM public.document_templates
+   WHERE company_id IS NULL
+     AND (code IN ('DEC-PERD', 'decl-perda-extravio', 'DECL_EXTRAVIO'))
+   ORDER BY (code = 'DEC-PERD') DESC, (code = 'decl-perda-extravio') DESC
+   LIMIT 1;
+
+  IF v_tpl_id IS NULL THEN
     INSERT INTO public.document_templates (
       name,
       code,
@@ -617,7 +667,7 @@ Armador / Representante Legal',
       base_content
     ) VALUES (
       'Declaração de Perda / Extravio de Documento Náutico',
-      'decl-perda-extravio',
+      'DEC-PERD',
       'geral',
       'segunda_via',
       'out',
@@ -682,9 +732,9 @@ Comprometo-me a inutilizar ou entregar à Capitania dos Portos o documento anter
 _______________________________________________________
 {{cliente.nome}}
 Declarante',
+           code = 'DEC-PERD',
            updated_at = now()
-     WHERE code = 'decl-perda-extravio'
-       AND company_id IS NULL;
+     WHERE id = v_tpl_id;
   END IF;
 
 END $$;

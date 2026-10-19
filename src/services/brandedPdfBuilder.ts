@@ -109,6 +109,7 @@ export async function buildBrandedDocumentPdf(opts: {
 
   const sanitize = (text: string) =>
     String(text || "")
+      .normalize("NFC")
       .replace(/\r/g, "")
       .replace(/\u00A0/g, " ")
       .replace(/\t/g, " ")
@@ -151,9 +152,11 @@ export async function buildBrandedDocumentPdf(opts: {
   const rawDocName = sanitize(opts.docName).toUpperCase();
   const maxCompanyHeaderW = 230; // Área Esquerda: de LEFT(50) até 280
   const maxDocHeaderW = 230;     // Área Direita: de 315 até RIGHT_X(545) — Moat central livre de 35pt
+  const compFontSize = 10.5;
+  const docFontSize = 8;
 
-  const headerCompLines = wrap(rawCompanyName || "EMPRESA NAVAL", 10.5, maxCompanyHeaderW, bold);
-  const headerDocLines = wrap(rawDocName, 8, maxDocHeaderW, bold);
+  const headerCompLines = wrap(rawCompanyName || "EMPRESA NAVAL", compFontSize, maxCompanyHeaderW, bold);
+  const headerDocLines = wrap(rawDocName, docFontSize, maxDocHeaderW, bold);
 
   const maxHeaderLines = Math.max(headerCompLines.length, headerDocLines.length);
   const baseHeaderHeight =
@@ -163,9 +166,9 @@ export async function buildBrandedDocumentPdf(opts: {
     template === "minimalista" || template === "protocolo" ? 56 :
     72;
 
-  const headerHeight = Math.max(baseHeaderHeight, 62 + maxHeaderLines * 12);
-  const TOP_MARGIN = headerHeight + 22;
-  const BOTTOM_MARGIN = 55;
+  const headerHeight = Math.max(baseHeaderHeight, 60 + maxHeaderLines * 11);
+  const TOP_MARGIN = headerHeight + 14;
+  const BOTTOM_MARGIN = 48;
 
   const pages: any[] = [];
   let page = pdfDoc.addPage([W, H]);
@@ -480,31 +483,31 @@ export async function buildBrandedDocumentPdf(opts: {
       y -= 18;
     } else {
       // classico
-      drawWrappedTitle(16, CONTENT_W, ink);
-      y -= 4;
+      drawWrappedTitle(15, CONTENT_W, ink);
+      y -= 2;
       page.drawText(`Documento emitido em ${new Date().toLocaleString("pt-BR")}`, {
         x: LEFT,
         y: y - 8,
-        size: 9,
+        size: 8.5,
         font: italic,
         color: muted,
       });
-      y -= 20;
+      y -= 14;
       page.drawLine({
         start: { x: LEFT, y },
         end: { x: RIGHT_X, y },
         thickness: 0.5,
         color: lightBorder,
       });
-      y -= 16;
+      y -= 12;
     }
   };
   renderTitle();
 
   // ---------- CONTENT ----------
-  const bodySize = template === "executivo" ? 11 : template === "minimalista" ? 10 : 10.5;
-  const headingSize = template === "executivo" ? 13 : 11.5;
-  const lineGap = 5;
+  const bodySize = template === "executivo" ? 10.5 : template === "minimalista" ? 9.5 : 9.8;
+  const headingSize = template === "executivo" ? 12 : 11;
+  const lineGap = 3.8;
   let sectionIndex = 0;
   let twoColSlot: 0 | 1 = 0;
 
@@ -536,72 +539,91 @@ export async function buildBrandedDocumentPdf(opts: {
   const drawHeading = (text: string) => {
     flushTwoColumnRow();
     sectionIndex += 1;
-    ensureSpace(headingSize + 20);
+    const cleanHeading = sanitize(text);
+    const lines = wrap(cleanHeading, headingSize, CONTENT_W, bold);
+    const needed = lines.length * (headingSize + 4) + 22;
+    ensureSpace(needed);
     y -= 10;
     if (template === "laudo") {
+      const boxH = lines.length * (headingSize + 4) + 8;
       page.drawRectangle({
         x: LEFT,
-        y: y - headingSize - 8,
+        y: y - boxH,
         width: 22,
-        height: headingSize + 8,
+        height: boxH,
         color: primary,
       });
       page.drawText(String(sectionIndex), {
         x: LEFT + 6,
-        y: y - headingSize - 2,
+        y: y - headingSize - 4,
         size: headingSize - 1,
         font: bold,
         color: rgb(1, 1, 1),
       });
-      page.drawText(sanitize(text), {
-        x: LEFT + 32,
-        y: y - headingSize - 2,
-        size: headingSize,
-        font: bold,
-        color: ink,
-      });
-      y -= headingSize + 14;
+      for (const line of lines) {
+        page.drawText(line, {
+          x: LEFT + 32,
+          y: y - headingSize - 2,
+          size: headingSize,
+          font: bold,
+          color: ink,
+        });
+        y -= (headingSize + 4);
+      }
+      y -= 12;
     } else if (template === "checklist") {
-      page.drawText("> " + sanitize(text), {
-        x: LEFT,
-        y: y - headingSize,
-        size: headingSize,
-        font: bold,
-        color: primary,
-      });
-      y -= headingSize + 8;
+      for (let i = 0; i < lines.length; i++) {
+        const prefix = i === 0 ? "> " : "  ";
+        page.drawText(prefix + lines[i], {
+          x: LEFT,
+          y: y - headingSize,
+          size: headingSize,
+          font: bold,
+          color: primary,
+        });
+        y -= (headingSize + 4);
+      }
+      y -= 10;
     } else {
-      page.drawText(sanitize(text), {
-        x: LEFT,
-        y: y - headingSize,
-        size: headingSize,
-        font: bold,
-        color: primary,
-      });
-      y -= headingSize + 3;
+      for (const line of lines) {
+        page.drawText(line, {
+          x: LEFT,
+          y: y - headingSize,
+          size: headingSize,
+          font: bold,
+          color: primary,
+        });
+        y -= (headingSize + 4);
+      }
+      y -= 3;
       page.drawLine({
         start: { x: LEFT, y },
         end: { x: RIGHT_X, y },
         thickness: 0.6,
         color: lightBorder,
       });
-      y -= 8;
+      // Respiro vertical rigorosamente calculado abaixo da linha:
+      // O baseline da próxima linha fica a (bodySize + 4.5)pt abaixo da linha divisória,
+      // assegurando que os acentos e maiúsculas (ascender ~7.5pt) tenham espaçamento seguro sem encostar.
+      y -= (bodySize + 4.5);
     }
   };
 
   const drawParagraph = (text: string) => {
     flushTwoColumnRow();
-    const lines = wrap(text, bodySize, CONTENT_W);
+    const lines = wrap(text, bodySize, CONTENT_W, font);
     for (const ln of lines) {
       ensureSpace(bodySize + lineGap);
-      if (ln !== "") page.drawText(ln, { x: LEFT, y, size: bodySize, font, color: ink });
-      y -= bodySize + lineGap;
+      if (ln !== "") {
+        page.drawText(ln, { x: LEFT, y, size: bodySize, font, color: ink });
+      }
+      y -= (bodySize + lineGap);
     }
   };
 
   const drawBullet = (text: string) => {
     flushTwoColumnRow();
-    const lines = wrap(text.replace(/^[-•*]\s*/, ""), bodySize, CONTENT_W - 16);
+    const lines = wrap(text.replace(/^[-•*]\s*/, ""), bodySize, CONTENT_W - 16, font);
     lines.forEach((ln, i) => {
       ensureSpace(bodySize + lineGap);
       if (i === 0) {
@@ -619,7 +641,7 @@ export async function buildBrandedDocumentPdf(opts: {
         }
       }
       page.drawText(ln, { x: LEFT + 16, y, size: bodySize, font, color: ink });
-      y -= bodySize + lineGap;
+      y -= (bodySize + lineGap);
     });
   };
 
@@ -646,7 +668,7 @@ export async function buildBrandedDocumentPdf(opts: {
       font: bold,
       color: muted,
     });
-    const valueText = wrap(value, 8.6, colW - 18).slice(0, 2);
+    const valueText = wrap(value, 8.6, colW - 18, font).slice(0, 2);
     valueText.forEach((line, idx) => {
       page.drawText(line, { x: x + 9, y: rowTop - 24 - idx * 9, size: 8.6, font, color: ink });
     });
@@ -670,14 +692,18 @@ export async function buildBrandedDocumentPdf(opts: {
     flushTwoColumnRow();
     const cleanLabel = sanitize(label).trim();
     const cleanValue = sanitize(value).trim();
-    const lw = measure(cleanLabel + ":", bodySize, bold) + 6;
+    const labelWithColon = cleanLabel ? cleanLabel + ":" : "";
+    const lw = labelWithColon ? measure(labelWithColon, bodySize, bold) + 6 : 0;
 
-    // Se o rótulo for longo (>140pt) ou o valor for longo (>65 chars), quebra em bloco com recuo
-    if (lw > 140 || cleanValue.length > 65) {
+    // Se o rótulo for longo (>140pt), o valor for longo (>55 chars) ou ultrapassar a margem direita:
+    const exceedsWidth = lw + measure(cleanValue, bodySize, font) > CONTENT_W;
+    if (lw > 140 || cleanValue.length > 55 || exceedsWidth) {
       ensureSpace(bodySize * 2 + lineGap * 2 + 4);
-      page.drawText(cleanLabel + ":", { x: LEFT, y, size: bodySize, font: bold, color: ink });
-      y -= (bodySize + 3);
-      const valueLines = wrap(cleanValue, bodySize, CONTENT_W - 14);
+      if (labelWithColon) {
+        page.drawText(labelWithColon, { x: LEFT, y, size: bodySize, font: bold, color: ink });
+        y -= (bodySize + lineGap);
+      }
+      const valueLines = wrap(cleanValue, bodySize, CONTENT_W - 14, font);
       for (const valLn of valueLines) {
         ensureSpace(bodySize + lineGap);
         page.drawText(valLn, { x: LEFT + 14, y, size: bodySize, font, color: ink });
@@ -685,13 +711,17 @@ export async function buildBrandedDocumentPdf(opts: {
       }
     } else {
       ensureSpace(bodySize + lineGap);
-      page.drawText(cleanLabel + ":", { x: LEFT, y, size: bodySize, font: bold, color: ink });
-      const valueLines = wrap(cleanValue, bodySize, CONTENT_W - lw);
-      page.drawText(valueLines[0] || "", { x: LEFT + lw, y, size: bodySize, font, color: ink });
-      y -= (bodySize + lineGap);
-      for (let i = 1; i < valueLines.length; i++) {
-        ensureSpace(bodySize + lineGap);
-        page.drawText(valueLines[i], { x: LEFT + 14, y, size: bodySize, font, color: ink });
+      page.drawText(labelWithColon, { x: LEFT, y, size: bodySize, font: bold, color: ink });
+      const valueLines = wrap(cleanValue, bodySize, CONTENT_W - lw, font);
+      if (valueLines.length > 0) {
+        page.drawText(valueLines[0], { x: LEFT + lw, y, size: bodySize, font, color: ink });
+        y -= (bodySize + lineGap);
+        for (let i = 1; i < valueLines.length; i++) {
+          ensureSpace(bodySize + lineGap);
+          page.drawText(valueLines[i], { x: LEFT + 14, y, size: bodySize, font, color: ink });
+          y -= (bodySize + lineGap);
+        }
+      } else {
         y -= (bodySize + lineGap);
       }
     }
@@ -1124,7 +1154,7 @@ export async function buildBrandedDocumentPdf(opts: {
         p.drawText(cln, {
           x: LEFT,
           y: cy,
-          size: headerCompLines.length > 1 ? 10.5 : 12,
+          size: compFontSize,
           font: bold,
           color: headerTextColor,
         });
@@ -1136,11 +1166,11 @@ export async function buildBrandedDocumentPdf(opts: {
     const docBlockH = headerDocLines.length * 10;
     let dy = H - (headerHeight - docBlockH) / 2 - 8;
     for (const dln of headerDocLines) {
-      const dw = measure(dln, 8, bold);
+      const dw = measure(dln, docFontSize, bold);
       p.drawText(dln, {
         x: RIGHT_X - dw,
         y: dy,
-        size: 8,
+        size: docFontSize,
         font: bold,
         color: headerTextColor,
       });

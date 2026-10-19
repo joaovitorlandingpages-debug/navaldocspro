@@ -38,8 +38,10 @@ BEGIN
       FROM public.document_templates
      WHERE company_id IS NULL
        AND is_active = true
-       AND lifecycle_status = 'published'
-       AND code IN ('REQ-001', 'REQ-PROF', 'PROC-NAV', 'DEC-RES', 'REQ-JET', 'DEC-PERD')
+       AND (
+         code IN ('REQ-001', 'REQ-PROF', 'PROC-NAV', 'DEC-RES', 'REQ-JET', 'DEC-PERD')
+         OR code IN ('req-padrao-cpes', 'req-comercial-prof', 'proc-representacao-naval', 'decl-residencia-naval', 'req-moto-aquatica', 'decl-perda-extravio')
+       )
        AND base_content IS NOT NULL
        AND base_content <> ''
      ORDER BY code
