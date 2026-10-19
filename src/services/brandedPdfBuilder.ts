@@ -25,7 +25,19 @@ export async function buildBrandedDocumentPdf(opts: {
   signerName?: string;
   signerRole?: string;
 }): Promise<{ bytes: Uint8Array; verificationCode: string }> {
-  const { PDFDocument, StandardFonts, rgb, degrees } = await import("pdf-lib");
+  const {
+    PDFDocument,
+    StandardFonts,
+    rgb,
+    degrees,
+    setCharacterSpacing,
+    setWordSpacing,
+    setTextRise,
+    setTextRenderingMode,
+    TextRenderingMode,
+    pushGraphicsState,
+    popGraphicsState,
+  } = await import("pdf-lib");
   const pdfDoc = await PDFDocument.create();
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
@@ -170,15 +182,83 @@ export async function buildBrandedDocumentPdf(opts: {
   const TOP_MARGIN = headerHeight + 14;
   const BOTTOM_MARGIN = 48;
 
+  const resetPdfTextSpacing = (targetPage: any) => {
+    targetPage.pushOperators(
+      setCharacterSpacing(0),
+      setWordSpacing(0),
+      setTextRise(0),
+      setTextRenderingMode(TextRenderingMode.Fill),
+    );
+  };
+
+  const drawWatermarkAndDecorations = (p: any, idx: number) => {
+    p.pushOperators(pushGraphicsState());
+    resetPdfTextSpacing(p);
+
+    if (template === "corporate-clean") {
+      p.drawRectangle({ x: 0, y: 0, width: 12, height: H, color: primary, opacity: 0.12 });
+    } else if (template === "engenharia-naval" || template === "laudo") {
+      p.drawRectangle({ x: 0, y: 0, width: 6, height: H, color: secondary, opacity: 0.16 });
+    } else if (template === "naval-premium") {
+      p.drawRectangle({ x: W - 16, y: 0, width: 16, height: H, color: primary, opacity: 0.1 });
+    }
+
+    const wmOpt = opts.watermarkOptions;
+    const isWatermarkEnabled = wmOpt ? wmOpt.enabled !== false : true;
+    const isPageAllowed = !wmOpt || wmOpt.pages !== "first_only" || idx === 0;
+
+    if (isWatermarkEnabled && isPageAllowed) {
+      if (finalWatermarkImg) {
+        const scaleFraction = wmOpt?.scale ?? 0.6;
+        const targetOpacity = wmOpt?.opacity ?? 0.05;
+        const ww = Math.min(CONTENT_W * scaleFraction, W - 40);
+        const wh = (finalWatermarkImg.height / finalWatermarkImg.width) * ww;
+
+        let targetY = (H - wh) / 2;
+        if (wmOpt?.position === "top") {
+          targetY = H - headerHeight - wh - 30;
+        } else if (wmOpt?.position === "bottom") {
+          targetY = BOTTOM_MARGIN + 30;
+        }
+
+        p.drawImage(finalWatermarkImg, {
+          x: (W - ww) / 2,
+          y: targetY,
+          width: ww,
+          height: wh,
+          opacity: Math.max(0.01, Math.min(0.2, targetOpacity)),
+        });
+      } else if (b?.company_name) {
+        const wmText = sanitize(b.company_name.toUpperCase());
+        const wmSize = 46;
+        const wmW = bold.widthOfTextAtSize(wmText, wmSize);
+        p.drawText(wmText, {
+          x: (W - wmW) / 2 + wmSize * 0.6,
+          y: H / 2 - wmSize * 0.3,
+          size: wmSize,
+          font: bold,
+          color: secondary,
+          opacity: wmOpt?.opacity ?? 0.04,
+          rotate: degrees(-30),
+        });
+      }
+    }
+
+    p.pushOperators(popGraphicsState());
+    resetPdfTextSpacing(p);
+  };
+
   const pages: any[] = [];
   let page = pdfDoc.addPage([W, H]);
   pages.push(page);
+  drawWatermarkAndDecorations(page, 0);
   let y = H - TOP_MARGIN;
 
   const newPage = () => {
     page = pdfDoc.addPage([W, H]);
     pages.push(page);
     y = H - TOP_MARGIN;
+    drawWatermarkAndDecorations(page, pages.length - 1);
   };
 
   const ensureSpace = (needed: number) => {
@@ -187,6 +267,7 @@ export async function buildBrandedDocumentPdf(opts: {
 
   // ---------- TITLE BLOCK ----------
   const renderTitle = () => {
+    resetPdfTextSpacing(page);
     const title = sanitize(opts.docName).toUpperCase();
 
     const drawWrappedTitle = (
@@ -198,6 +279,7 @@ export async function buildBrandedDocumentPdf(opts: {
     ) => {
       const lines = wrap(title, fontSize, maxW, bold);
       for (const line of lines) {
+        resetPdfTextSpacing(page);
         const lineW = measure(line, fontSize, bold);
         const xPos = align === "center" ? (W - lineW) / 2 : startX;
         page.drawText(line, { x: xPos, y: y - fontSize, size: fontSize, font: bold, color });
@@ -530,8 +612,10 @@ export async function buildBrandedDocumentPdf(opts: {
       borderColor: lightBorder,
       borderWidth: 0.4,
     });
+    resetPdfTextSpacing(page);
     page.drawText(sanitize(label), { x: LEFT + 8, y: y - 11, size: 8.5, font: bold, color: muted });
     const labelW = measure(label, 8.5, bold) + 24;
+    resetPdfTextSpacing(page);
     page.drawText(sanitize(value), { x: LEFT + labelW, y: y - 11, size: 9.5, font, color: ink });
     y -= lh + 4;
   };
@@ -553,6 +637,7 @@ export async function buildBrandedDocumentPdf(opts: {
         height: boxH,
         color: primary,
       });
+      resetPdfTextSpacing(page);
       page.drawText(String(sectionIndex), {
         x: LEFT + 6,
         y: y - headingSize - 4,
@@ -561,6 +646,7 @@ export async function buildBrandedDocumentPdf(opts: {
         color: rgb(1, 1, 1),
       });
       for (const line of lines) {
+        resetPdfTextSpacing(page);
         page.drawText(line, {
           x: LEFT + 32,
           y: y - headingSize - 2,
@@ -574,6 +660,7 @@ export async function buildBrandedDocumentPdf(opts: {
     } else if (template === "checklist") {
       for (let i = 0; i < lines.length; i++) {
         const prefix = i === 0 ? "> " : "  ";
+        resetPdfTextSpacing(page);
         page.drawText(prefix + lines[i], {
           x: LEFT,
           y: y - headingSize,
@@ -586,6 +673,7 @@ export async function buildBrandedDocumentPdf(opts: {
       y -= 10;
     } else {
       for (const line of lines) {
+        resetPdfTextSpacing(page);
         page.drawText(line, {
           x: LEFT,
           y: y - headingSize,
@@ -602,9 +690,6 @@ export async function buildBrandedDocumentPdf(opts: {
         thickness: 0.6,
         color: lightBorder,
       });
-      // Respiro vertical rigorosamente calculado abaixo da linha:
-      // O baseline da próxima linha fica a (bodySize + 4.5)pt abaixo da linha divisória,
-      // assegurando que os acentos e maiúsculas (ascender ~7.5pt) tenham espaçamento seguro sem encostar.
       y -= (bodySize + 4.5);
     }
   };
@@ -615,6 +700,7 @@ export async function buildBrandedDocumentPdf(opts: {
     for (const ln of lines) {
       ensureSpace(bodySize + lineGap);
       if (ln !== "") {
+        resetPdfTextSpacing(page);
         page.drawText(ln, { x: LEFT, y, size: bodySize, font, color: ink });
       }
       y -= (bodySize + lineGap);
@@ -640,6 +726,7 @@ export async function buildBrandedDocumentPdf(opts: {
           page.drawCircle({ x: LEFT + 3, y: y + 3, size: 1.6, color: primary });
         }
       }
+      resetPdfTextSpacing(page);
       page.drawText(ln, { x: LEFT + 16, y, size: bodySize, font, color: ink });
       y -= (bodySize + lineGap);
     });
@@ -661,6 +748,7 @@ export async function buildBrandedDocumentPdf(opts: {
       borderWidth: 0.45,
     });
     page.drawRectangle({ x, y: rowTop - 34, width: 3, height: 34, color: primary, opacity: 0.85 });
+    resetPdfTextSpacing(page);
     page.drawText(sanitize(label).toUpperCase(), {
       x: x + 9,
       y: rowTop - 12,
@@ -670,6 +758,7 @@ export async function buildBrandedDocumentPdf(opts: {
     });
     const valueText = wrap(value, 8.6, colW - 18, font).slice(0, 2);
     valueText.forEach((line, idx) => {
+      resetPdfTextSpacing(page);
       page.drawText(line, { x: x + 9, y: rowTop - 24 - idx * 9, size: 8.6, font, color: ink });
     });
     if (twoColSlot === 0) {
@@ -700,24 +789,29 @@ export async function buildBrandedDocumentPdf(opts: {
     if (lw > 140 || cleanValue.length > 55 || exceedsWidth) {
       ensureSpace(bodySize * 2 + lineGap * 2 + 4);
       if (labelWithColon) {
+        resetPdfTextSpacing(page);
         page.drawText(labelWithColon, { x: LEFT, y, size: bodySize, font: bold, color: ink });
         y -= (bodySize + lineGap);
       }
       const valueLines = wrap(cleanValue, bodySize, CONTENT_W - 14, font);
       for (const valLn of valueLines) {
         ensureSpace(bodySize + lineGap);
+        resetPdfTextSpacing(page);
         page.drawText(valLn, { x: LEFT + 14, y, size: bodySize, font, color: ink });
         y -= (bodySize + lineGap);
       }
     } else {
       ensureSpace(bodySize + lineGap);
+      resetPdfTextSpacing(page);
       page.drawText(labelWithColon, { x: LEFT, y, size: bodySize, font: bold, color: ink });
       const valueLines = wrap(cleanValue, bodySize, CONTENT_W - lw, font);
       if (valueLines.length > 0) {
+        resetPdfTextSpacing(page);
         page.drawText(valueLines[0], { x: LEFT + lw, y, size: bodySize, font, color: ink });
         y -= (bodySize + lineGap);
         for (let i = 1; i < valueLines.length; i++) {
           ensureSpace(bodySize + lineGap);
+          resetPdfTextSpacing(page);
           page.drawText(valueLines[i], { x: LEFT + 14, y, size: bodySize, font, color: ink });
           y -= (bodySize + lineGap);
         }
@@ -775,6 +869,7 @@ export async function buildBrandedDocumentPdf(opts: {
   y -= 10;
   const signerLines = signerText.split("\n");
   for (const sLine of signerLines) {
+    resetPdfTextSpacing(page);
     page.drawText(sanitize(sLine), {
       x: LEFT,
       y,
@@ -785,6 +880,7 @@ export async function buildBrandedDocumentPdf(opts: {
     y -= 12;
   }
   if (signerSub) {
+    resetPdfTextSpacing(page);
     page.drawText(sanitize(signerSub), {
       x: LEFT,
       y,
@@ -806,17 +902,13 @@ export async function buildBrandedDocumentPdf(opts: {
     });
   }
 
-  // ---------- HEADER / FOOTER / WATERMARK PER PAGE ----------
+  // ---------- HEADER / FOOTER PER PAGE ----------
   const total = pages.length;
   pages.forEach((p, idx) => {
-    if (template === "corporate-clean") {
-      p.drawRectangle({ x: 0, y: 0, width: 12, height: H, color: primary, opacity: 0.12 });
-    } else if (template === "engenharia-naval" || template === "laudo") {
-      p.drawRectangle({ x: 0, y: 0, width: 6, height: H, color: secondary, opacity: 0.16 });
-    } else if (template === "naval-premium") {
-      p.drawRectangle({ x: W - 16, y: 0, width: 16, height: H, color: primary, opacity: 0.1 });
-    }
-    // Header
+    // Header (isolamento de estado gráfico e reset de espaçamento de texto)
+    p.pushOperators(pushGraphicsState());
+    resetPdfTextSpacing(p);
+
     if (template === "executivo") {
       // Gradient simulation: 3 stacked bands
       p.drawRectangle({
@@ -1176,50 +1268,13 @@ export async function buildBrandedDocumentPdf(opts: {
       });
       dy -= 10;
     }
+    p.pushOperators(popGraphicsState());
+    resetPdfTextSpacing(p);
 
-    // Watermark personalizada (respeita opacidade, escala, posição e páginas)
-    const wmOpt = opts.watermarkOptions;
-    const isWatermarkEnabled = wmOpt ? wmOpt.enabled !== false : true;
-    const isPageAllowed = !wmOpt || wmOpt.pages !== "first_only" || idx === 0;
+    // Footer (isolamento de estado gráfico e reset de espaçamento de texto)
+    p.pushOperators(pushGraphicsState());
+    resetPdfTextSpacing(p);
 
-    if (isWatermarkEnabled && isPageAllowed) {
-      if (finalWatermarkImg) {
-        const scaleFraction = wmOpt?.scale ?? 0.6;
-        const targetOpacity = wmOpt?.opacity ?? 0.05;
-        const ww = Math.min(CONTENT_W * scaleFraction, W - 40);
-        const wh = (finalWatermarkImg.height / finalWatermarkImg.width) * ww;
-
-        let targetY = (H - wh) / 2;
-        if (wmOpt?.position === "top") {
-          targetY = H - headerHeight - wh - 30;
-        } else if (wmOpt?.position === "bottom") {
-          targetY = BOTTOM_MARGIN + 30;
-        }
-
-        p.drawImage(finalWatermarkImg, {
-          x: (W - ww) / 2,
-          y: targetY,
-          width: ww,
-          height: wh,
-          opacity: Math.max(0.01, Math.min(0.2, targetOpacity)),
-        });
-      } else if (b?.company_name) {
-        const wmText = sanitize(b.company_name.toUpperCase());
-        const wmSize = 46;
-        const wmW = measure(wmText, wmSize, bold);
-        p.drawText(wmText, {
-          x: (W - wmW) / 2 + wmSize * 0.6,
-          y: H / 2 - wmSize * 0.3,
-          size: wmSize,
-          font: bold,
-          color: secondary,
-          opacity: wmOpt?.opacity ?? 0.04,
-          rotate: degrees(-30),
-        });
-      }
-    }
-
-    // Footer
     p.drawLine({
       start: { x: LEFT, y: 62 },
       end: { x: RIGHT_X, y: 62 },
@@ -1230,6 +1285,7 @@ export async function buildBrandedDocumentPdf(opts: {
       .filter(Boolean)
       .join("  •  ");
     if (contactBits) {
+      resetPdfTextSpacing(p);
       p.drawText(sanitize(contactBits), {
         x: LEFT,
         y: 48,
@@ -1240,6 +1296,7 @@ export async function buildBrandedDocumentPdf(opts: {
       });
     }
     if (b?.pdf_footer_text) {
+      resetPdfTextSpacing(p);
       p.drawText(sanitize(b.pdf_footer_text), {
         x: LEFT,
         y: 36,
@@ -1261,7 +1318,9 @@ export async function buildBrandedDocumentPdf(opts: {
       borderColor: primary,
       borderWidth: 0.5,
     });
+    resetPdfTextSpacing(p);
     p.drawText(codeText, { x: RIGHT_X - ctw - 7, y: 48, size: 7, font: bold, color: primary });
+    resetPdfTextSpacing(p);
     p.drawText(`Página ${idx + 1} / ${total}`, {
       x: RIGHT_X - 70,
       y: 32,
@@ -1269,6 +1328,9 @@ export async function buildBrandedDocumentPdf(opts: {
       font: bold,
       color: muted,
     });
+
+    p.pushOperators(popGraphicsState());
+    resetPdfTextSpacing(p);
   });
 
   const bytes = await pdfDoc.save();

@@ -16,6 +16,8 @@
 DO $$
 DECLARE
   v_tpl_id uuid;
+  v_count integer;
+  v_candidates text;
 BEGIN
 
   -- A. CORREÇÃO DE SEGURANÇA: Se algum modelo particular de empresa foi tornado global indevidamente, restaura
@@ -27,12 +29,42 @@ BEGIN
 
   -- 1. REQUERIMENTO PADRÃO DO INTERESSADO (NORMAM-211/DPC, Anexo 2-E)
   v_tpl_id := NULL;
-  SELECT id INTO v_tpl_id
+  v_count := 0;
+  v_candidates := NULL;
+
+  -- Pré-verificação sem LIMIT 1: consulta nome, categoria, conteúdo e aliases
+  SELECT count(*), string_agg(id::text || ' [code=' || coalesce(code,'') || ', name="' || coalesce(name,'') || '", cat=' || coalesce(category,'') || ']', '; ')
+    INTO v_count, v_candidates
     FROM public.document_templates
    WHERE company_id IS NULL
-     AND (code IN ('REQ-001', 'req-padrao-cpes', 'REQ_PADRAO', 'REQ_CPES'))
-   ORDER BY (code = 'REQ-001') DESC, (code = 'req-padrao-cpes') DESC
-   LIMIT 1;
+     AND (
+       code IN ('REQ-001', 'req-padrao-cpes', 'REQ_PADRAO', 'REQ_CPES')
+       OR (
+         code = 'REQ_INSCR'
+         AND (category IN ('esporte_recreio', 'geral') OR name ILIKE '%requerimento%' OR name ILIKE '%inscrição%' OR name ILIKE '%embarcação%' OR base_content ILIKE '%embarcação%' OR base_content ILIKE '%NORMAM-211%')
+         AND category != 'moto_aquatica'
+         AND coalesce(name, '') NOT ILIKE '%moto%'
+         AND coalesce(name, '') NOT ILIKE '%jet%'
+       )
+     );
+
+  IF v_count > 1 THEN
+    RAISE EXCEPTION 'AMBIGUIDADE CRÍTICA EM REQ-001 (Requerimento Padrão): Encontrados % candidatos globais no banco: (%). A migration foi interrompida para evitar sobrescrita indevida e preservar o histórico.', v_count, v_candidates;
+  ELSIF v_count = 1 THEN
+    SELECT id INTO v_tpl_id
+      FROM public.document_templates
+     WHERE company_id IS NULL
+       AND (
+         code IN ('REQ-001', 'req-padrao-cpes', 'REQ_PADRAO', 'REQ_CPES')
+         OR (
+           code = 'REQ_INSCR'
+           AND (category IN ('esporte_recreio', 'geral') OR name ILIKE '%requerimento%' OR name ILIKE '%inscrição%' OR name ILIKE '%embarcação%' OR base_content ILIKE '%embarcação%' OR base_content ILIKE '%NORMAM-211%')
+           AND category != 'moto_aquatica'
+           AND coalesce(name, '') NOT ILIKE '%moto%'
+           AND coalesce(name, '') NOT ILIKE '%jet%'
+         )
+       );
+  END IF;
 
   IF v_tpl_id IS NULL THEN
     INSERT INTO public.document_templates (
@@ -171,12 +203,23 @@ Assinatura do Requerente ou Procurador Legal',
 
   -- 2. PROCURAÇÃO ESPECÍFICA PARA CAPITANIA DOS PORTOS (Código Civil art. 653 c/c NORMAM-211/DPC)
   v_tpl_id := NULL;
-  SELECT id INTO v_tpl_id
+  v_count := 0;
+  v_candidates := NULL;
+
+  SELECT count(*), string_agg(id::text || ' [code=' || coalesce(code,'') || ', name="' || coalesce(name,'') || '"]', '; ')
+    INTO v_count, v_candidates
     FROM public.document_templates
    WHERE company_id IS NULL
-     AND (code IN ('PROC-NAV', 'proc-representacao-naval', 'PROC_PART_NAVAL', 'PROC_SIMPLES_NAVAL'))
-   ORDER BY (code = 'PROC-NAV') DESC, (code = 'proc-representacao-naval') DESC
-   LIMIT 1;
+     AND (code IN ('PROC-NAV', 'proc-representacao-naval', 'PROC_PART_NAVAL', 'PROC_SIMPLES_NAVAL'));
+
+  IF v_count > 1 THEN
+    RAISE EXCEPTION 'AMBIGUIDADE CRÍTICA EM PROC-NAV (Procuração Naval): Encontrados % candidatos globais no banco: (%). A migration foi interrompida para evitar sobrescrita indevida.', v_count, v_candidates;
+  ELSIF v_count = 1 THEN
+    SELECT id INTO v_tpl_id
+      FROM public.document_templates
+     WHERE company_id IS NULL
+       AND (code IN ('PROC-NAV', 'proc-representacao-naval', 'PROC_PART_NAVAL', 'PROC_SIMPLES_NAVAL'));
+  END IF;
 
   IF v_tpl_id IS NULL THEN
     INSERT INTO public.document_templates (
@@ -287,12 +330,23 @@ Outorgante',
 
   -- 3. DECLARAÇÃO DE RESIDÊNCIA DO PROPRIETÁRIO (Lei Federal nº 7.115/1983 c/c NORMAM-211/DPC)
   v_tpl_id := NULL;
-  SELECT id INTO v_tpl_id
+  v_count := 0;
+  v_candidates := NULL;
+
+  SELECT count(*), string_agg(id::text || ' [code=' || coalesce(code,'') || ', name="' || coalesce(name,'') || '"]', '; ')
+    INTO v_count, v_candidates
     FROM public.document_templates
    WHERE company_id IS NULL
-     AND (code IN ('DEC-RES', 'decl-residencia-naval', 'DECL_RES_NAVAL'))
-   ORDER BY (code = 'DEC-RES') DESC, (code = 'decl-residencia-naval') DESC
-   LIMIT 1;
+     AND (code IN ('DEC-RES', 'decl-residencia-naval', 'DECL_RES_NAVAL'));
+
+  IF v_count > 1 THEN
+    RAISE EXCEPTION 'AMBIGUIDADE CRÍTICA EM DEC-RES (Declaração de Residência): Encontrados % candidatos globais no banco: (%). A migration foi interrompida para evitar sobrescrita indevida.', v_count, v_candidates;
+  ELSIF v_count = 1 THEN
+    SELECT id INTO v_tpl_id
+      FROM public.document_templates
+     WHERE company_id IS NULL
+       AND (code IN ('DEC-RES', 'decl-residencia-naval', 'DECL_RES_NAVAL'));
+  END IF;
 
   IF v_tpl_id IS NULL THEN
     INSERT INTO public.document_templates (
@@ -385,12 +439,40 @@ Declarante',
 
   -- 4. REQUERIMENTO ESPECÍFICO PARA MOTO AQUÁTICA (JET SKI) (NORMAM-212/DPC, Anexo 3-B)
   v_tpl_id := NULL;
-  SELECT id INTO v_tpl_id
+  v_count := 0;
+  v_candidates := NULL;
+
+  -- IMPORTANTE: REQ_INSCR foi estritamente removido deste bloco por ser historicamente requerimento geral de inscrição.
+  -- A busca de moto aquática restringe-se a aliases legítimos ('REQ-JET', 'req-moto-aquatica', 'REQ_MOTO_AQUATICA')
+  -- ou modelos categorizados como moto_aquatica cujo nome confirme jet ski / moto aquática, nunca convertendo REQ_INSCR.
+  SELECT count(*), string_agg(id::text || ' [code=' || coalesce(code,'') || ', name="' || coalesce(name,'') || '", cat=' || coalesce(category,'') || ']', '; ')
+    INTO v_count, v_candidates
     FROM public.document_templates
    WHERE company_id IS NULL
-     AND (code IN ('REQ-JET', 'req-moto-aquatica', 'REQ_INSCR'))
-   ORDER BY (code = 'REQ-JET') DESC, (code = 'req-moto-aquatica') DESC
-   LIMIT 1;
+     AND (
+       code IN ('REQ-JET', 'req-moto-aquatica', 'REQ_MOTO_AQUATICA')
+       OR (
+         category = 'moto_aquatica'
+         AND (name ILIKE '%moto%' OR name ILIKE '%jet%')
+         AND code != 'REQ_INSCR'
+       )
+     );
+
+  IF v_count > 1 THEN
+    RAISE EXCEPTION 'AMBIGUIDADE CRÍTICA EM REQ-JET (Moto Aquática): Encontrados % candidatos globais no banco: (%). A migration foi interrompida para evitar sobrescrita indevida.', v_count, v_candidates;
+  ELSIF v_count = 1 THEN
+    SELECT id INTO v_tpl_id
+      FROM public.document_templates
+     WHERE company_id IS NULL
+       AND (
+         code IN ('REQ-JET', 'req-moto-aquatica', 'REQ_MOTO_AQUATICA')
+         OR (
+           category = 'moto_aquatica'
+           AND (name ILIKE '%moto%' OR name ILIKE '%jet%')
+           AND code != 'REQ_INSCR'
+         )
+       );
+  END IF;
 
   IF v_tpl_id IS NULL THEN
     INSERT INTO public.document_templates (
@@ -509,12 +591,23 @@ Proprietário / Requerente',
 
   -- 5. REQUERIMENTO DE EMBARCAÇÃO PROFISSIONAL / COMERCIAL (NORMAM-201/DPC, Anexo 2-A)
   v_tpl_id := NULL;
-  SELECT id INTO v_tpl_id
+  v_count := 0;
+  v_candidates := NULL;
+
+  SELECT count(*), string_agg(id::text || ' [code=' || coalesce(code,'') || ', name="' || coalesce(name,'') || '"]', '; ')
+    INTO v_count, v_candidates
     FROM public.document_templates
    WHERE company_id IS NULL
-     AND (code IN ('REQ-PROF', 'req-comercial-prof', 'REQ_COM_PROF'))
-   ORDER BY (code = 'REQ-PROF') DESC, (code = 'req-comercial-prof') DESC
-   LIMIT 1;
+     AND (code IN ('REQ-PROF', 'req-comercial-prof', 'REQ_COM_PROF'));
+
+  IF v_count > 1 THEN
+    RAISE EXCEPTION 'AMBIGUIDADE CRÍTICA EM REQ-PROF (Embarcação Profissional): Encontrados % candidatos globais no banco: (%). A migration foi interrompida para evitar sobrescrita indevida.', v_count, v_candidates;
+  ELSIF v_count = 1 THEN
+    SELECT id INTO v_tpl_id
+      FROM public.document_templates
+     WHERE company_id IS NULL
+       AND (code IN ('REQ-PROF', 'req-comercial-prof', 'REQ_COM_PROF'));
+  END IF;
 
   IF v_tpl_id IS NULL THEN
     INSERT INTO public.document_templates (
@@ -641,12 +734,23 @@ Armador / Representante Legal',
 
   -- 6. DECLARAÇÃO DE PERDA / EXTRAVIO DE DOCUMENTO NÁUTICO (PRESERVADO EM REVISÃO - NÃO PUBLICAR)
   v_tpl_id := NULL;
-  SELECT id INTO v_tpl_id
+  v_count := 0;
+  v_candidates := NULL;
+
+  SELECT count(*), string_agg(id::text || ' [code=' || coalesce(code,'') || ', name="' || coalesce(name,'') || '"]', '; ')
+    INTO v_count, v_candidates
     FROM public.document_templates
    WHERE company_id IS NULL
-     AND (code IN ('DEC-PERD', 'decl-perda-extravio', 'DECL_EXTRAVIO'))
-   ORDER BY (code = 'DEC-PERD') DESC, (code = 'decl-perda-extravio') DESC
-   LIMIT 1;
+     AND (code IN ('DEC-PERD', 'decl-perda-extravio', 'DECL_EXTRAVIO'));
+
+  IF v_count > 1 THEN
+    RAISE EXCEPTION 'AMBIGUIDADE CRÍTICA EM DEC-PERD (Perda/Extravio): Encontrados % candidatos globais no banco: (%). A migration foi interrompida para evitar sobrescrita indevida.', v_count, v_candidates;
+  ELSIF v_count = 1 THEN
+    SELECT id INTO v_tpl_id
+      FROM public.document_templates
+     WHERE company_id IS NULL
+       AND (code IN ('DEC-PERD', 'decl-perda-extravio', 'DECL_EXTRAVIO'));
+  END IF;
 
   IF v_tpl_id IS NULL THEN
     INSERT INTO public.document_templates (

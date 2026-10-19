@@ -146,10 +146,11 @@ export const CATALOG_TEMPLATES: CatalogTemplateItem[] = [
     officialSource: "NORMAM-212/DPC, Anexo 3-B • Capitania dos Portos (CPES node/384)",
     validationDate: "16/10/2026",
     aliases: {
-      codes: ["req-moto-aquatica", "REQ-JET", "REQ_INSCR"],
+      codes: ["req-moto-aquatica", "REQ-JET", "REQ_MOTO_AQUATICA"],
       names: [
         "Requerimento Específico para Moto Aquática (Jet Ski)",
-        "Requerimento de Inscrição",
+        "Requerimento para Moto Aquática",
+        "Requerimento Jet Ski",
       ],
     },
   },
