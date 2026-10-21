@@ -335,13 +335,40 @@ serve(async (req) => {
     const supabaseAdmin = ctx.admin
 
 
-    const { data: template, error: templateError } = await supabaseAdmin
-      .from('document_templates')
-      .select('*')
-      .eq('id', templateId)
-      .single()
+    let template: any = null
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(templateId || ''))
 
-    if (templateError || !template) throw new HttpError(404, { error: 'template_not_found' })
+    if (isUuid) {
+      const { data, error: templateError } = await supabaseAdmin
+        .from('document_templates')
+        .select('*')
+        .eq('id', templateId)
+        .maybeSingle()
+      if (templateError) {
+        console.error('[generate-document] Erro ao buscar template por UUID:', templateError)
+      }
+      template = data
+    } else {
+      // Resolução segura por código ou slug de texto (nunca consulta id com texto)
+      const normCode = String(templateId || '').trim()
+      const { data, error: templateError } = await supabaseAdmin
+        .from('document_templates')
+        .select('*')
+        .or(`code.eq."${normCode}",code.ilike."${normCode}"`)
+        .limit(1)
+        .maybeSingle()
+      if (templateError) {
+        console.error('[generate-document] Erro ao buscar template por código/slug:', templateError)
+      }
+      template = data
+    }
+
+    if (!template) {
+      throw new HttpError(404, {
+        error: 'template_not_found',
+        message: `Modelo de documento não localizado no catálogo: "${templateId}".`,
+      })
+    }
     // Template must be global (company_id null) OR belong to user's company
     if (template.company_id) ctx.requireCompany(template.company_id)
 
@@ -612,8 +639,12 @@ serve(async (req) => {
     let contentType: string
     let extension: string
 
-    const TOP_MARGIN = 90 // leave room for branded header
-    const BOTTOM_MARGIN = 70 // leave room for footer
+    const TOP_MARGIN = 95  // espaço para cabeçalho de marca
+    const BOTTOM_MARGIN = 75  // espaço para rodapé
+    const PAGE_W = 595.28
+    const PAGE_H = 841.89
+    const CONTENT_MARGIN = 52
+    const MAX_LINE_WIDTH = PAGE_W - CONTENT_MARGIN * 2
 
     if (!template.template_file_url && template.base_content) {
       console.log(`Generating text-to-PDF for template: ${template.name}`)
@@ -621,43 +652,137 @@ serve(async (req) => {
       const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
       const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
 
-      let page = pdfDoc.addPage([595.28, 841.89])
+      // Determina tipo de documento para campo de assinatura específico
+      const templateCode = String(template.code || '').toLowerCase()
+      const templateName = String(template.name || '').toLowerCase()
+      let signatureLabel = ''
+      if (templateCode.includes('proc') || templateName.includes('procura')) {
+        signatureLabel = 'Outorgante'
+      } else if (templateCode.includes('decl') || templateName.includes('declara')) {
+        signatureLabel = 'Declarante'
+      } else if (templateCode.includes('req') || templateName.includes('requer')) {
+        signatureLabel = 'Requerente ou Procurador Legal'
+      } else {
+        signatureLabel = 'Interessado'
+      }
+
+      let page = pdfDoc.addPage([PAGE_W, PAGE_H])
       const { height } = page.getSize()
       let currentY = height - TOP_MARGIN
-      const margin = 50
       const fontSize = 11
-      const lineHeight = 14
+      const lineH = 16   // linha aumentada para evitar colisão entre linhas
+      const titleH = 20  // espaço extra após título de seção
 
       let processedContent = template.base_content
       const flatValues = flattenValues(mergedFieldValues)
 
       Object.entries(flatValues).forEach(([key, val]) => {
-        const placeholder = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g')
-        const replacement = (val !== undefined && val !== null && val !== "") ? String(val) : "____________________"
+        const placeholder = new RegExp(`\\{\\{\\s*${key.replace('.', '\\.')}\\s*\\}\\}`, 'g')
+        const replacement = (val !== undefined && val !== null && String(val).trim() !== '') ? String(val) : '____________________'
         processedContent = processedContent.replace(placeholder, replacement)
-      });
-
-      processedContent = processedContent.replace(/\{\{\s*.*?\s*\}\}/g, (match) => {
-        const fieldName = match.replace(/\{\{\s*|\s*\}\}/g, "");
-        return `[Campo pendente: ${fieldName}]`;
       })
 
-      const lines = processedContent.split('\n')
-      for (const rawLine of lines) {
-        if (currentY < BOTTOM_MARGIN + lineHeight) {
-          page = pdfDoc.addPage([595.28, 841.89])
+      // Substitui placeholders não resolvidos por indicador visual claro
+      processedContent = processedContent.replace(/\{\{\s*([^}]+)\s*\}\}/g, (_match, fieldName) => {
+        return `[${fieldName.trim()}]`
+      })
+
+      // Helper: quebra uma linha em sub-linhas que cabem em maxWidth
+      const wrapLine = (text: string, drawFont: any, size: number): string[] => {
+        if (!text.trim()) return ['']
+        const words = text.split(' ')
+        const result: string[] = []
+        let current = ''
+        for (const word of words) {
+          const test = current ? `${current} ${word}` : word
+          if (drawFont.widthOfTextAtSize(test, size) <= MAX_LINE_WIDTH) {
+            current = test
+          } else {
+            if (current) result.push(current)
+            // palavra sozinha maior que a linha: força quebra em caracteres
+            if (drawFont.widthOfTextAtSize(word, size) > MAX_LINE_WIDTH) {
+              let part = ''
+              for (const ch of word) {
+                const testPart = part + ch
+                if (drawFont.widthOfTextAtSize(testPart, size) <= MAX_LINE_WIDTH) {
+                  part = testPart
+                } else {
+                  result.push(part)
+                  part = ch
+                }
+              }
+              current = part
+            } else {
+              current = word
+            }
+          }
+        }
+        if (current) result.push(current)
+        return result.length ? result : ['']
+      }
+
+      const ensureSpace = (needed: number) => {
+        if (currentY < BOTTOM_MARGIN + needed) {
+          page = pdfDoc.addPage([PAGE_W, PAGE_H])
           currentY = height - TOP_MARGIN
         }
-        const isTitle = rawLine === rawLine.toUpperCase() && rawLine.trim().length > 3
-        const drawFont = isTitle ? boldFont : font
-        const drawSize = isTitle ? fontSize + 1 : fontSize
-
-        page.drawText(rawLine, {
-          x: margin, y: currentY, size: drawSize, font: drawFont,
-          color: rgb(0, 0, 0), maxWidth: 595.28 - (margin * 2),
-        })
-        currentY -= lineHeight
       }
+
+      const rawLines = processedContent.split('\n')
+      for (let li = 0; li < rawLines.length; li++) {
+        const rawLine = rawLines[li]
+        const trimmed = rawLine.trim()
+
+        // Linha vazia → espaço entre parágrafos
+        if (!trimmed) {
+          currentY -= lineH * 0.6
+          continue
+        }
+
+        // Detecta cabeçalho de seção numerada (ex: "1. DADOS DO REQUERENTE")
+        const isSectionHeader = /^\d+\./.test(trimmed) && trimmed === trimmed.toUpperCase()
+        // Detecta título de documento (toda maiúscula, linha isolada, acima de 4 chars)
+        const isDocTitle = trimmed === trimmed.toUpperCase() && trimmed.length > 4
+          && (li === 0 || rawLines.slice(Math.max(0, li - 2), li).every(l => !l.trim() || l.trim() === l.trim().toUpperCase()))
+
+        if (isDocTitle || isSectionHeader) {
+          // Espaço extra antes de títulos (exceto primeiro)
+          if (li > 0) currentY -= 6
+          const subLines = wrapLine(trimmed, boldFont, fontSize + 1)
+          for (const sub of subLines) {
+            ensureSpace(titleH)
+            page.drawText(sub, { x: CONTENT_MARGIN, y: currentY, size: fontSize + 1, font: boldFont, color: rgb(0, 0, 0) })
+            currentY -= titleH
+          }
+          // Linha horizontal fina abaixo de títulos de seção
+          if (isSectionHeader) {
+            page.drawLine({ start: { x: CONTENT_MARGIN, y: currentY + 4 }, end: { x: PAGE_W - CONTENT_MARGIN, y: currentY + 4 }, thickness: 0.4, color: rgb(0.7, 0.7, 0.7) })
+            currentY -= 4
+          }
+        } else {
+          // Linha regular com word-wrap
+          const subLines = wrapLine(rawLine, font, fontSize)
+          for (const sub of subLines) {
+            ensureSpace(lineH)
+            page.drawText(sub, { x: CONTENT_MARGIN, y: currentY, size: fontSize, font, color: rgb(0, 0, 0) })
+            currentY -= lineH
+          }
+        }
+      }
+
+      // Campo de assinatura específico por tipo de documento
+      ensureSpace(80)
+      currentY -= 20
+      const sigLineStart = CONTENT_MARGIN
+      const sigLineEnd = CONTENT_MARGIN + 240
+      page.drawLine({ start: { x: sigLineStart, y: currentY }, end: { x: sigLineEnd, y: currentY }, thickness: 0.8, color: rgb(0, 0, 0) })
+      currentY -= 14
+      const clienteNome = String(mergedFieldValues['cliente.nome'] || '').trim()
+      if (clienteNome) {
+        page.drawText(clienteNome, { x: sigLineStart, y: currentY, size: 10, font: boldFont, color: rgb(0, 0, 0) })
+        currentY -= 13
+      }
+      page.drawText(signatureLabel, { x: sigLineStart, y: currentY, size: 9, font, color: rgb(0.3, 0.3, 0.3) })
 
       await applyBranding(pdfDoc, branding, {
         documentName: template.name,
@@ -691,7 +816,7 @@ serve(async (req) => {
         const pdfDoc = await PDFDocument.load(arrayBuffer)
         const pages = pdfDoc.getPages()
         const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
-        const { data: fields } = await supabaseAdmin.from('document_fields').select('*').eq('template_id', templateId)
+        const { data: fields } = await supabaseAdmin.from('document_fields').select('*').eq('template_id', template.id)
         if (fields) {
           for (const field of fields) {
             const value = (mergedFieldValues as any)[field.field_name] || ''
@@ -735,7 +860,7 @@ serve(async (req) => {
         customer_id: customerId,
         vessel_id: vesselId,
         process_id: processId,
-        template_id: templateId,
+        template_id: template.id, // UUID real garantido
         name: `${template.name} - ${new Date().toLocaleDateString()}`,
         generated_file_url: generatedPath,
         status: 'completed',
@@ -862,30 +987,72 @@ async function handleNewModeGeneration(
     const pdfDoc = await PDFDocument.create()
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
-    const TOP_MARGIN = 90
-    const BOTTOM_MARGIN = 70
-    const margin = 50
-    const fontSize = 11
-    const lineHeight = 14
+    const NM_TOP = 95
+    const NM_BOTTOM = 75
+    const NM_PAGE_W = 595.28
+    const NM_PAGE_H = 841.89
+    const NM_MARGIN = 52
+    const NM_MAX_W = NM_PAGE_W - NM_MARGIN * 2
+    const nmFontSize = 11
+    const nmLineH = 16
+    const nmTitleH = 20
 
-    let page = pdfDoc.addPage([595.28, 841.89])
-    const { height } = page.getSize()
-    let currentY = height - TOP_MARGIN
-    for (const rawLine of plainText.split('\n')) {
-      if (currentY < BOTTOM_MARGIN + lineHeight) {
-        page = pdfDoc.addPage([595.28, 841.89])
-        currentY = height - TOP_MARGIN
+    // Word-wrap helper for new mode
+    const nmWrapLine = (text: string, drawFont: any, size: number): string[] => {
+      if (!text.trim()) return ['']
+      const words = text.split(' ')
+      const result: string[] = []
+      let current = ''
+      for (const word of words) {
+        const test = current ? `${current} ${word}` : word
+        if (drawFont.widthOfTextAtSize(test, size) <= NM_MAX_W) {
+          current = test
+        } else {
+          if (current) result.push(current)
+          current = word
+        }
       }
-      const isTitle = rawLine === rawLine.toUpperCase() && rawLine.trim().length > 3
-      page.drawText(rawLine, {
-        x: margin,
-        y: currentY,
-        size: isTitle ? fontSize + 1 : fontSize,
-        font: isTitle ? boldFont : font,
-        color: rgb(0, 0, 0),
-        maxWidth: 595.28 - margin * 2,
-      })
-      currentY -= lineHeight
+      if (current) result.push(current)
+      return result.length ? result : ['']
+    }
+
+    let page = pdfDoc.addPage([NM_PAGE_W, NM_PAGE_H])
+    const { height } = page.getSize()
+    let currentY = height - NM_TOP
+
+    const nmEnsureSpace = (needed: number) => {
+      if (currentY < NM_BOTTOM + needed) {
+        page = pdfDoc.addPage([NM_PAGE_W, NM_PAGE_H])
+        currentY = height - NM_TOP
+      }
+    }
+
+    const nmRawLines = plainText.split('\n')
+    for (let li = 0; li < nmRawLines.length; li++) {
+      const rawLine = nmRawLines[li]
+      const trimmed = rawLine.trim()
+      if (!trimmed) { currentY -= nmLineH * 0.6; continue }
+      const isSectionHeader = /^\d+\./.test(trimmed) && trimmed === trimmed.toUpperCase()
+      const isDocTitle = trimmed === trimmed.toUpperCase() && trimmed.length > 4
+        && (li === 0 || nmRawLines.slice(Math.max(0, li - 2), li).every((l: string) => !l.trim()))
+      if (isDocTitle || isSectionHeader) {
+        if (li > 0) currentY -= 6
+        for (const sub of nmWrapLine(trimmed, boldFont, nmFontSize + 1)) {
+          nmEnsureSpace(nmTitleH)
+          page.drawText(sub, { x: NM_MARGIN, y: currentY, size: nmFontSize + 1, font: boldFont, color: rgb(0, 0, 0) })
+          currentY -= nmTitleH
+        }
+        if (isSectionHeader) {
+          page.drawLine({ start: { x: NM_MARGIN, y: currentY + 4 }, end: { x: NM_PAGE_W - NM_MARGIN, y: currentY + 4 }, thickness: 0.4, color: rgb(0.7, 0.7, 0.7) })
+          currentY -= 4
+        }
+      } else {
+        for (const sub of nmWrapLine(rawLine, font, nmFontSize)) {
+          nmEnsureSpace(nmLineH)
+          page.drawText(sub, { x: NM_MARGIN, y: currentY, size: nmFontSize, font, color: rgb(0, 0, 0) })
+          currentY -= nmLineH
+        }
+      }
     }
 
     await applyBranding(pdfDoc, branding, {

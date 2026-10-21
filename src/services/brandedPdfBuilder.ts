@@ -27,21 +27,47 @@ export async function buildBrandedDocumentPdf(opts: {
 }): Promise<{ bytes: Uint8Array; verificationCode: string }> {
   const {
     PDFDocument,
-    StandardFonts,
     rgb,
     degrees,
     setCharacterSpacing,
     setWordSpacing,
-    setTextRise,
-    setTextRenderingMode,
-    TextRenderingMode,
     pushGraphicsState,
     popGraphicsState,
   } = await import("pdf-lib");
+  const fontkit = await import("@pdf-lib/fontkit");
   const pdfDoc = await PDFDocument.create();
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  const italic = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
+  // Register fontkit to enable embedding real TTF fonts with full Unicode/Latin-Extended support
+  pdfDoc.registerFontkit(fontkit.default ?? fontkit);
+
+  // Load Liberation Sans TTF bytes (Apache 2.0 license, metric-compatible with Arial)
+  // These are served as static assets from /fonts/
+  const loadFontBytes = async (filename: string): Promise<Uint8Array> => {
+    if (typeof window === "undefined") {
+      try {
+        const fs = await import("fs");
+        const path = await import("path");
+        const localPath = path.resolve(process.cwd(), "public/fonts", filename);
+        if (fs.existsSync(localPath)) {
+          return new Uint8Array(fs.readFileSync(localPath));
+        }
+      } catch {}
+    }
+    const base = typeof window !== "undefined" ? window.location.origin : "http://localhost:5174";
+    const res = await fetch(`${base}/fonts/${filename}`);
+    if (!res.ok) throw new Error(`Font fetch failed: ${filename} (${res.status})`);
+    return new Uint8Array(await res.arrayBuffer());
+  };
+
+  const [regularBytes, boldBytes, italicBytes] = await Promise.all([
+    loadFontBytes("LiberationSans-Regular.ttf"),
+    loadFontBytes("LiberationSans-Bold.ttf"),
+    loadFontBytes("LiberationSans-Italic.ttf"),
+  ]);
+
+  // Embed full fonts (no subset) for maximum reliability with all characters
+  const font = await pdfDoc.embedFont(regularBytes);
+  const bold = await pdfDoc.embedFont(boldBytes);
+  const italic = await pdfDoc.embedFont(italicBytes);
   const b = opts.branding;
   const template: PdfTemplateId = (b?.pdf_template as PdfTemplateId) || "classico";
 
@@ -182,12 +208,12 @@ export async function buildBrandedDocumentPdf(opts: {
   const TOP_MARGIN = headerHeight + 14;
   const BOTTOM_MARGIN = 48;
 
+  // Reset text state operators that can bleed between text blocks.
+  // With embedded TTF fonts, Tc/Tw default to 0 per page, so this is a safety guard only.
   const resetPdfTextSpacing = (targetPage: any) => {
     targetPage.pushOperators(
       setCharacterSpacing(0),
       setWordSpacing(0),
-      setTextRise(0),
-      setTextRenderingMode(TextRenderingMode.Fill),
     );
   };
 
@@ -247,6 +273,7 @@ export async function buildBrandedDocumentPdf(opts: {
     p.pushOperators(popGraphicsState());
     resetPdfTextSpacing(p);
   };
+
 
   const pages: any[] = [];
   let page = pdfDoc.addPage([W, H]);
@@ -821,8 +848,52 @@ export async function buildBrandedDocumentPdf(opts: {
     }
   };
 
-  // Parse contents into structural blocks
+  // ---------- SIGNATURE & CLOSING COUPLING ----------
+  const signerText = opts.signerName || b?.technical_responsible_name || "Assinatura do Responsável";
+  const signerSub = opts.signerRole || b?.technical_responsible_registry || "";
+
+  const signerLines = signerText.split("\n");
+  const estimatedSignerHeight =
+    (signatureImg ? 45 : 0) +
+    22 + // line and padding
+    signerLines.length * 12 +
+    (signerSub ? 14 : 0) +
+    18;
+
+  // Se o fechamento do documento (últimas linhas descritivas de conclusão) puder ficar
+  // isolado da assinatura, mantemos ambos juntos na página seguinte.
   const rawLines = opts.content.split("\n");
+
+  // Localiza os últimos itens de fechamento do documento para garantir espaço conjunto
+  let closingStartIndex = -1;
+  for (let k = 0; k < rawLines.length; k++) {
+    const t = rawLines[k].trim();
+    if (
+      t.startsWith("5. ELABORADO POR") ||
+      t.startsWith("PREPARADO POR") ||
+      t.startsWith("Por ser a expressão")
+    ) {
+      closingStartIndex = k;
+      break;
+    }
+  }
+
+  // Se não encontrou cabeçalho de fechamento explícito, busca os últimos 3 parágrafos
+  if (closingStartIndex === -1) {
+    for (let k = rawLines.length - 1; k >= 0; k--) {
+      const t = rawLines[k].trim();
+      if (t.startsWith("Documento elaborado") || t.startsWith("Requerimento elaborado")) {
+        closingStartIndex = Math.max(0, k - 2);
+        break;
+      }
+    }
+  }
+
+  let closingLinesCount = closingStartIndex !== -1 ? rawLines.length - closingStartIndex : 3;
+  const estimatedClosingHeight = closingLinesCount * (bodySize + lineGap + 4) + 30;
+  const totalClosingAndSignatureNeeded = estimatedSignerHeight + estimatedClosingHeight;
+
+  // Processamento das linhas de conteúdo
   for (let i = 0; i < rawLines.length; i++) {
     const ln = rawLines[i];
     const trimmed = ln.trim();
@@ -830,6 +901,13 @@ export async function buildBrandedDocumentPdf(opts: {
       y -= 8;
       continue;
     }
+
+    // Se estivermos entrando no bloco final de encerramento do documento,
+    // garantimos que há espaço suficiente para TODO o encerramento JUNTO com a assinatura.
+    if (closingStartIndex !== -1 && i === closingStartIndex) {
+      ensureSpace(totalClosingAndSignatureNeeded);
+    }
+
     const isNumberedHeading = /^[0-9]+\.\s+[A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9 ()/\-.,:]{3,90}$/.test(trimmed);
     const isSectionHeading = /^[A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9 ()/\-.,]{3,70}:$/.test(trimmed);
     const isCapsTitle = !/[a-z]/.test(trimmed) && trimmed.length >= 4 && trimmed.length <= 80 && !trimmed.includes(": ");
@@ -849,10 +927,7 @@ export async function buildBrandedDocumentPdf(opts: {
   flushTwoColumnRow();
 
   // ---------- SIGNATURE BLOCK ----------
-  const signerText = opts.signerName || b?.technical_responsible_name || "Assinatura do Responsável";
-  const signerSub = opts.signerRole || b?.technical_responsible_registry || "";
-
-  ensureSpace(70);
+  ensureSpace(estimatedSignerHeight);
   y -= 18;
   if (signatureImg) {
     const sw = 130;
@@ -867,7 +942,6 @@ export async function buildBrandedDocumentPdf(opts: {
     color: secondary,
   });
   y -= 10;
-  const signerLines = signerText.split("\n");
   for (const sLine of signerLines) {
     resetPdfTextSpacing(page);
     page.drawText(sanitize(sLine), {
