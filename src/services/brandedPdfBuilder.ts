@@ -11,6 +11,8 @@ export type WatermarkCustomOptions = {
   rawImageType?: "png" | "jpg";
 };
 
+export type LogoModeOption = "company" | "navaldocs" | "none";
+
 /**
  * Single source of truth para PDFs com identidade visual.
  * Aplica o modelo escolhido em Identidade Corporativa
@@ -22,6 +24,7 @@ export async function buildBrandedDocumentPdf(opts: {
   branding: CompanyBranding | null;
   verificationCode?: string;
   watermarkOptions?: WatermarkCustomOptions;
+  logoMode?: LogoModeOption;
   signerName?: string;
   signerRole?: string;
 }): Promise<{ bytes: Uint8Array; verificationCode: string }> {
@@ -119,18 +122,43 @@ export async function buildBrandedDocumentPdf(opts: {
     }
   };
 
-  const watermarkTargetUrl =
-    opts.watermarkOptions?.logoUrl || b?.watermark_url || b?.logo_primary_url;
+  // Determinar URL ou fonte do Logo do Cabeçalho com base no logoMode selecionado
+  const effectiveLogoMode: LogoModeOption = opts.logoMode || (b?.logo_primary_url ? "company" : "navaldocs");
+
+  const resolveLogoUrl = (): string | null => {
+    if (effectiveLogoMode === "none") return null;
+    if (effectiveLogoMode === "navaldocs") {
+      const base = typeof window !== "undefined" ? window.location.origin : "http://localhost:5174";
+      return `${base}/navaldocs-logo.png`;
+    }
+    // company
+    if (b?.logo_primary_url) return b.logo_primary_url;
+    // se empresa não tem logo mas escolheu company, fallback para null (sem bloquear geração)
+    return null;
+  };
+
+  const headerLogoTargetUrl = resolveLogoUrl();
+
+  // Marca-d'água é 100% independente do cabeçalho
+  const wmOpt = opts.watermarkOptions;
+  const isWatermarkEnabled = wmOpt ? wmOpt.enabled !== false : true;
+
+  const watermarkTargetUrl = isWatermarkEnabled
+    ? opts.watermarkOptions?.logoUrl ||
+      b?.watermark_url ||
+      (effectiveLogoMode === "company" ? b?.logo_primary_url : null) ||
+      (typeof window !== "undefined" ? `${window.location.origin}/navaldocs-logo.png` : null)
+    : null;
 
   const [logoImg, watermarkImg, rawWatermarkImg, signatureImg, stampImg] = await Promise.all([
-    embedImage(b?.logo_primary_url),
+    embedImage(headerLogoTargetUrl),
     embedImage(watermarkTargetUrl),
-    embedRaw(opts.watermarkOptions?.rawImageBytes, opts.watermarkOptions?.rawImageType),
+    embedRaw(isWatermarkEnabled ? opts.watermarkOptions?.rawImageBytes : null, opts.watermarkOptions?.rawImageType),
     embedImage(b?.signature_url),
     embedImage(b?.stamp_url),
   ]);
 
-  const finalWatermarkImg = rawWatermarkImg || watermarkImg;
+  const finalWatermarkImg = isWatermarkEnabled ? (rawWatermarkImg || watermarkImg) : null;
 
   const verificationCode =
     opts.verificationCode ||

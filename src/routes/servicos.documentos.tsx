@@ -92,7 +92,7 @@ function DocumentosDoServicoPage() {
 
   // Estados condicionais do formulário
   const [vesselType, setVesselType] = useState("Lancha");
-  const [lengthMeters, setLengthMeters] = useState("6,50 m");
+  const [lengthMeters, setLengthMeters] = useState("");
   const [ownerType, setOwnerType] = useState<"pf" | "pj">("pf");
   const [serviceAttendance, setServiceAttendance] = useState<"representante" | "proprietario">(
     "representante",
@@ -159,8 +159,9 @@ function DocumentosDoServicoPage() {
             if (vesData.vessel_type) {
               setVesselType(vesData.vessel_type);
             }
-            if (vesData.length_overall) {
-              setLengthMeters(`${vesData.length_overall} m`);
+            const actualLength = vesData.length || vesData.length_overall;
+            if (actualLength) {
+              setLengthMeters(`${actualLength}${String(actualLength).includes("m") ? "" : " m"}`);
             }
           }
         }
@@ -317,6 +318,8 @@ function DocumentosDoServicoPage() {
             services_count: rawServices.length,
             attached_files: attachedFiles,
             is_jet_ski: isJetSki,
+            vessel_length: lengthMeters.trim() || vessel?.length || vessel?.length_overall || null,
+            vessel_type: vesselType || vessel?.vessel_type || null,
             created_by_user_id: user?.id,
             created_by_email: user?.email,
             created_at_date: new Date().toISOString(),
@@ -903,6 +906,7 @@ function DocumentosDoServicoPage() {
                   customerId,
                   vesselId,
                   services: rawServices.join(","),
+                  ...(lengthMeters ? { length: lengthMeters } : {}),
                 },
               });
             }}

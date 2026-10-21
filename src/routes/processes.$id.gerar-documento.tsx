@@ -33,6 +33,8 @@ import {
   Eye,
   Edit,
   XCircle,
+  Image as ImageIcon,
+  Droplet,
 } from "lucide-react";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -40,7 +42,7 @@ import { DashboardLayout } from "@/routes/dashboard";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadToBucket } from "@/lib/storage";
-import { buildBrandedDocumentPdf } from "@/services/brandedPdfBuilder";
+import { buildBrandedDocumentPdf, LogoModeOption } from "@/services/brandedPdfBuilder";
 import { loadCompanyBranding } from "@/services/companyBranding";
 import { openStoredFile, downloadStoredFile } from "@/utils/file-preview";
 import {
@@ -136,6 +138,12 @@ function GerarDocumentoPage() {
   >([]);
 
   const [companyData, setCompanyData] = useState<any | null>(null);
+
+  // Estados de Aparência do Documento (Logo Opcional e Marca-d'água Independente)
+  const [logoChoice, setLogoChoice] = useState<LogoModeOption>("navaldocs");
+  const [showWatermark, setShowWatermark] = useState<boolean>(true);
+  const [isSavingAppearancePref, setIsSavingAppearancePref] = useState(false);
+  const [isUploadingCompanyLogo, setIsUploadingCompanyLogo] = useState(false);
 
   // Modal para cadastro rápido de funcionário
   const [showQuickStaffModal, setShowQuickStaffModal] = useState(false);
@@ -314,6 +322,21 @@ function GerarDocumentoPage() {
           setCompanyStaffList(activeEmployees);
           if (activeEmployees.length > 0) {
             setSelectedStaff(activeEmployees[0]);
+          }
+
+          // Carregar preferência salva de aparência do documento
+          const savedAppearance = docMap?.appearance || (comp as any)?.metadata?.appearance;
+          if (savedAppearance) {
+            if (savedAppearance.logoChoice) {
+              setLogoChoice(savedAppearance.logoChoice as LogoModeOption);
+            }
+            if (typeof savedAppearance.showWatermark === "boolean") {
+              setShowWatermark(savedAppearance.showWatermark);
+            }
+          } else {
+            // Se a empresa possui logo configurado, sugere "company"; caso contrário, sugere "navaldocs"
+            const hasCompanyLogo = !!(comp.logo_url || comp.logo_primary_url);
+            setLogoChoice(hasCompanyLogo ? "company" : "navaldocs");
           }
         }
       } catch (err) {
@@ -594,6 +617,90 @@ function GerarDocumentoPage() {
       toast.error("Não foi possível cadastrar o funcionário.");
     } finally {
       setIsSavingQuickStaff(false);
+    }
+  };
+
+  // Salvar preferência de aparência como padrão nas configurações da empresa
+  const handleSaveAppearancePreference = async () => {
+    if (!companyId) return;
+    setIsSavingAppearancePref(true);
+    try {
+      const now = new Date().toISOString();
+      const { data: comp } = await supabase
+        .from("companies")
+        .select("document_template_map")
+        .eq("id", companyId)
+        .single();
+
+      const docMap = (comp?.document_template_map as any) || {};
+      const updatedDocMap = {
+        ...docMap,
+        appearance: {
+          logoChoice,
+          showWatermark,
+          updated_at: now,
+        },
+      };
+
+      const { error } = await supabase
+        .from("companies")
+        .update({
+          document_template_map: updatedDocMap,
+          updated_at: now,
+        } as any)
+        .eq("id", companyId);
+
+      if (error) throw error;
+      toast.success("Preferência de aparência salva com sucesso!", {
+        description: "Essa configuração será o padrão para as próximas gerações desta empresa.",
+      });
+    } catch (err: any) {
+      console.error("Erro ao salvar preferência de aparência:", err);
+      toast.error(err?.message || "Não foi possível salvar a preferência.");
+    } finally {
+      setIsSavingAppearancePref(false);
+    }
+  };
+
+  // Upload rápido do logo da empresa caso ainda não possua
+  const handleUploadCompanyLogo = async (file: File) => {
+    if (!companyId || !file) return;
+    setIsUploadingCompanyLogo(true);
+    try {
+      const ext = file.name.split(".").pop() || "png";
+      const path = `companies/${companyId}/logo_${Date.now()}.${ext}`;
+      await uploadToBucket("company-assets", path, file, {
+        contentType: file.type || "image/png",
+        upsert: true,
+      });
+
+      // Obter URL pública do asset
+      const { data: urlData } = supabase.storage.from("company-assets").getPublicUrl(path);
+      const publicUrl = urlData?.publicUrl || path;
+
+      const { error: updErr } = await supabase
+        .from("companies")
+        .update({
+          logo_url: publicUrl,
+          logo_primary_url: publicUrl,
+          updated_at: new Date().toISOString(),
+        } as any)
+        .eq("id", companyId);
+
+      if (updErr) throw updErr;
+
+      setCompanyData((prev: any) => ({
+        ...prev,
+        logo_url: publicUrl,
+        logo_primary_url: publicUrl,
+      }));
+      setLogoChoice("company");
+      toast.success("Logo da sua empresa enviado e configurado com sucesso!");
+    } catch (err: any) {
+      console.error("Erro ao enviar logo da empresa:", err);
+      toast.error("Não foi possível enviar o logo da empresa.");
+    } finally {
+      setIsUploadingCompanyLogo(false);
     }
   };
 
@@ -913,7 +1020,7 @@ function GerarDocumentoPage() {
               `Número de Inscrição: ${vessel?.registration_number || "Em regularização"}`,
               `Tipo de Embarcação: ${vessel?.vessel_type || "Embarcação"}`,
               `Categoria: ${isProf ? "Embarcação Profissional" : isJet ? "Moto Aquática" : "Esporte e Recreio"}`,
-              `Comprimento Total: ${vessel?.length || vessel?.length_overall || "Não informado"} m`,
+              `Comprimento Total: ${effectiveLength}${String(effectiveLength).includes("m") || effectiveLength === "Não informado" ? "" : " m"}`,
               `Material do Casco: ${vessel?.material || "Não informado"}`,
               ``,
               `3. ESCOPO DA SOLICITAÇÃO (${normamScope})`,
@@ -949,10 +1056,16 @@ function GerarDocumentoPage() {
                 signerRole: `CPF/CNPJ: ${customer?.cpf_cnpj || customer?.document || ""}`,
               };
 
+          const effectiveLength = (processData?.draft_data as any)?.vessel_length || vessel?.length || vessel?.length_overall || "Não informado";
+
           const { bytes, verificationCode } = await buildBrandedDocumentPdf({
             docName: docTitle,
             content,
             branding,
+            logoMode: logoChoice,
+            watermarkOptions: {
+              enabled: showWatermark,
+            },
             signerName: signerInfo.signerName,
             signerRole: signerInfo.signerRole,
           });
@@ -983,6 +1096,10 @@ function GerarDocumentoPage() {
             validation_status: tpl.status,
             storage_bucket: "generated-documents",
             storage_path: storagePath,
+            appearance_snapshot: {
+              logo_choice: logoChoice,
+              watermark_enabled: showWatermark,
+            },
             disclaimer:
               "Documento elaborado eletronicamente pelo NavalDocs Pro para assinatura externa (gov.br ou presencial). Não emitido pela Autoridade Marítima.",
             staff_responsible: {
@@ -1006,7 +1123,7 @@ function GerarDocumentoPage() {
               name: vesselName,
               registration: vessel?.registration_number || "",
               type: vessel?.vessel_type || "",
-              length: vessel?.length || vessel?.length_overall || "",
+              length: effectiveLength,
               material: vessel?.material || "",
             },
             company_snapshot: {
@@ -1504,6 +1621,39 @@ function GerarDocumentoPage() {
                           </div>
                         )}
 
+                        {/* Detalhamento do Outorgado da Procuração */}
+                        {tpl.slug === "proc-representacao-naval" && (
+                          <div className="mt-3 p-3 rounded-xl bg-blue-50/70 border border-blue-200 text-xs text-blue-900 flex items-start gap-2.5 animate-in fade-in duration-150">
+                            <Building2 className="h-4 w-4 text-[#075BFF] shrink-0 mt-0.5" />
+                            <div className="space-y-1">
+                              <span className="font-bold block text-[#0B1739]">
+                                Configuração do Outorgado (Procurador):
+                              </span>
+                              {companyData?.procurador_nome ? (
+                                <p className="text-[11px] text-slate-700 leading-relaxed">
+                                  <strong>Pessoa Física:</strong> {companyData.procurador_nome}{" "}
+                                  (CPF: {companyData.procurador_cpf || <span className="text-amber-700 font-bold">Não informado</span>}
+                                  {companyData.procurador_crea ? ` • Registro: ${companyData.procurador_crea}` : ""})
+                                  <span className="block text-[10px] text-slate-500 mt-0.5">
+                                    Vínculo: {companyData?.name || currentCompany?.name || "Empresa Naval"} (CNPJ: {companyData?.cnpj || currentCompany?.cnpj || "Não informado"})
+                                  </span>
+                                </p>
+                              ) : (
+                                <p className="text-[11px] text-slate-700 leading-relaxed">
+                                  <strong>Pessoa Jurídica:</strong> {companyData?.name || currentCompany?.name || "Empresa Naval"}{" "}
+                                  (CNPJ: {companyData?.cnpj || currentCompany?.cnpj || <span className="text-amber-700 font-bold">Não informado</span>})
+                                  <span className="block text-[10px] text-slate-500 mt-0.5">
+                                    Sede: {companyData?.contact_address || "Endereço cadastrado na empresa"}
+                                  </span>
+                                </p>
+                              )}
+                              <p className="text-[10px] text-blue-800 italic">
+                                Nota: A logo é meramente cosmética e não integra a validação jurídica da procuração.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
                         {/* Aviso Granular: Bloqueio por Campos Obrigatórios Ausentes */}
                         {isBlockedForRequiredFields && isGeneratingThis && (
                           <div className="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-in fade-in duration-150">
@@ -1768,6 +1918,12 @@ function GerarDocumentoPage() {
                       <span className="text-amber-600 font-semibold">Ausente no cadastro</span>
                     )}
                   </p>
+                  <p className="text-[11px] text-slate-500 truncate">
+                    Comprimento:{" "}
+                    <span className="font-semibold text-slate-700">
+                      {(processData?.draft_data as any)?.vessel_length || (vessel?.length || vessel?.length_overall ? `${vessel?.length || vessel?.length_overall} m` : "Não informado")}
+                    </span>
+                  </p>
                 </div>
 
                 {/* Empresa / Logo */}
@@ -1826,9 +1982,204 @@ function GerarDocumentoPage() {
           </div>
 
           {/* ======================================================================= */}
-          {/* COLUNA DIREITA (5 COLUNAS): FUNCIONÁRIO + RESUMO DA GERAÇÃO */}
+          {/* COLUNA DIREITA (5 COLUNAS): APARÊNCIA + FUNCIONÁRIO + RESUMO DA GERAÇÃO */}
           {/* ======================================================================= */}
           <div className="lg:col-span-5 space-y-6">
+            {/* SEÇÃO NOVO: APARÊNCIA DO DOCUMENTO */}
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#075BFF] flex items-center justify-center shrink-0">
+                    <ImageIcon className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-[#0B1739]">Aparência do documento</h2>
+                    <p className="text-[11px] text-slate-500">
+                      Personalize logo e marca-d’água para este lote
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleSaveAppearancePreference}
+                  disabled={isSavingAppearancePref}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition-colors cursor-pointer disabled:opacity-50"
+                  title="Salva essa preferência como padrão para próximas gerações desta empresa"
+                >
+                  {isSavingAppearancePref ? (
+                    <Loader2 className="h-3 w-3 animate-spin text-[#075BFF]" />
+                  ) : (
+                    <Check className="h-3 w-3 text-emerald-600" />
+                  )}
+                  <span>Salvar como padrão</span>
+                </button>
+              </div>
+
+              {/* OPÇÕES DE LOGO */}
+              <div className="space-y-2 pt-1 text-xs">
+                <label className="text-xs font-semibold text-slate-700 block">
+                  Logo do cabeçalho:
+                </label>
+                <div className="space-y-2">
+                  {/* OPÇÃO 1: LOGO DA EMPRESA */}
+                  <label
+                    className={`flex items-start justify-between p-3 rounded-xl border cursor-pointer transition-all ${
+                      logoChoice === "company"
+                        ? "border-[#075BFF] bg-blue-50/40 shadow-2xs font-semibold text-[#0B1739]"
+                        : "border-slate-200 hover:border-slate-300 bg-white text-slate-700"
+                    }`}
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <input
+                        type="radio"
+                        name="logoChoiceOption"
+                        value="company"
+                        checked={logoChoice === "company"}
+                        onChange={() => setLogoChoice("company")}
+                        className="mt-0.5 text-[#075BFF] focus:ring-blue-500"
+                      />
+                      <div>
+                        <span className="block text-xs font-bold">Usar logo da minha empresa</span>
+                        <span className="text-[11px] text-slate-500 block mt-0.5">
+                          {companyData?.logo_url || companyData?.logo_primary_url
+                            ? "Arquivo oficial configurado nas preferências da empresa"
+                            : "Nenhum arquivo de logo configurado ainda"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Previa ou Upload */}
+                    {companyData?.logo_url || companyData?.logo_primary_url ? (
+                      <div className="w-12 h-8 rounded border border-slate-200 bg-white p-0.5 shrink-0 flex items-center justify-center overflow-hidden">
+                        <img
+                          src={companyData.logo_url || companyData.logo_primary_url}
+                          alt="Logo da Empresa"
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      </div>
+                    ) : (
+                      <label className="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 text-[#075BFF] text-[10px] font-bold cursor-pointer shrink-0 border border-blue-200">
+                        {isUploadingCompanyLogo ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Upload className="h-3 w-3" />
+                        )}
+                        <span>Fazer upload</span>
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg"
+                          className="hidden"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) handleUploadCompanyLogo(f);
+                          }}
+                        />
+                      </label>
+                    )}
+                  </label>
+
+                  {/* OPÇÃO 2: LOGO DO NAVALDOCS PRO */}
+                  <label
+                    className={`flex items-start justify-between p-3 rounded-xl border cursor-pointer transition-all ${
+                      logoChoice === "navaldocs"
+                        ? "border-[#075BFF] bg-blue-50/40 shadow-2xs font-semibold text-[#0B1739]"
+                        : "border-slate-200 hover:border-slate-300 bg-white text-slate-700"
+                    }`}
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <input
+                        type="radio"
+                        name="logoChoiceOption"
+                        value="navaldocs"
+                        checked={logoChoice === "navaldocs"}
+                        onChange={() => setLogoChoice("navaldocs")}
+                        className="mt-0.5 text-[#075BFF] focus:ring-blue-500"
+                      />
+                      <div>
+                        <span className="block text-xs font-bold">Usar logo do NavalDocs Pro</span>
+                        <span className="text-[11px] text-slate-500 block mt-0.5">
+                          Arquivo oficial do projeto, preservando proporções
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="w-12 h-8 rounded border border-slate-200 bg-white p-0.5 shrink-0 flex items-center justify-center overflow-hidden">
+                      <img
+                        src="/navaldocs-logo.png"
+                        alt="Logo NavalDocs Pro"
+                        className="max-h-full max-w-full object-contain"
+                      />
+                    </div>
+                  </label>
+
+                  {/* OPÇÃO 3: SEM LOGO */}
+                  <label
+                    className={`flex items-start justify-between p-3 rounded-xl border cursor-pointer transition-all ${
+                      logoChoice === "none"
+                        ? "border-[#075BFF] bg-blue-50/40 shadow-2xs font-semibold text-[#0B1739]"
+                        : "border-slate-200 hover:border-slate-300 bg-white text-slate-700"
+                    }`}
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <input
+                        type="radio"
+                        name="logoChoiceOption"
+                        value="none"
+                        checked={logoChoice === "none"}
+                        onChange={() => setLogoChoice("none")}
+                        className="mt-0.5 text-[#075BFF] focus:ring-blue-500"
+                      />
+                      <div>
+                        <span className="block text-xs font-bold">Sem logo</span>
+                        <span className="text-[11px] text-slate-500 block mt-0.5">
+                          Cabeçalho textual neutro com nome da empresa (nunca bloqueia geração)
+                        </span>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* OPÇÃO DE MARCA-D'ÁGUA (INDEPENDENTE) */}
+              <div className="pt-3 border-t border-slate-100 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Droplet className="h-4 w-4 text-[#075BFF]" />
+                    <span className="text-xs font-bold text-slate-800">
+                      Exibir marca-d’água no fundo
+                    </span>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={showWatermark}
+                      onChange={(e) => setShowWatermark(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-slate-200 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#075BFF]"></div>
+                  </label>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-[11px]">
+                  <span className="text-slate-600">
+                    {showWatermark
+                      ? "Marca-d’água ativa em todas as páginas (opacidade sutil)"
+                      : "Marca-d’água desativada em todas as páginas (o logo do cabeçalho permanece)"}
+                  </span>
+                  <span
+                    className={`font-semibold px-2 py-0.5 rounded text-[10px] ${
+                      showWatermark
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-slate-200 text-slate-700"
+                    }`}
+                  >
+                    {showWatermark ? "Visível" : "Oculta"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {/* SEÇÃO 3: FUNCIONÁRIO RESPONSÁVEL */}
             <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
               <div className="flex items-center justify-between">

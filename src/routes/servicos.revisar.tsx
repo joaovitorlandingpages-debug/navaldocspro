@@ -55,6 +55,7 @@ export const Route = createFileRoute("/servicos/revisar")({
     from?: string;
     activeServiceId?: string;
     preview?: string;
+    length?: string;
   } => ({
     category: (search.category as "profissional" | "esporte_recreio") || "esporte_recreio",
     customerId: (search.customerId as string) || "",
@@ -63,6 +64,7 @@ export const Route = createFileRoute("/servicos/revisar")({
     from: (search.from as string) || undefined,
     activeServiceId: (search.activeServiceId as string) || undefined,
     preview: (search.preview as string) || undefined,
+    length: (search.length as string) || undefined,
   }),
   component: () => (
     <ProtectedRoute>
@@ -231,6 +233,8 @@ function RevisarProcessoPage() {
       const vesselName = vessel?.name || "Embarcação";
       const processTitle = `${serviceSummary} - ${vesselName} (${customerName})`;
 
+      const effectiveVesselLength = search.length || vessel?.length || vessel?.length_overall || null;
+
       const { data: newProcess, error: procError } = await supabase
         .from("processes")
         .insert({
@@ -251,6 +255,8 @@ function RevisarProcessoPage() {
             services_count: rawServices.length,
             is_jet_ski: isJetSki,
             all_services_validated: allServicesValidated,
+            vessel_length: effectiveVesselLength,
+            vessel_type: vessel?.vessel_type || null,
             created_by_user_id: user?.id,
             created_by_email: user?.email,
             created_at_date: new Date().toISOString(),
@@ -627,6 +633,13 @@ function RevisarProcessoPage() {
                   <span className="text-slate-500">Embarcação:</span>
                   <span className="font-bold text-[#0B1739] text-right truncate max-w-[200px]">
                     {vessel?.name || "Embarcação não informada"}
+                  </span>
+                </div>
+
+                <div className="flex justify-between py-1.5 border-b border-slate-100">
+                  <span className="text-slate-500">Comprimento:</span>
+                  <span className="font-medium text-slate-800 text-right">
+                    {search.length || (vessel?.length || vessel?.length_overall ? `${vessel?.length || vessel?.length_overall} m` : "Não informado")}
                   </span>
                 </div>
 
