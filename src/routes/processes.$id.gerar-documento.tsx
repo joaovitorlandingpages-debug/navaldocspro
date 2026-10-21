@@ -18,6 +18,7 @@ import {
   Building2,
   FileSpreadsheet,
   ChevronRight,
+  ChevronDown,
   Check,
   Sparkles,
   PenTool,
@@ -32,6 +33,7 @@ import {
   Square,
   Eye,
   Edit,
+  Trash2,
   XCircle,
   Image as ImageIcon,
   Droplet,
@@ -157,6 +159,9 @@ function GerarDocumentoPage() {
   const [quickVesselReg, setQuickVesselReg] = useState("");
   const [quickVesselType, setQuickVesselType] = useState("Lancha / Recreio");
   const [isSavingQuickVessel, setIsSavingQuickVessel] = useState(false);
+
+  // Estado de detalhes recolhidos por documento ("Quando usar e ver detalhes")
+  const [expandedDetails, setExpandedDetails] = useState<Record<string, boolean>>({});
 
   // Estado de Geração e Falhas Parciais
   const [isGenerating, setIsGenerating] = useState(false);
@@ -462,6 +467,21 @@ function GerarDocumentoPage() {
   const templatesOmitted = useMemo(() => {
     return filteredTemplates.filter((tpl) => docSelections[tpl.id]?.mode === "omit");
   }, [filteredTemplates, docSelections]);
+
+  // Documentos que o usuário selecionou para gerar, mas que possuem pendência de dados ou revisão
+  const pendingTemplatesSelected = useMemo(() => {
+    return filteredTemplates.filter((tpl) => {
+      const isModeGenerate = docSelections[tpl.id]?.mode === "generate";
+      if (!isModeGenerate) return false;
+      const isApproved = tpl.status === "aprovado";
+      const validation = templateValidationMap.get(tpl.slug);
+      const isBlocked = !!validation?.isBlocked;
+      const resolution = resolvedTemplatesMap.get(tpl.slug);
+      const isNotResolved = !resolution?.dbTemplateId;
+
+      return !isApproved || isBlocked || isNotResolved;
+    });
+  }, [filteredTemplates, docSelections, templateValidationMap, resolvedTemplatesMap]);
 
   // Modelo Selecionado Atualmente para prévia de campos
   const activeTemplate = useMemo(() => {
@@ -785,6 +805,19 @@ function GerarDocumentoPage() {
         [tpl.id]: { ...(prev[tpl.id] || { mode: "attach" }), isUploading: false },
       }));
     }
+  };
+
+  // Remover anexo pronto de um documento
+  const handleRemoveAttachedFile = (tplId: string) => {
+    setDocSelections((prev) => ({
+      ...prev,
+      [tplId]: {
+        mode: "attach",
+        attachedFile: undefined,
+        isUploading: false,
+      },
+    }));
+    toast.info("Anexo removido.");
   };
 
   // Tabela de tradução: slug interno → rótulo legível para o PDF
@@ -1135,7 +1168,21 @@ function GerarDocumentoPage() {
             generated_at: now,
           };
 
-          // 6. Inserir registro na tabela generated_documents com UUID real (NUNCA slug)
+          // 6. Determinar versão sequencial do documento para preservar histórico
+          const { data: previousDocs } = await supabase
+            .from("generated_documents")
+            .select("version")
+            .eq("company_id", companyId)
+            .eq("process_id", id)
+            .eq("template_id", realTemplateUuid)
+            .order("version", { ascending: false })
+            .limit(1);
+
+          const nextVersion = previousDocs && previousDocs.length > 0 && typeof previousDocs[0].version === "number"
+            ? previousDocs[0].version + 1
+            : 1;
+
+          // 7. Inserir registro na tabela generated_documents com UUID real (NUNCA slug)
           const { data: newDoc, error: docError } = await supabase
             .from("generated_documents")
             .insert({
@@ -1150,10 +1197,10 @@ function GerarDocumentoPage() {
               signature_status: "pending",
               verification_code: verificationCode,
               template_id: realTemplateUuid, // UUID REAL DO BANCO
-              version: 1,
+              version: nextVersion,
               metadata: documentMetadata,
             })
-            .select("id, name, generated_file_url, created_at, status")
+            .select("id, name, generated_file_url, created_at, status, version")
             .single();
 
           if (docError) {
@@ -1273,9 +1320,9 @@ function GerarDocumentoPage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24 font-sans text-slate-800">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-20 space-y-6">
         {/* ========================================================================= */}
-        {/* 1. CABEÇALHO */}
+        {/* 1. CABEÇALHO SIMPLES */}
         {/* ========================================================================= */}
         <div>
           <button
@@ -1288,96 +1335,99 @@ function GerarDocumentoPage() {
           </button>
 
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0B1739]">
-            Gerar documento
+            Documentos do processo
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Selecione um modelo e confira os dados antes de gerar o arquivo.
+            Escolha quais documentos deseja gerar ou anexe os que já possui.
           </p>
         </div>
 
-        {/* ========================================================================= */}
-        {/* RESUMO DO CONTEXTO (4 COLUNAS) */}
-        {/* ========================================================================= */}
-        <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-xs grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
+        {/* Resumo do Contexto (Cliente, Embarcação com edição rápida e Serviços Selecionados) */}
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-xs grid grid-cols-1 md:grid-cols-3 gap-4 divide-y md:divide-y-0 md:divide-x divide-slate-100">
           {/* Cliente */}
-          <div className="flex items-center gap-3 pt-2 sm:pt-0 sm:pr-3">
-            <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 shrink-0">
+          <div className="flex items-start gap-3 pt-2 md:pt-0 md:pr-3">
+            <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 shrink-0 mt-0.5">
               <User className="h-5 w-5" />
             </div>
             <div className="min-w-0">
               <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
                 Cliente
               </span>
-              <span className="text-sm font-bold text-[#0B1739] truncate block">
+              <span className="text-sm font-bold text-[#0B1739] whitespace-normal break-words block">
                 {customer?.fantasy_name || customer?.name || "Cliente não informado"}
               </span>
+              {(customer?.cpf_cnpj || customer?.document) && (
+                <span className="text-xs text-slate-500 block font-mono mt-0.5">
+                  {customer.cpf_cnpj || customer.document}
+                </span>
+              )}
             </div>
           </div>
 
           {/* Embarcação */}
-          <div className="flex items-center justify-between gap-3 pt-3 sm:pt-0 sm:px-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 shrink-0">
+          <div className="flex items-start justify-between gap-3 pt-3 md:pt-0 md:px-3">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 shrink-0 mt-0.5">
                 <Ship className="h-5 w-5" />
               </div>
               <div className="min-w-0">
                 <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
                   Embarcação
                 </span>
-                <span className="text-sm font-bold text-[#0B1739] truncate block">
+                <span className="text-sm font-bold text-[#0B1739] whitespace-normal break-words block">
                   {vessel?.name || "Embarcação não informada"}
                 </span>
+                <div className="flex items-center gap-2 flex-wrap text-xs text-slate-500 mt-0.5">
+                  <span>Inscrição: {vessel?.registration_number || "Em regularização"}</span>
+                  <span>•</span>
+                  <span>
+                    Comprimento:{" "}
+                    {(processData?.draft_data as any)?.vessel_length ||
+                      (vessel?.length || vessel?.length_overall
+                        ? `${vessel?.length || vessel?.length_overall} m`
+                        : "Não informado")}
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Ação rápida para editar/completar embarcação */}
             <button
               type="button"
               onClick={() => setShowQuickVesselModal(true)}
-              title="Completar dados cadastrais da embarcação"
+              title="Completar ou alterar dados cadastrais da embarcação"
               className="p-1.5 rounded-lg text-[#075BFF] hover:bg-blue-50 transition-colors cursor-pointer shrink-0"
             >
               <Edit className="h-4 w-4" />
             </button>
           </div>
 
-          {/* Serviço */}
-          <div className="flex items-center gap-3 pt-3 sm:pt-0 sm:px-3">
-            <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 shrink-0">
+          {/* Serviços Selecionados */}
+          <div className="flex items-start gap-3 pt-3 md:pt-0 md:pl-3">
+            <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 shrink-0 mt-0.5">
               <Cog className="h-5 w-5" />
             </div>
             <div className="min-w-0">
               <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
-                Serviço
+                Serviços selecionados
               </span>
-              <span className="text-sm font-bold text-[#0B1739] truncate block">
-                {processData?.title || "Renovação do TIE"}
+              <span className="text-xs font-semibold text-[#0B1739] whitespace-normal break-words block leading-snug">
+                {translateServices((processData?.draft_data as any)?.services) ||
+                  processData?.title ||
+                  "Serviço Naval"}
               </span>
-            </div>
-          </div>
-
-          {/* Processo */}
-          <div className="flex items-center gap-3 pt-3 sm:pt-0 sm:pl-3">
-            <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 shrink-0">
-              <FileCheck2 className="h-5 w-5" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
-                Processo
-              </span>
-              <span className="text-sm font-bold text-[#0B1739] font-mono truncate block">
-                {processCode}
+              <span className="text-[11px] text-slate-400 block font-mono mt-1">
+                Processo: {processCode}
               </span>
             </div>
           </div>
         </div>
 
         {/* ========================================================================= */}
-        {/* BANNER DE RESULTADO DA ÚLTIMA GERAÇÃO (CASO DISPONÍVEL) */}
+        {/* BANNER DE RESULTADO DA ÚLTIMA GERAÇÃO */}
         {/* ========================================================================= */}
         {generationSummary && (
           <div
-            className={`p-5 rounded-2xl border ${
+            className={`p-4 sm:p-5 rounded-2xl border ${
               generationSummary.failedDocs.length === 0
                 ? "bg-emerald-50/70 border-emerald-200"
                 : "bg-amber-50/70 border-amber-200"
@@ -1393,11 +1443,13 @@ function GerarDocumentoPage() {
                 <div>
                   <h3 className="text-sm font-bold text-slate-900">
                     {generationSummary.failedDocs.length === 0
-                      ? `Lote concluído com sucesso: ${generationSummary.successDocs.length} documento(s) gerado(s)`
-                      : `Resultado do lote: ${generationSummary.successDocs.length} gerado(s), ${generationSummary.failedDocs.length} com falha`}
+                      ? `${generationSummary.successDocs.length} documento(s) gerado(s).`
+                      : `Resultado do lote: ${generationSummary.successDocs.length} gerado(s), ${generationSummary.failedDocs.length} falharam.`}
                   </h3>
                   <p className="text-xs text-slate-600 mt-0.5">
-                    Todos os documentos bem-sucedidos estão salvos e vinculados a este processo.
+                    {generationSummary.failedDocs.length === 0
+                      ? "Os arquivos foram criados, salvos com sucesso e constam na seção de Documentos Gerados abaixo."
+                      : "Verifique os detalhes abaixo para conferir quais deram certo e quais falharam."}
                   </p>
                 </div>
               </div>
@@ -1410,15 +1462,14 @@ function GerarDocumentoPage() {
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors cursor-pointer"
                 >
                   <RefreshCw className="h-3.5 w-3.5" />
-                  <span>Repetir apenas os que falharam</span>
+                  <span>Tentar novamente os que falharam</span>
                 </button>
               )}
             </div>
 
-            {/* Lista dos que falharam, se houver */}
             {generationSummary.failedDocs.length > 0 && (
               <div className="p-3 bg-white rounded-xl border border-amber-200 space-y-1.5 text-xs">
-                <span className="font-bold text-amber-900 block">Documentos não gerados:</span>
+                <span className="font-bold text-amber-900 block">Falhas no processamento:</span>
                 <ul className="space-y-1">
                   {generationSummary.failedDocs.map((f, i) => (
                     <li key={i} className="flex items-center justify-between gap-2 text-amber-800">
@@ -1433,761 +1484,25 @@ function GerarDocumentoPage() {
         )}
 
         {/* ========================================================================= */}
-        {/* GRID PRINCIPAL: 2 COLUNAS */}
+        {/* 6. RESPONSÁVEL E APARÊNCIA */}
         {/* ========================================================================= */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* ======================================================================= */}
-          {/* COLUNA ESQUERDA (7 COLUNAS): MODELOS DISPONÍVEIS + DADOS UTILIZADOS */}
-          {/* ======================================================================= */}
-          <div className="lg:col-span-7 space-y-6">
-            {/* SEÇÃO 2: DOCUMENTOS APLICÁVEIS AO SERVIÇO */}
-            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start divide-y md:divide-y-0 md:divide-x divide-slate-100">
+            {/* Responsável */}
+            <div className="space-y-3 md:pr-4">
+              <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-base font-bold text-[#0B1739]">
-                    Documentos aplicáveis ao serviço
+                  <h2 className="text-sm font-bold text-[#0B1739]">
+                    Quem está preparando os documentos?
                   </h2>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Escolha individualmente quais documentos gerar pelo sistema ou anexar já
-                    preenchidos.
+                    Nome e função que constarão na elaboração formal dos arquivos
                   </p>
                 </div>
-
-                {/* Busca */}
-                <div className="relative w-full sm:w-52">
-                  <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Buscar documento..."
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#0B1739] placeholder:text-slate-400 focus:outline-hidden focus:bg-white focus:ring-2 focus:ring-blue-500/20"
-                  />
-                </div>
-              </div>
-
-              {/* Badges de Contagem de Seleção */}
-              <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-slate-100 text-xs">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-[#075BFF] font-semibold border border-blue-100">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  <span>{templatesToGenerate.length} a gerar pelo NavalDocs</span>
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-semibold border border-emerald-100">
-                  <Paperclip className="h-3.5 w-3.5" />
-                  <span>{templatesAttached.length} anexado(s) já pronto(s)</span>
-                </span>
-                {templatesOmitted.length > 0 && (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 font-medium">
-                    <span>{templatesOmitted.length} não utilizado(s)</span>
-                  </span>
-                )}
-              </div>
-
-              {filteredTemplates.length === 0 ? (
-                <div className="p-6 text-center border border-dashed border-slate-200 rounded-2xl space-y-2">
-                  <FileText className="h-8 w-8 text-slate-300 mx-auto" />
-                  <p className="text-xs font-semibold text-slate-600">
-                    Nenhum documento aplicável foi encontrado para este serviço.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {filteredTemplates.map((tpl) => {
-                    const selection = docSelections[tpl.id] || {
-                      mode: tpl.status === "em_revisao" ? "omit" : "generate",
-                    };
-                    const isApproved = tpl.status === "aprovado";
-                    const isGeneratingThis = selection.mode === "generate";
-                    const isAttachingThis = selection.mode === "attach";
-                    const isOmittedThis = selection.mode === "omit";
-
-                    // Validação granular para este modelo específico
-                    const validation = templateValidationMap.get(tpl.slug);
-                    const isBlockedForRequiredFields = !!validation?.isBlocked;
-                    const missingForThisDoc = validation?.missingFields || [];
-
-                    // Resolução do banco de dados para este modelo
-                    const resolution = resolvedTemplatesMap.get(tpl.slug);
-                    const isResolvedInDb = !!resolution?.dbTemplateId;
-
-                    return (
-                      <div
-                        key={tpl.id}
-                        className={`p-4 sm:p-5 rounded-2xl border transition-all ${
-                          isGeneratingThis
-                            ? isBlockedForRequiredFields || !isResolvedInDb
-                              ? "border-amber-300 bg-amber-50/20 shadow-2xs"
-                              : "border-[#075BFF] bg-blue-50/15 shadow-2xs"
-                            : isAttachingThis
-                              ? "border-emerald-300 bg-emerald-50/15 shadow-2xs"
-                              : "border-slate-200/90 bg-white opacity-85"
-                        }`}
-                      >
-                        {/* Cabeçalho do Documento com Badges */}
-                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5">
-                          <div className="flex items-start gap-3 min-w-0">
-                            <div
-                              className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
-                                isGeneratingThis
-                                  ? isBlockedForRequiredFields || !isResolvedInDb
-                                    ? "bg-amber-500 text-white"
-                                    : "bg-[#075BFF] text-white"
-                                  : isAttachingThis
-                                    ? "bg-emerald-600 text-white"
-                                    : "bg-slate-100 text-slate-500"
-                              }`}
-                            >
-                              <FileText className="h-4 w-4" />
-                            </div>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <h3 className="text-xs sm:text-sm font-bold text-[#0B1739]">
-                                  {tpl.name}
-                                </h3>
-                                <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-mono font-bold">
-                                  {tpl.code}
-                                </span>
-                                {isResolvedInDb ? (
-                                  <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[9px] font-semibold border border-emerald-200">
-                                    Catálogo vinculado
-                                  </span>
-                                ) : (
-                                  <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 text-[9px] font-semibold">
-                                    Aguardando sincronização
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                                {tpl.description}
-                              </p>
-                              <div className="flex items-center gap-2 mt-1.5 flex-wrap text-[11px] text-slate-400">
-                                <span>
-                                  Fonte Oficial:{" "}
-                                  <strong className="text-slate-600 font-mono">
-                                    {tpl.officialSource}
-                                  </strong>
-                                </span>
-                                <span>•</span>
-                                <span>
-                                  Conferência:{" "}
-                                  <strong className="text-slate-600">{tpl.validationDate}</strong>
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center sm:flex-col sm:items-end gap-1.5 shrink-0">
-                            {isApproved ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
-                                <Check className="h-3 w-3" />
-                                <span>Aprovado</span>
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/60">
-                                <Clock className="h-3 w-3" />
-                                <span>Em revisão</span>
-                              </span>
-                            )}
-
-                            {tpl.isMandatory ? (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-[#075BFF] border border-blue-200/60">
-                                Obrigatório
-                              </span>
-                            ) : tpl.isConditional ? (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200/60">
-                                Condicional
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600">
-                                Opcional
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Aviso Explicativo de Regra Condicional */}
-                        {tpl.isConditional && (
-                          <div className="mt-3 p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 flex items-start gap-2">
-                            <Info className="h-4 w-4 text-[#075BFF] shrink-0 mt-0.5" />
-                            <div>
-                              <span className="font-bold text-slate-900">
-                                Regra Condicional:
-                              </span>
-                              <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
-                                {tpl.conditionText ||
-                                  "Este documento só deve ser utilizado quando a condição específica se aplicar ao caso."}
-                              </p>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Detalhamento do Outorgado da Procuração */}
-                        {tpl.slug === "proc-representacao-naval" && (
-                          <div className="mt-3 p-3 rounded-xl bg-blue-50/70 border border-blue-200 text-xs text-blue-900 flex items-start gap-2.5 animate-in fade-in duration-150">
-                            <Building2 className="h-4 w-4 text-[#075BFF] shrink-0 mt-0.5" />
-                            <div className="space-y-1">
-                              <span className="font-bold block text-[#0B1739]">
-                                Configuração do Outorgado (Procurador):
-                              </span>
-                              {companyData?.procurador_nome ? (
-                                <p className="text-[11px] text-slate-700 leading-relaxed">
-                                  <strong>Pessoa Física:</strong> {companyData.procurador_nome}{" "}
-                                  (CPF: {companyData.procurador_cpf || <span className="text-amber-700 font-bold">Não informado</span>}
-                                  {companyData.procurador_crea ? ` • Registro: ${companyData.procurador_crea}` : ""})
-                                  <span className="block text-[10px] text-slate-500 mt-0.5">
-                                    Vínculo: {companyData?.name || currentCompany?.name || "Empresa Naval"} (CNPJ: {companyData?.cnpj || currentCompany?.cnpj || "Não informado"})
-                                  </span>
-                                </p>
-                              ) : (
-                                <p className="text-[11px] text-slate-700 leading-relaxed">
-                                  <strong>Pessoa Jurídica:</strong> {companyData?.name || currentCompany?.name || "Empresa Naval"}{" "}
-                                  (CNPJ: {companyData?.cnpj || currentCompany?.cnpj || <span className="text-amber-700 font-bold">Não informado</span>})
-                                  <span className="block text-[10px] text-slate-500 mt-0.5">
-                                    Sede: {companyData?.contact_address || "Endereço cadastrado na empresa"}
-                                  </span>
-                                </p>
-                              )}
-                              <p className="text-[10px] text-blue-800 italic">
-                                Nota: A logo é meramente cosmética e não integra a validação jurídica da procuração.
-                              </p>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Aviso Granular: Bloqueio por Campos Obrigatórios Ausentes */}
-                        {isBlockedForRequiredFields && isGeneratingThis && (
-                          <div className="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-in fade-in duration-150">
-                            <div className="flex items-start gap-2">
-                              <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-                              <div>
-                                <span className="font-bold block">
-                                  Campos obrigatórios ausentes para gerar este documento:
-                                </span>
-                                <span className="text-[11px] text-amber-800">
-                                  {missingForThisDoc.join(", ")}.
-                                </span>
-                              </div>
-                            </div>
-
-                            <button
-                              type="button"
-                              onClick={() => setShowQuickVesselModal(true)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[11px] transition-colors cursor-pointer shrink-0"
-                            >
-                              <Edit className="h-3 w-3" />
-                              <span>Completar dados agora</span>
-                            </button>
-                          </div>
-                        )}
-
-                        {/* Aviso se Modelo Estiver em Revisão */}
-                        {!isApproved && tpl.reviewReason && (
-                          <div className="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-start gap-2">
-                            <Info className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-                            <span>{tpl.reviewReason}</span>
-                          </div>
-                        )}
-
-                        {/* SELETOR DAS 3 AÇÕES (A, B, C) */}
-                        <div className="mt-4 pt-3 border-t border-slate-100">
-                          <span className="text-[11px] font-semibold text-slate-600 block mb-2">
-                            Opção para este documento:
-                          </span>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                            {/* OPÇÃO A: GERAR PELO NAVALDOCS */}
-                            <button
-                              type="button"
-                              disabled={!isApproved}
-                              onClick={() => {
-                                setDocSelections((prev) => ({
-                                  ...prev,
-                                  [tpl.id]: { ...(prev[tpl.id] || {}), mode: "generate" },
-                                }));
-                                setSelectedTemplateId(tpl.id);
-                              }}
-                              className={`p-2.5 rounded-xl border text-left transition-all text-xs flex items-center justify-between cursor-pointer ${
-                                isGeneratingThis
-                                  ? isBlockedForRequiredFields
-                                    ? "border-amber-500 bg-amber-500 text-white font-bold shadow-2xs"
-                                    : "border-[#075BFF] bg-[#075BFF] text-white font-bold shadow-2xs"
-                                  : "border-slate-200 hover:border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-                              } ${!isApproved ? "opacity-40 cursor-not-allowed" : ""}`}
-                            >
-                              <div className="flex items-center gap-2">
-                                <Sparkles className="h-3.5 w-3.5 shrink-0" />
-                                <span>A. Gerar pelo NavalDocs</span>
-                              </div>
-                              {isGeneratingThis && <Check className="h-3.5 w-3.5 shrink-0" />}
-                            </button>
-
-                            {/* OPÇÃO B: JÁ TENHO ESTE DOCUMENTO (ANEXAR) */}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setDocSelections((prev) => ({
-                                  ...prev,
-                                  [tpl.id]: { ...(prev[tpl.id] || {}), mode: "attach" },
-                                }));
-                              }}
-                              className={`p-2.5 rounded-xl border text-left transition-all text-xs flex items-center justify-between cursor-pointer ${
-                                isAttachingThis
-                                  ? "border-emerald-600 bg-emerald-600 text-white font-bold shadow-2xs"
-                                  : "border-slate-200 hover:border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2">
-                                <Paperclip className="h-3.5 w-3.5 shrink-0" />
-                                <span>B. Já tenho: anexar arquivo</span>
-                              </div>
-                              {isAttachingThis && <Check className="h-3.5 w-3.5 shrink-0" />}
-                            </button>
-
-                            {/* OPÇÃO C: NÃO UTILIZAR AGORA */}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setDocSelections((prev) => ({
-                                  ...prev,
-                                  [tpl.id]: { ...(prev[tpl.id] || {}), mode: "omit" },
-                                }));
-                              }}
-                              className={`p-2.5 rounded-xl border text-left transition-all text-xs flex items-center justify-between cursor-pointer ${
-                                isOmittedThis
-                                  ? "border-slate-400 bg-slate-600 text-white font-bold shadow-2xs"
-                                  : "border-slate-200 hover:border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-                              }`}
-                            >
-                              <span>C. Não utilizar agora</span>
-                              {isOmittedThis && <Check className="h-3.5 w-3.5 shrink-0" />}
-                            </button>
-                          </div>
-
-                          {/* ÁREA DE ANEXO SE OPÇÃO B ESTIVER SELECIONADA */}
-                          {isAttachingThis && (
-                            <div className="mt-3 p-3.5 bg-emerald-50/50 border border-emerald-200/80 rounded-xl space-y-2.5 animate-in fade-in duration-150">
-                              {selection.attachedFile ? (
-                                <div className="flex items-center justify-between gap-3 bg-white p-2.5 rounded-lg border border-emerald-200">
-                                  <div className="flex items-center gap-2.5 min-w-0">
-                                    <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
-                                      <CheckCircle2 className="h-4 w-4" />
-                                    </div>
-                                    <div className="min-w-0">
-                                      <span className="text-xs font-bold text-slate-800 truncate block">
-                                        {selection.attachedFile.name}
-                                      </span>
-                                      <span className="text-[10px] text-emerald-700 font-semibold">
-                                        Arquivo anexado como documento oficial do processo (dispensa
-                                        geração)
-                                      </span>
-                                    </div>
-                                  </div>
-
-                                  <label className="text-[11px] font-semibold text-[#075BFF] hover:underline cursor-pointer shrink-0">
-                                    Substituir
-                                    <input
-                                      type="file"
-                                      accept=".pdf,application/pdf"
-                                      className="hidden"
-                                      onChange={(e) => {
-                                        const f = e.target.files?.[0];
-                                        if (f) handleAttachFileForTemplate(tpl, f);
-                                      }}
-                                    />
-                                  </label>
-                                </div>
-                              ) : (
-                                <div className="space-y-2">
-                                  <div className="flex items-center gap-2 text-xs font-semibold text-emerald-900">
-                                    <Upload className="h-4 w-4 text-emerald-600" />
-                                    <span>Anexar documento já pronto / assinado</span>
-                                  </div>
-                                  <p className="text-[11px] text-slate-600">
-                                    Se você já possui este documento preenchido e assinado fora do
-                                    sistema, anexe o PDF. Ele será incorporado ao dossiê sem
-                                    consumir nova geração.
-                                  </p>
-
-                                  <div className="flex items-center gap-2">
-                                    <label className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-emerald-300 hover:bg-emerald-50 text-emerald-800 font-semibold text-xs transition-colors cursor-pointer shadow-2xs">
-                                      {selection.isUploading ? (
-                                        <>
-                                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                          <span>Enviando arquivo...</span>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Paperclip className="h-3.5 w-3.5" />
-                                          <span>Selecionar PDF pronto</span>
-                                        </>
-                                      )}
-                                      <input
-                                        type="file"
-                                        accept=".pdf,application/pdf"
-                                        disabled={selection.isUploading}
-                                        className="hidden"
-                                        onChange={(e) => {
-                                          const f = e.target.files?.[0];
-                                          if (f) handleAttachFileForTemplate(tpl, f);
-                                        }}
-                                      />
-                                    </label>
-                                    <span className="text-[10px] text-slate-400">PDF até 10MB</span>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {/* ALERTA SE OPÇÃO C FOI ESCOLHIDA EM DOCUMENTO OBRIGATÓRIO */}
-                          {isOmittedThis && tpl.isMandatory && (
-                            <div className="mt-3 p-3 bg-amber-50 border border-amber-200/90 rounded-xl flex items-start gap-2 text-xs text-amber-900 animate-in fade-in duration-150">
-                              <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-                              <div className="space-y-1">
-                                <p className="font-bold">
-                                  Atenção: Este documento é exigido obrigatoriamente pela Capitania
-                                  dos Portos.
-                                </p>
-                                <p className="text-[11px] text-amber-800 leading-relaxed">
-                                  Se você já possui o documento preenchido e assinado fora do
-                                  sistema, a opção recomendada é{" "}
-                                  <strong>"Já tenho: anexar arquivo"</strong>. Dispensar este item
-                                  manterá a pendência documental ativa no processo.
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* SEÇÃO 4: DADOS UTILIZADOS NO DOCUMENTO */}
-            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-base font-bold text-[#0B1739]">Dados utilizados no documento</h2>
-                <button
-                  type="button"
-                  onClick={() => setShowQuickVesselModal(true)}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#075BFF] hover:underline cursor-pointer"
-                >
-                  <Edit className="h-3.5 w-3.5" />
-                  <span>Editar dados cadastrais</span>
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                {/* Cliente */}
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                    Dados do Cliente
-                  </span>
-                  <p className="font-bold text-[#0B1739] truncate">
-                    {customer?.fantasy_name || customer?.name}
-                  </p>
-                  <p className="text-slate-500 truncate">
-                    {customer?.cpf_cnpj || customer?.document || "Documento não informado"}
-                  </p>
-                </div>
-
-                {/* Embarcação */}
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                      Dados da Embarcação
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setShowQuickVesselModal(true)}
-                      className="text-[10px] text-[#075BFF] font-semibold hover:underline cursor-pointer"
-                    >
-                      Alterar
-                    </button>
-                  </div>
-                  <p className="font-bold text-[#0B1739] truncate">
-                    {vessel?.name || <span className="text-amber-600 font-semibold">Nome não informado</span>}
-                  </p>
-                  <p className="text-slate-500 truncate">
-                    Inscrição:{" "}
-                    {vessel?.registration_number ? (
-                      vessel.registration_number
-                    ) : (
-                      <span className="text-amber-600 font-semibold">Ausente no cadastro</span>
-                    )}
-                  </p>
-                  <p className="text-[11px] text-slate-500 truncate">
-                    Comprimento:{" "}
-                    <span className="font-semibold text-slate-700">
-                      {(processData?.draft_data as any)?.vessel_length || (vessel?.length || vessel?.length_overall ? `${vessel?.length || vessel?.length_overall} m` : "Não informado")}
-                    </span>
-                  </p>
-                </div>
-
-                {/* Empresa / Logo */}
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                    Identidade da Empresa
-                  </span>
-                  <p className="font-bold text-[#0B1739] truncate">
-                    {currentCompany?.name || "NavalDocs Despachante"}
-                  </p>
-                  <p className="text-emerald-600 font-semibold flex items-center gap-1">
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    <span>Logo e dados oficiais configurados</span>
-                  </p>
-                </div>
-
-                {/* Porto de Registro */}
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                    Jurisdição / Capitania
-                  </span>
-                  <p className="font-bold text-[#0B1739] truncate">
-                    {vessel?.port_of_registry || "Capitania dos Portos de São Paulo"}
-                  </p>
-                  <p className="text-slate-500">Área de Atendimento da CPES</p>
-                </div>
-              </div>
-
-              {!dataValidation.isValid && (
-                <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 font-bold">
-                      <AlertTriangle className="h-4 w-4 text-amber-600" />
-                      <span>Atenção: Campos cadastrais pendentes</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setShowQuickVesselModal(true)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[11px] transition-colors cursor-pointer"
-                    >
-                      <Edit className="h-3 w-3" />
-                      <span>Completar dados da embarcação</span>
-                    </button>
-                  </div>
-                  <ul className="list-disc list-inside text-[11px] text-amber-700 pl-1">
-                    {dataValidation.missingFields.map((f, i) => (
-                      <li key={i}>{f} ausente no cadastro</li>
-                    ))}
-                  </ul>
-                  <p className="text-[11px] text-amber-800">
-                    Documentos que não exigem a embarcação (como <strong>Declaração de Residência</strong>) continuam liberados para geração.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* ======================================================================= */}
-          {/* COLUNA DIREITA (5 COLUNAS): APARÊNCIA + FUNCIONÁRIO + RESUMO DA GERAÇÃO */}
-          {/* ======================================================================= */}
-          <div className="lg:col-span-5 space-y-6">
-            {/* SEÇÃO NOVO: APARÊNCIA DO DOCUMENTO */}
-            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#075BFF] flex items-center justify-center shrink-0">
-                    <ImageIcon className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-bold text-[#0B1739]">Aparência do documento</h2>
-                    <p className="text-[11px] text-slate-500">
-                      Personalize logo e marca-d’água para este lote
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleSaveAppearancePreference}
-                  disabled={isSavingAppearancePref}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition-colors cursor-pointer disabled:opacity-50"
-                  title="Salva essa preferência como padrão para próximas gerações desta empresa"
-                >
-                  {isSavingAppearancePref ? (
-                    <Loader2 className="h-3 w-3 animate-spin text-[#075BFF]" />
-                  ) : (
-                    <Check className="h-3 w-3 text-emerald-600" />
-                  )}
-                  <span>Salvar como padrão</span>
-                </button>
-              </div>
-
-              {/* OPÇÕES DE LOGO */}
-              <div className="space-y-2 pt-1 text-xs">
-                <label className="text-xs font-semibold text-slate-700 block">
-                  Logo do cabeçalho:
-                </label>
-                <div className="space-y-2">
-                  {/* OPÇÃO 1: LOGO DA EMPRESA */}
-                  <label
-                    className={`flex items-start justify-between p-3 rounded-xl border cursor-pointer transition-all ${
-                      logoChoice === "company"
-                        ? "border-[#075BFF] bg-blue-50/40 shadow-2xs font-semibold text-[#0B1739]"
-                        : "border-slate-200 hover:border-slate-300 bg-white text-slate-700"
-                    }`}
-                  >
-                    <div className="flex items-start gap-2.5">
-                      <input
-                        type="radio"
-                        name="logoChoiceOption"
-                        value="company"
-                        checked={logoChoice === "company"}
-                        onChange={() => setLogoChoice("company")}
-                        className="mt-0.5 text-[#075BFF] focus:ring-blue-500"
-                      />
-                      <div>
-                        <span className="block text-xs font-bold">Usar logo da minha empresa</span>
-                        <span className="text-[11px] text-slate-500 block mt-0.5">
-                          {companyData?.logo_url || companyData?.logo_primary_url
-                            ? "Arquivo oficial configurado nas preferências da empresa"
-                            : "Nenhum arquivo de logo configurado ainda"}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Previa ou Upload */}
-                    {companyData?.logo_url || companyData?.logo_primary_url ? (
-                      <div className="w-12 h-8 rounded border border-slate-200 bg-white p-0.5 shrink-0 flex items-center justify-center overflow-hidden">
-                        <img
-                          src={companyData.logo_url || companyData.logo_primary_url}
-                          alt="Logo da Empresa"
-                          className="max-h-full max-w-full object-contain"
-                        />
-                      </div>
-                    ) : (
-                      <label className="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 text-[#075BFF] text-[10px] font-bold cursor-pointer shrink-0 border border-blue-200">
-                        {isUploadingCompanyLogo ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : (
-                          <Upload className="h-3 w-3" />
-                        )}
-                        <span>Fazer upload</span>
-                        <input
-                          type="file"
-                          accept="image/png,image/jpeg"
-                          className="hidden"
-                          onChange={(e) => {
-                            const f = e.target.files?.[0];
-                            if (f) handleUploadCompanyLogo(f);
-                          }}
-                        />
-                      </label>
-                    )}
-                  </label>
-
-                  {/* OPÇÃO 2: LOGO DO NAVALDOCS PRO */}
-                  <label
-                    className={`flex items-start justify-between p-3 rounded-xl border cursor-pointer transition-all ${
-                      logoChoice === "navaldocs"
-                        ? "border-[#075BFF] bg-blue-50/40 shadow-2xs font-semibold text-[#0B1739]"
-                        : "border-slate-200 hover:border-slate-300 bg-white text-slate-700"
-                    }`}
-                  >
-                    <div className="flex items-start gap-2.5">
-                      <input
-                        type="radio"
-                        name="logoChoiceOption"
-                        value="navaldocs"
-                        checked={logoChoice === "navaldocs"}
-                        onChange={() => setLogoChoice("navaldocs")}
-                        className="mt-0.5 text-[#075BFF] focus:ring-blue-500"
-                      />
-                      <div>
-                        <span className="block text-xs font-bold">Usar logo do NavalDocs Pro</span>
-                        <span className="text-[11px] text-slate-500 block mt-0.5">
-                          Arquivo oficial do projeto, preservando proporções
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="w-12 h-8 rounded border border-slate-200 bg-white p-0.5 shrink-0 flex items-center justify-center overflow-hidden">
-                      <img
-                        src="/navaldocs-logo.png"
-                        alt="Logo NavalDocs Pro"
-                        className="max-h-full max-w-full object-contain"
-                      />
-                    </div>
-                  </label>
-
-                  {/* OPÇÃO 3: SEM LOGO */}
-                  <label
-                    className={`flex items-start justify-between p-3 rounded-xl border cursor-pointer transition-all ${
-                      logoChoice === "none"
-                        ? "border-[#075BFF] bg-blue-50/40 shadow-2xs font-semibold text-[#0B1739]"
-                        : "border-slate-200 hover:border-slate-300 bg-white text-slate-700"
-                    }`}
-                  >
-                    <div className="flex items-start gap-2.5">
-                      <input
-                        type="radio"
-                        name="logoChoiceOption"
-                        value="none"
-                        checked={logoChoice === "none"}
-                        onChange={() => setLogoChoice("none")}
-                        className="mt-0.5 text-[#075BFF] focus:ring-blue-500"
-                      />
-                      <div>
-                        <span className="block text-xs font-bold">Sem logo</span>
-                        <span className="text-[11px] text-slate-500 block mt-0.5">
-                          Cabeçalho textual neutro com nome da empresa (nunca bloqueia geração)
-                        </span>
-                      </div>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              {/* OPÇÃO DE MARCA-D'ÁGUA (INDEPENDENTE) */}
-              <div className="pt-3 border-t border-slate-100 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Droplet className="h-4 w-4 text-[#075BFF]" />
-                    <span className="text-xs font-bold text-slate-800">
-                      Exibir marca-d’água no fundo
-                    </span>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={showWatermark}
-                      onChange={(e) => setShowWatermark(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-9 h-5 bg-slate-200 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#075BFF]"></div>
-                  </label>
-                </div>
-
-                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-[11px]">
-                  <span className="text-slate-600">
-                    {showWatermark
-                      ? "Marca-d’água ativa em todas as páginas (opacidade sutil)"
-                      : "Marca-d’água desativada em todas as páginas (o logo do cabeçalho permanece)"}
-                  </span>
-                  <span
-                    className={`font-semibold px-2 py-0.5 rounded text-[10px] ${
-                      showWatermark
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-slate-200 text-slate-700"
-                    }`}
-                  >
-                    {showWatermark ? "Visível" : "Oculta"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* SEÇÃO 3: FUNCIONÁRIO RESPONSÁVEL */}
-            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-base font-bold text-[#0B1739]">Funcionário responsável</h2>
                 <button
                   type="button"
                   onClick={() => setShowQuickStaffModal(true)}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#075BFF] hover:underline cursor-pointer"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#075BFF] hover:underline cursor-pointer shrink-0"
                 >
                   <UserPlus className="h-3.5 w-3.5" />
                   <span>Cadastrar funcionário</span>
@@ -2195,13 +1510,9 @@ function GerarDocumentoPage() {
               </div>
 
               {companyStaffList.length === 0 ? (
-                <div className="p-4 bg-amber-50/70 border border-amber-200/80 rounded-xl space-y-2 text-xs">
+                <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-xl space-y-2 text-xs">
                   <p className="font-semibold text-amber-900">
                     Nenhum funcionário ativo cadastrado na sua empresa.
-                  </p>
-                  <p className="text-[11px] text-amber-800">
-                    Cadastre o operador ou despachante responsável para constar formalmente nos
-                    documentos gerados.
                   </p>
                   <button
                     type="button"
@@ -2213,10 +1524,7 @@ function GerarDocumentoPage() {
                   </button>
                 </div>
               ) : (
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-600">
-                    Selecione o operador ou despachante responsável:
-                  </label>
+                <div>
                   <select
                     value={selectedStaff.id}
                     onChange={(e) => {
@@ -2235,134 +1543,603 @@ function GerarDocumentoPage() {
               )}
             </div>
 
-            {/* SEÇÃO 5: RESUMO E BOTÃO DE GERAÇÃO */}
-            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-              <h2 className="text-base font-bold text-[#0B1739]">Resumo da geração</h2>
-
-              <div className="space-y-3 text-xs">
-                <div className="flex justify-between py-1 border-b border-slate-100">
-                  <span className="text-slate-500">Documentos a gerar:</span>
-                  <span className="font-bold text-[#075BFF]">
-                    {templatesToGenerate.length} selecionado(s)
-                  </span>
+            {/* Aparência do PDF */}
+            <div className="space-y-3 pt-4 md:pt-0 md:pl-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-sm font-bold text-[#0B1739]">Aparência do PDF</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Logo e marca-d’água (não bloqueiam a geração)
+                  </p>
                 </div>
 
-                <div className="space-y-1.5">
-                  <span className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider block">
-                    Lista do lote:
-                  </span>
-                  {templatesToGenerate.length === 0 ? (
-                    <span className="text-slate-400 italic">
-                      Nenhum documento apto selecionado para gerar
-                    </span>
+                <button
+                  type="button"
+                  onClick={handleSaveAppearancePreference}
+                  disabled={isSavingAppearancePref}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition-colors cursor-pointer disabled:opacity-50"
+                  title="Salva essa preferência como padrão para próximas gerações"
+                >
+                  {isSavingAppearancePref ? (
+                    <Loader2 className="h-3 w-3 animate-spin text-[#075BFF]" />
                   ) : (
-                    <ul className="space-y-1">
-                      {templatesToGenerate.map((t) => (
-                        <li
-                          key={t.id}
-                          className="font-bold text-[#0B1739] flex items-center justify-between"
-                        >
-                          <span className="truncate">{t.name}</span>
-                          <span className="font-mono text-[10px] font-bold text-blue-700 bg-blue-100/60 px-1.5 py-0.5 rounded ml-2">
-                            {t.code}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
+                    <Check className="h-3 w-3 text-emerald-600" />
                   )}
-                </div>
+                  <span>Salvar padrão</span>
+                </button>
+              </div>
 
-                {templatesAttached.length > 0 && (
-                  <div className="pt-2 border-t border-slate-200/60">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 block mb-1">
-                      Documentos já anexados ({templatesAttached.length}):
-                    </span>
-                    <ul className="space-y-1">
-                      {templatesAttached.map((t) => (
-                        <li
-                          key={t.id}
-                          className="text-xs text-slate-700 flex items-center justify-between"
-                        >
-                          <span className="truncate">{t.name}</span>
-                          <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded">
-                            Anexo externo
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
+              {/* Opções de Logo */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                {/* 1. Logo da minha empresa */}
+                <label
+                  className={`p-2.5 rounded-xl border cursor-pointer transition-all flex flex-col justify-between gap-1.5 ${
+                    logoChoice === "company"
+                      ? "border-[#075BFF] bg-blue-50/40 text-[#0B1739] font-bold shadow-2xs"
+                      : "border-slate-200 hover:border-slate-300 bg-white text-slate-700"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="logoChoiceOption"
+                      value="company"
+                      checked={logoChoice === "company"}
+                      onChange={() => setLogoChoice("company")}
+                      className="text-[#075BFF] focus:ring-blue-500"
+                    />
+                    <span className="text-xs">Logo da minha empresa</span>
                   </div>
-                )}
+                  {companyData?.logo_url || companyData?.logo_primary_url ? (
+                    <div className="h-6 flex items-center">
+                      <img
+                        src={companyData.logo_url || companyData.logo_primary_url}
+                        alt="Logo da Empresa"
+                        className="max-h-5 max-w-[80px] object-contain"
+                      />
+                    </div>
+                  ) : (
+                    <label className="text-[10px] text-[#075BFF] hover:underline cursor-pointer block">
+                      {isUploadingCompanyLogo ? "Enviando..." : "+ Enviar logo"}
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg"
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) handleUploadCompanyLogo(f);
+                        }}
+                      />
+                    </label>
+                  )}
+                </label>
 
-                <div className="pt-2 border-t border-slate-200/60 flex justify-between py-1">
-                  <span className="text-slate-400">Responsável:</span>
-                  <span className="font-medium text-slate-700">{selectedStaff.name}</span>
-                </div>
-                <div className="flex justify-between py-1">
-                  <span className="text-slate-400">Natureza:</span>
-                  <span className="font-medium text-slate-700">
-                    {activeTemplate.nature === "official_form"
-                      ? "Formulário Oficial da Marinha"
-                      : "Documento Elaborado pela Plataforma"}
+                {/* 2. Logo do NavalDocs Pro */}
+                <label
+                  className={`p-2.5 rounded-xl border cursor-pointer transition-all flex flex-col justify-between gap-1.5 ${
+                    logoChoice === "navaldocs"
+                      ? "border-[#075BFF] bg-blue-50/40 text-[#0B1739] font-bold shadow-2xs"
+                      : "border-slate-200 hover:border-slate-300 bg-white text-slate-700"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="logoChoiceOption"
+                      value="navaldocs"
+                      checked={logoChoice === "navaldocs"}
+                      onChange={() => setLogoChoice("navaldocs")}
+                      className="text-[#075BFF] focus:ring-blue-500"
+                    />
+                    <span className="text-xs">Logo do NavalDocs Pro</span>
+                  </div>
+                  <div className="h-6 flex items-center">
+                    <img
+                      src="/navaldocs-logo.png"
+                      alt="Logo NavalDocs Pro"
+                      className="max-h-5 max-w-[80px] object-contain"
+                    />
+                  </div>
+                </label>
+
+                {/* 3. Sem logo */}
+                <label
+                  className={`p-2.5 rounded-xl border cursor-pointer transition-all flex flex-col justify-between gap-1.5 ${
+                    logoChoice === "none"
+                      ? "border-[#075BFF] bg-blue-50/40 text-[#0B1739] font-bold shadow-2xs"
+                      : "border-slate-200 hover:border-slate-300 bg-white text-slate-700"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="logoChoiceOption"
+                      value="none"
+                      checked={logoChoice === "none"}
+                      onChange={() => setLogoChoice("none")}
+                      className="text-[#075BFF] focus:ring-blue-500"
+                    />
+                    <span className="text-xs">Sem logo</span>
+                  </div>
+                  <span className="text-[10px] text-slate-400">Cabeçalho limpo</span>
+                </label>
+              </div>
+
+              {/* Marca-d'água independente */}
+              <div className="pt-2 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Droplet className="h-4 w-4 text-[#075BFF]" />
+                  <span className="text-xs font-semibold text-slate-700">
+                    Marca-d’água no fundo da página
                   </span>
                 </div>
-                <div className="flex justify-between py-1">
-                  <span className="text-slate-400">Formato:</span>
-                  <span className="font-semibold text-slate-800">PDF A4</span>
-                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showWatermark}
+                    onChange={(e) => setShowWatermark(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#075BFF]"></div>
+                  <span className="ml-2 text-xs font-medium text-slate-600">
+                    {showWatermark ? "Ativa" : "Desativada"}
+                  </span>
+                </label>
               </div>
-
-              {/* Card Explicativo sobre GOV.BR */}
-              <div className="p-3.5 bg-blue-50/60 border border-blue-100 rounded-xl space-y-1.5 text-xs">
-                <div className="flex items-center gap-1.5 font-bold text-[#075BFF]">
-                  <PenTool className="h-4 w-4" />
-                  <span>Fluxo de assinatura GOV.BR</span>
-                </div>
-                <p className="text-[11px] text-slate-600 leading-relaxed">
-                  Os documentos gerados são disponibilizados para download e assinatura externa via
-                  GOV.BR ou presencial. O sistema <strong>não marca como assinado</strong>{" "}
-                  automaticamente na geração.
-                </p>
-              </div>
-
-              {/* Botão Dinâmico de Geração */}
-              <button
-                type="button"
-                id="btn-generate-documents"
-                disabled={isGenerating || templatesToGenerate.length === 0}
-                onClick={handleGenerateBatchDocuments}
-                className="w-full py-3 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Gerando {templatesToGenerate.length} documento(s)...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4" />
-                    <span>
-                      {templatesToGenerate.length === 0
-                        ? "Nenhum documento apto selecionado"
-                        : templatesToGenerate.length === 1
-                          ? "Gerar 1 documento selecionado"
-                          : `Gerar ${templatesToGenerate.length} documentos selecionados`}
-                    </span>
-                  </>
-                )}
-              </button>
             </div>
           </div>
         </div>
 
         {/* ========================================================================= */}
-        {/* SEÇÃO 6: DOCUMENTOS GERADOS PERSISTIDOS NESTE PROCESSO */}
+        {/* 2 & 3 & 4 & 5. LISTA COMPACTA DE DOCUMENTOS */}
+        {/* ========================================================================= */}
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+            <div>
+              <h2 className="text-base font-bold text-[#0B1739]">Documentos do serviço</h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Escolha individualmente o que gerar agora ou anexe os documentos que você já tem.
+              </p>
+            </div>
+
+            {/* Busca rápida */}
+            <div className="relative w-full sm:w-56">
+              <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar documento..."
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#0B1739] placeholder:text-slate-400 focus:outline-hidden focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+              />
+            </div>
+          </div>
+
+          {filteredTemplates.length === 0 ? (
+            <div className="p-8 text-center border border-dashed border-slate-200 rounded-2xl space-y-2">
+              <FileText className="h-8 w-8 text-slate-300 mx-auto" />
+              <p className="text-xs font-semibold text-slate-600">
+                Nenhum documento encontrado para este filtro ou serviço.
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {filteredTemplates.map((tpl) => {
+                const selection = docSelections[tpl.id] || {
+                  mode: tpl.status === "em_revisao" ? "omit" : "generate",
+                };
+                const isGeneratingThis = selection.mode === "generate";
+                const isAttachingThis = selection.mode === "attach";
+                const isOmittedThis = selection.mode === "omit";
+
+                // Validação granular de campos para este documento
+                const validation = templateValidationMap.get(tpl.slug);
+                const isBlockedForRequiredFields = !!validation?.isBlocked;
+                const missingForThisDoc = validation?.missingFields || [];
+
+                // Resolução no banco de dados
+                const resolution = resolvedTemplatesMap.get(tpl.slug);
+                const isResolvedInDb = !!resolution?.dbTemplateId;
+
+                // Nomes limpos e objetivos (sem códigos técnicos na apresentação principal)
+                const cleanName =
+                  tpl.slug === "req-padrao-cpes"
+                    ? "Requerimento"
+                    : tpl.slug === "req-comercial-prof"
+                    ? "Requerimento — embarcação profissional"
+                    : tpl.slug === "req-moto-aquatica"
+                    ? "Requerimento — moto aquática (jet ski)"
+                    : tpl.slug === "proc-representacao-naval"
+                    ? "Procuração"
+                    : tpl.slug === "decl-residencia-naval"
+                    ? "Declaração de residência"
+                    : tpl.slug === "decl-perda-extravio"
+                    ? "Declaração de perda ou extravio"
+                    : tpl.name;
+
+                // Frase curta explicando finalidade
+                const cleanPurpose =
+                  tpl.slug === "req-padrao-cpes"
+                    ? "Requerimento padronizado perante a Capitania dos Portos para serviços na embarcação."
+                    : tpl.slug === "req-comercial-prof"
+                    ? "Requerimento específico para inscrição e regularização de embarcações comerciais."
+                    : tpl.slug === "req-moto-aquatica"
+                    ? "Formulário oficial para inscrição, transferência ou renovação de jet ski."
+                    : tpl.slug === "proc-representacao-naval"
+                    ? "Outorga poderes de representação náutica perante a Autoridade Marítima."
+                    : tpl.slug === "decl-residencia-naval"
+                    ? "Declaração de domicílio válida sob as penas da lei federal."
+                    : tpl.slug === "decl-perda-extravio"
+                    ? "Declaração formal exclusivamente para casos de documento náutico extraviado."
+                    : tpl.description;
+
+                // Situação em texto compreensível (Situações Claras)
+                let statusBadge: { label: string; colorClass: string };
+                if (isOmittedThis) {
+                  statusBadge = { label: "Não selecionado", colorClass: "bg-slate-100 text-slate-600" };
+                } else if (isAttachingThis) {
+                  statusBadge = selection.attachedFile
+                    ? { label: "Anexado", colorClass: "bg-emerald-50 text-emerald-700 border border-emerald-200" }
+                    : { label: "Aguardando arquivo", colorClass: "bg-amber-50 text-amber-700 border border-amber-200" };
+                } else if (tpl.status === "em_revisao") {
+                  statusBadge = { label: "Modelo em revisão", colorClass: "bg-amber-50 text-amber-700 border border-amber-200" };
+                } else if (isBlockedForRequiredFields || !isResolvedInDb) {
+                  statusBadge = { label: "Faltam dados", colorClass: "bg-amber-100 text-amber-800 font-bold" };
+                } else {
+                  statusBadge = { label: "Pronto para gerar", colorClass: "bg-blue-50 text-[#075BFF] font-semibold border border-blue-200" };
+                }
+
+                const isDetailsExpanded = !!expandedDetails[tpl.id];
+
+                return (
+                  <div key={tpl.id} className="py-4 space-y-3">
+                    {/* Linha Compacta Principal */}
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                      {/* Lado Esquerdo: Nome claro, finalidade e situação */}
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                          <h3 className="text-sm font-bold text-[#0B1739]">{cleanName}</h3>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[11px] ${statusBadge.colorClass}`}
+                          >
+                            {statusBadge.label}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 leading-relaxed">{cleanPurpose}</p>
+                      </div>
+
+                      {/* Lado Direito: Seletor das 3 Opções Simples */}
+                      <div className="flex items-center gap-1.5 shrink-0 bg-slate-50 p-1 rounded-xl border border-slate-200 text-xs">
+                        {/* Opção 1: Gerar documento */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDocSelections((prev) => ({
+                              ...prev,
+                              [tpl.id]: { ...(prev[tpl.id] || {}), mode: "generate" },
+                            }));
+                            setSelectedTemplateId(tpl.id);
+                          }}
+                          className={`px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
+                            isGeneratingThis
+                              ? "bg-[#075BFF] text-white font-bold shadow-2xs"
+                              : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                          }`}
+                        >
+                          Gerar documento
+                        </button>
+
+                        {/* Opção 2: Anexar documento pronto */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDocSelections((prev) => ({
+                              ...prev,
+                              [tpl.id]: { ...(prev[tpl.id] || {}), mode: "attach" },
+                            }));
+                          }}
+                          className={`px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
+                            isAttachingThis
+                              ? "bg-emerald-600 text-white font-bold shadow-2xs"
+                              : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                          }`}
+                        >
+                          Anexar documento pronto
+                        </button>
+
+                        {/* Opção 3: Não usar agora */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDocSelections((prev) => ({
+                              ...prev,
+                              [tpl.id]: { ...(prev[tpl.id] || {}), mode: "omit" },
+                            }));
+                          }}
+                          className={`px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
+                            isOmittedThis
+                              ? "bg-slate-600 text-white font-bold shadow-2xs"
+                              : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                          }`}
+                        >
+                          Não usar agora
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Aviso Curto se houver condição essencial para escolher o documento */}
+                    {tpl.isConditional && (
+                      <div className="text-xs text-amber-800 bg-amber-50/70 border border-amber-200/70 rounded-xl px-3 py-2 flex items-center gap-2">
+                        <Info className="h-4 w-4 text-amber-600 shrink-0" />
+                        <span>
+                          <strong>Condição:</strong> {tpl.conditionText}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Falta de Dados: Mensagem Clara + Botão "Completar dados" */}
+                    {isGeneratingThis && isBlockedForRequiredFields && (
+                      <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                          <div>
+                            <span className="font-bold block">
+                              Faltam: {missingForThisDoc.join(", ")}.
+                            </span>
+                            <span className="text-[11px] text-amber-800">
+                              Complete as informações pendentes para liberar a geração.
+                            </span>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setShowQuickVesselModal(true)}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-colors cursor-pointer shrink-0"
+                        >
+                          <Edit className="h-3 w-3" />
+                          <span>Completar dados</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Gerenciamento de Anexo Pronto quando "Anexar documento pronto" estiver ativo */}
+                    {isAttachingThis && (
+                      <div className="p-3.5 bg-emerald-50/60 border border-emerald-200 rounded-xl space-y-2 text-xs">
+                        {selection.attachedFile ? (
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 rounded-lg border border-emerald-200">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                                <CheckCircle2 className="h-4 w-4" />
+                              </div>
+                              <div className="min-w-0">
+                                <span className="font-bold text-slate-800 truncate block">
+                                  {selection.attachedFile.name}
+                                </span>
+                                <span className="text-[11px] text-emerald-700">
+                                  Documento pronto anexado ao processo.
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              {/* Visualizar */}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  openStoredFile({
+                                    generated_file_url: selection.attachedFile?.url,
+                                    name: selection.attachedFile?.name,
+                                  })
+                                }
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold cursor-pointer"
+                              >
+                                <Eye className="h-3.5 w-3.5 text-[#075BFF]" />
+                                <span>Visualizar</span>
+                              </button>
+
+                              {/* Substituir */}
+                              <label className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-emerald-300 hover:bg-emerald-50 text-emerald-800 text-xs font-semibold cursor-pointer">
+                                <span>Substituir</span>
+                                <input
+                                  type="file"
+                                  accept=".pdf,application/pdf"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const f = e.target.files?.[0];
+                                    if (f) handleAttachFileForTemplate(tpl, f);
+                                  }}
+                                />
+                              </label>
+
+                              {/* Remover */}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveAttachedFile(tpl.id)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-red-600 hover:bg-red-50 text-xs font-semibold cursor-pointer"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                                <span>Remover</span>
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div>
+                              <span className="font-bold text-emerald-950 block">
+                                Enviar documento pronto
+                              </span>
+                              <span className="text-[11px] text-slate-600">
+                                Se você já possui este documento preenchido e assinado fora do
+                                sistema, selecione o arquivo PDF.
+                              </span>
+                            </div>
+
+                            <label className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs cursor-pointer shrink-0 transition-colors">
+                              {selection.isUploading ? (
+                                <>
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  <span>Enviando...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Upload className="h-3.5 w-3.5" />
+                                  <span>Selecionar arquivo</span>
+                                </>
+                              )}
+                              <input
+                                type="file"
+                                accept=".pdf,application/pdf"
+                                disabled={selection.isUploading}
+                                className="hidden"
+                                onChange={(e) => {
+                                  const f = e.target.files?.[0];
+                                  if (f) handleAttachFileForTemplate(tpl, f);
+                                }}
+                              />
+                            </label>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* 5. DETALHES RECOLHIDOS (Quando usar e ver detalhes) */}
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setExpandedDetails((prev) => ({ ...prev, [tpl.id]: !prev[tpl.id] }))
+                        }
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                      >
+                        {isDetailsExpanded ? (
+                          <ChevronDown className="h-3.5 w-3.5" />
+                        ) : (
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        )}
+                        <span>Quando usar e ver detalhes</span>
+                      </button>
+
+                      {isDetailsExpanded && (
+                        <div className="mt-2.5 p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 space-y-2.5 animate-in fade-in duration-150">
+                          <p className="leading-relaxed text-slate-600">{tpl.description}</p>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-slate-200/60 text-[11px]">
+                            <div>
+                              <span className="text-slate-400 block">Fonte Oficial e Norma:</span>
+                              <span className="font-semibold text-slate-800">
+                                {tpl.officialSource}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 block">Data de Conferência:</span>
+                              <span className="font-semibold text-slate-800">
+                                {tpl.validationDate}
+                              </span>
+                            </div>
+                          </div>
+
+                          {tpl.slug === "proc-representacao-naval" && (
+                            <div className="pt-2 border-t border-slate-200/60 text-[11px] space-y-1">
+                              <span className="font-bold text-slate-900 block">
+                                Outorgado configurado:
+                              </span>
+                              {companyData?.procurador_nome ? (
+                                <p className="text-slate-700">
+                                  Pessoa Física: {companyData.procurador_nome} (CPF:{" "}
+                                  {companyData.procurador_cpf || "Não informado"})
+                                </p>
+                              ) : (
+                                <p className="text-slate-700">
+                                  Pessoa Jurídica: {companyData?.name || currentCompany?.name} (CNPJ:{" "}
+                                  {companyData?.cnpj || currentCompany?.cnpj || "Não informado"})
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          {!tpl.status && (
+                            <div className="text-[11px] text-amber-800 bg-amber-50 p-2 rounded-lg">
+                              {tpl.reviewReason || "Modelo em revisão técnica pela equipe."}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* ========================================================================= */}
+        {/* 7. AÇÃO PRINCIPAL (BARRA COMPACTA NA PARTE INFERIOR) */}
+        {/* ========================================================================= */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-[#0B1739]">
+                {templatesToGenerate.length === 1
+                  ? "1 documento pronto para gerar"
+                  : `${templatesToGenerate.length} documentos prontos para gerar`}
+              </span>
+              <span className="text-xs text-slate-400">•</span>
+              <span className="text-xs text-slate-500 font-medium">
+                {templatesAttached.length} anexado(s)
+              </span>
+            </div>
+
+            {/* Aviso explícito de documentos com dados pendentes */}
+            {pendingTemplatesSelected.length > 0 && (
+              <p className="text-xs text-amber-700 font-medium flex items-center gap-1.5">
+                <AlertTriangle className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                <span>
+                  {pendingTemplatesSelected.length === 1
+                    ? "1 documento precisa de dados: "
+                    : `${pendingTemplatesSelected.length} documentos precisam de dados: `}
+                  <strong>{pendingTemplatesSelected.map((t) => t.name).join(", ")}</strong>.
+                </span>
+              </p>
+            )}
+          </div>
+
+          <button
+            type="button"
+            id="btn-generate-documents"
+            disabled={isGenerating || templatesToGenerate.length === 0}
+            onClick={handleGenerateBatchDocuments}
+            className="px-6 py-3 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Gerando {templatesToGenerate.length} documento(s)...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4" />
+                <span>
+                  {templatesToGenerate.length === 0
+                    ? "Nenhum documento pronto"
+                    : templatesToGenerate.length === 1
+                    ? "Gerar 1 documento"
+                    : `Gerar ${templatesToGenerate.length} documentos`}
+                </span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* 8. DOCUMENTOS JÁ GERADOS */}
         {/* ========================================================================= */}
         <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <FileCheck2 className="h-5 w-5 text-[#075BFF]" />
               <h2 className="text-base font-bold text-[#0B1739]">
-                Documentos gerados no processo ({generatedDocsList.length})
+                Documentos gerados ({generatedDocsList.length})
               </h2>
             </div>
             <button
@@ -2375,6 +2152,10 @@ function GerarDocumentoPage() {
               <span>Atualizar</span>
             </button>
           </div>
+
+          <p className="text-xs text-slate-500">
+            Ao gerar novamente um documento existente, será criada uma nova versão no histórico.
+          </p>
 
           {isLoadingGeneratedDocs ? (
             <div className="p-8 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
@@ -2405,7 +2186,14 @@ function GerarDocumentoPage() {
                       </span>
                     </div>
                     <div className="min-w-0">
-                      <h4 className="text-xs font-bold text-slate-900 truncate">{doc.name}</h4>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-xs font-bold text-slate-900 truncate">{doc.name}</h4>
+                        {doc.version && doc.version > 1 && (
+                          <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-600">
+                            v{doc.version}
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-500 mt-0.5">
                         <span>
                           Gerado em: {new Date(doc.created_at).toLocaleString("pt-BR")}
