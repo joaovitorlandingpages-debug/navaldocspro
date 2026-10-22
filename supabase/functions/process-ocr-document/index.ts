@@ -222,6 +222,10 @@ serve(async (req) => {
       }
       if (claim.currentStatus === "completed") {
         return jsonResponse({ ok: true, idempotent: true, jobId, result: job.extracted_data })
+      }
+      throw new HttpError(409, { error: "ocr_claim_failed", jobId, status: claim.currentStatus })
+    }
+
     await supabase.from("ocr_jobs").update({
       provider_used: "Lovable AI / google/gemini-2.5-flash",
       updated_at: new Date().toISOString(),
