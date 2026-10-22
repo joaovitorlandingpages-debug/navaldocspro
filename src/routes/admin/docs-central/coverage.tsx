@@ -11,7 +11,7 @@ export const Route = createFileRoute("/admin/docs-central/coverage")({
   component: CoveragePage,
   errorComponent: ({ error, reset }) => (
     <div className="p-6">
-      <p className="text-sm text-rose-600 mb-3">Erro ao carregar cobertura: {error.message}</p>
+      <p className="text-sm text-rose-600 mb-3">Erro ao carregar cobertura: {(error as Error).message}</p>
       <Button size="sm" onClick={reset}>Tentar novamente</Button>
     </div>
   ),

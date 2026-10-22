@@ -20,7 +20,7 @@ export type ComplianceReport = {
 
 export const validateProcessCompliance = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => Input.parse(data))
+  .validator((data: unknown) => Input.parse(data))
   .handler(async ({ data, context }): Promise<ComplianceReport> => {
     const { supabase } = context;
 

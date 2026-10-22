@@ -772,14 +772,14 @@ function GerarDocumentoPage() {
     setIsUploadingCompanyLogo(true);
     try {
       const ext = file.name.split(".").pop() || "png";
-      const path = `companies/${companyId}/logo_${Date.now()}.${ext}`;
-      await uploadToBucket("company-assets", path, file, {
+      const path = `${companyId}/logo_${Date.now()}.${ext}`;
+      await uploadToBucket("company-logos", path, file, {
         contentType: file.type || "image/png",
         upsert: true,
       });
 
       // Obter URL pública do asset
-      const { data: urlData } = supabase.storage.from("company-assets").getPublicUrl(path);
+      const { data: urlData } = supabase.storage.from("company-logos").getPublicUrl(path);
       const publicUrl = urlData?.publicUrl || path;
 
       const { error: updErr } = await supabase
@@ -1138,7 +1138,7 @@ function GerarDocumentoPage() {
               `Proprietário Atual da Embarcação: ${vessel?.current_owner_name ? `${vessel.current_owner_name}${vessel?.current_owner_cpf_cnpj ? ` (CPF/CNPJ: ${vessel.current_owner_cpf_cnpj})` : ""}` : "Não informado / Pendente de confirmação"}`,
               `Tipo de Embarcação: ${vessel?.vessel_type || "Embarcação"}`,
               `Categoria: ${isProf ? "Embarcação Profissional" : isJet ? "Moto Aquática" : "Esporte e Recreio"}`,
-              `Comprimento Total: ${effectiveLength}${String(effectiveLength).includes("m") || effectiveLength === "Não informado" ? "" : " m"}`,
+              `Comprimento Total: ${((processData?.draft_data as any)?.vessel_length || vessel?.length || vessel?.length_overall || "Não informado")}${String(((processData?.draft_data as any)?.vessel_length || vessel?.length || vessel?.length_overall || "Não informado")).includes("m") || ((processData?.draft_data as any)?.vessel_length || vessel?.length || vessel?.length_overall || "Não informado") === "Não informado" ? "" : " m"}`,
               `Material do Casco: ${vessel?.material || "Não informado"}`,
               ``,
               `3. ESCOPO DA SOLICITAÇÃO (${normamScope})`,

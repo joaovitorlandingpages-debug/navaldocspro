@@ -41,6 +41,7 @@ export interface ExtractedFieldDetail {
   status: FieldConfidenceStatus;
   doubtReason?: string;
   sourceExcerpt?: string;
+  rawExcerpt?: string;
   page?: number;
   isRequired?: boolean;
   section: "identificacao" | "contato_endereco" | "nautico" | "propulsao" | "outros";

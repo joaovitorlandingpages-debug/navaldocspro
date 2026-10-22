@@ -18,7 +18,7 @@ export type ExigenciaAnalysis = {
 
 export const analyzeExigencia = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => Input.parse(d))
+  .validator((d: unknown) => Input.parse(d))
   .handler(async ({ data, context }): Promise<ExigenciaAnalysis> => {
     let processContext = "";
     if (data.processId) {

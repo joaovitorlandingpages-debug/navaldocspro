@@ -39,7 +39,7 @@ export const Route = createFileRoute("/admin/templates/pfw")({
       <div className="p-10 max-w-md mx-auto text-center">
         <AlertTriangle className="h-10 w-10 text-red-500 mx-auto mb-3" />
         <p className="font-semibold mb-2">Erro ao carregar a matriz</p>
-        <p className="text-sm text-slate-500 mb-4">{error.message}</p>
+        <p className="text-sm text-slate-500 mb-4">{(error as Error).message}</p>
         <Button onClick={() => { reset(); navigate({ to: "/admin/templates/pfw" }); }}>
           Tentar novamente
         </Button>
