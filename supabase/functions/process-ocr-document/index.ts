@@ -1,6 +1,5 @@
 // Real OCR using Lovable AI Gateway (Gemini 2.5 Flash vision) with Brazilian Maritime & Identity Specialization
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { authContext, rateLimit, consume, jsonResponse, corsHeaders, HttpError, assertProcessNotFinalized, claimStatus } from "../_shared/auth.ts"
 
 const EXTRACTION_PROMPT = `Você é um motor de OCR de alta precisão especialista em documentação brasileira e marítima para o NavalDocs Pro.
@@ -82,7 +81,7 @@ function extractTextFromPdfBytes(pdfBytes: Uint8Array): string {
     const foundStrings: string[] = []
 
     // 1. Strings dentro de operadores Tj: (texto) Tj
-    const tjRegex = /\(([^)\\]*(?:\\.[^)\\]*)*\)\s*Tj/g
+    const tjRegex = new RegExp("\\(([^)\\\\]*(?:\\\\.[^)\\\\]*)*)\\)\\s*Tj", "g")
     let match: RegExpExecArray | null
     while ((match = tjRegex.exec(latin1)) !== null) {
       const unescaped = match[1].replace(/\\([()\\])/g, "$1").trim()
@@ -91,9 +90,10 @@ function extractTextFromPdfBytes(pdfBytes: Uint8Array): string {
 
     // 2. Strings dentro de arrays TJ: [(texto) 10 (texto)] TJ
     const tjArrayRegex = /\[([^\]]+)\]\s*TJ/g
+    const innerRegex = new RegExp("\\(([^)\\\\]*(?:\\\\.[^)\\\\]*)*)\\)", "g")
     while ((match = tjArrayRegex.exec(latin1)) !== null) {
       const inner = match[1]
-      const innerMatches = inner.match(/\(([^)\\]*(?:\\.[^)\\]*)*\)/g)
+      const innerMatches = inner.match(innerRegex)
       if (innerMatches) {
         const line = innerMatches.map(s => s.slice(1, -1).replace(/\\([()\\])/g, "$1")).join("").trim()
         if (line.length > 0) foundStrings.push(line)
@@ -171,7 +171,7 @@ serve(async (req) => {
 
   let jobId: string | undefined
   const startedAt = Date.now()
-  let supabase: ReturnType<typeof createClient>
+  let supabase: any
 
   try {
     const ctx = await authContext(req)
