@@ -222,14 +222,6 @@ serve(async (req) => {
       }
       if (claim.currentStatus === "completed") {
         return jsonResponse({ ok: true, idempotent: true, jobId, result: job.extracted_data })
-      }
-    }
-
-    // Contabilização de franquia no backend (idempotente pela chave `ocr:${jobId}`)
-    if (job.company_id) {
-      await consume(ctx.admin, job.company_id, "ocr", 1, `ocr:${jobId}`, { jobId })
-    }
-
     await supabase.from("ocr_jobs").update({
       provider_used: "Lovable AI / google/gemini-2.5-flash",
       updated_at: new Date().toISOString(),
@@ -449,7 +441,16 @@ serve(async (req) => {
       }
     }
 
-    const finalStatus = foundCount > 0 || rawText ? "completed" : "failed"
+    const finalStatus = foundCount > 0 || (rawText && rawText.length > 30) ? "completed" : "failed"
+
+    if (finalStatus === "completed" && job.company_id) {
+      // Contabilização de franquia no backend apenas com sucesso confirmado
+      try {
+        await consume(ctx.admin, job.company_id, "ocr", 1, `ocr:${jobId}`, { jobId })
+      } catch (consErr) {
+        console.warn("[OCR_CONSUME_WARNING]", consErr)
+      }
+    }
 
     const extracted_data = {
       ...fields,
@@ -470,6 +471,19 @@ serve(async (req) => {
     }).eq("id", jobId)
 
     console.log("[OCR_DONE]", { jobId, docType, foundCount, finalStatus })
+
+    if (finalStatus === "failed") {
+      return new Response(JSON.stringify({
+        success: false,
+        error: "unreadable_document",
+        message: "O documento enviado não contém texto ou campos legíveis identificáveis pelo motor de leitura.",
+        jobId,
+        fields_found: 0,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 422,
+      })
+    }
 
     return new Response(JSON.stringify({
       success: true,
