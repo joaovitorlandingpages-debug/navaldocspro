@@ -772,14 +772,14 @@ function GerarDocumentoPage() {
     setIsUploadingCompanyLogo(true);
     try {
       const ext = file.name.split(".").pop() || "png";
-      const path = `companies/${companyId}/logo_${Date.now()}.${ext}`;
-      await uploadToBucket("company-assets", path, file, {
+      const path = `${companyId}/logo_${Date.now()}.${ext}`;
+      await uploadToBucket("company-logos", path, file, {
         contentType: file.type || "image/png",
         upsert: true,
       });
 
       // Obter URL pública do asset
-      const { data: urlData } = supabase.storage.from("company-assets").getPublicUrl(path);
+      const { data: urlData } = supabase.storage.from("company-logos").getPublicUrl(path);
       const publicUrl = urlData?.publicUrl || path;
 
       const { error: updErr } = await supabase
