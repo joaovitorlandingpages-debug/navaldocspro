@@ -1138,7 +1138,7 @@ function GerarDocumentoPage() {
               `Proprietário Atual da Embarcação: ${vessel?.current_owner_name ? `${vessel.current_owner_name}${vessel?.current_owner_cpf_cnpj ? ` (CPF/CNPJ: ${vessel.current_owner_cpf_cnpj})` : ""}` : "Não informado / Pendente de confirmação"}`,
               `Tipo de Embarcação: ${vessel?.vessel_type || "Embarcação"}`,
               `Categoria: ${isProf ? "Embarcação Profissional" : isJet ? "Moto Aquática" : "Esporte e Recreio"}`,
-              `Comprimento Total: ${effectiveLength}${String(effectiveLength).includes("m") || effectiveLength === "Não informado" ? "" : " m"}`,
+              `Comprimento Total: ${((processData?.draft_data as any)?.vessel_length || vessel?.length || vessel?.length_overall || "Não informado")}${String(((processData?.draft_data as any)?.vessel_length || vessel?.length || vessel?.length_overall || "Não informado")).includes("m") || ((processData?.draft_data as any)?.vessel_length || vessel?.length || vessel?.length_overall || "Não informado") === "Não informado" ? "" : " m"}`,
               `Material do Casco: ${vessel?.material || "Não informado"}`,
               ``,
               `3. ESCOPO DA SOLICITAÇÃO (${normamScope})`,
