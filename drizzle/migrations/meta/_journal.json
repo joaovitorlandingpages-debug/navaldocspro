@@ -15,6 +15,13 @@
       "when": 1792709146872,
       "tag": "0001_tighten_incidents_downloads_reviews",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792709341414,
+      "tag": "0002_admin_only_system_tables",
+      "breakpoints": true
     }
   ]
 }
