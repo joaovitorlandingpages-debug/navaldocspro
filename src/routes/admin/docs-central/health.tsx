@@ -12,7 +12,7 @@ export const Route = createFileRoute("/admin/docs-central/health")({
   component: HealthPage,
   errorComponent: ({ error, reset }) => (
     <div className="p-6">
-      <p className="text-sm text-rose-600 mb-3">Erro ao carregar saúde: {error.message}</p>
+      <p className="text-sm text-rose-600 mb-3">Erro ao carregar saúde: {(error as Error).message}</p>
       <Button size="sm" onClick={reset}>Tentar novamente</Button>
     </div>
   ),

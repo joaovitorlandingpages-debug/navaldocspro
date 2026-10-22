@@ -32,7 +32,7 @@ export const Route = createFileRoute("/documentos/biblioteca")({
   component: BibliotecaPage,
   errorComponent: ({ error, reset }) => (
     <div className="p-10 text-center text-red-600">
-      <p className="font-bold">Erro: {error.message}</p>
+      <p className="font-bold">Erro: {(error as Error).message}</p>
       <button onClick={reset} className="mt-3 px-4 py-2 bg-primary text-white rounded-lg">
         Tentar novamente
       </button>
