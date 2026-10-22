@@ -54,6 +54,7 @@ export const CATALOG_TEMPLATES: CatalogTemplateItem[] = [
       "Nome do Cliente",
       "CPF/CNPJ do Cliente",
       "Nome da Embarcação",
+      "Proprietário da Embarcação",
       "Número de Inscrição",
     ],
     isMandatory: true,
@@ -140,7 +141,12 @@ export const CATALOG_TEMPLATES: CatalogTemplateItem[] = [
     updatedAt: "16/10/2026",
     status: "aprovado",
     nature: "platform_generated",
-    requiredFields: ["Nome do Cliente", "CPF/CNPJ do Cliente", "Nome da Embarcação"],
+    requiredFields: [
+      "Nome do Cliente",
+      "CPF/CNPJ do Cliente",
+      "Nome da Embarcação",
+      "Proprietário da Embarcação",
+    ],
     isMandatory: true,
     isConditional: false,
     officialSource: "NORMAM-212/DPC, Anexo 3-B • Capitania dos Portos (CPES node/384)",
@@ -195,7 +201,12 @@ export const CATALOG_TEMPLATES: CatalogTemplateItem[] = [
     updatedAt: "16/10/2026",
     status: "aprovado",
     nature: "platform_generated",
-    requiredFields: ["Nome do Cliente", "CPF/CNPJ do Cliente", "Nome da Embarcação"],
+    requiredFields: [
+      "Nome do Cliente",
+      "CPF/CNPJ do Cliente",
+      "Nome da Embarcação",
+      "Proprietário da Embarcação",
+    ],
     isMandatory: true,
     isConditional: false,
     officialSource: "NORMAM-201/DPC, Anexo 2-A • Capitania dos Portos (CPES node/388)",
@@ -382,6 +393,7 @@ export function checkTemplateMissingRequirements(
   const hasStaff = !!(staff?.name && staff?.name !== "Não informado");
   const hasVesselName = !!vessel?.name;
   const hasVesselRegistration = !!(vessel?.registration_number && vessel.registration_number.trim() !== "");
+  const hasVesselOwner = !!(vessel?.current_owner_name && vessel.current_owner_name.trim() !== "");
 
   // Outorgado da Procuração: verificação estrita de PF vs PJ
   const isProcuradorPF = !!company?.procurador_nome;
@@ -403,6 +415,9 @@ export function checkTemplateMissingRequirements(
     }
     if (field === "Nome da Embarcação" && !hasVesselName) {
       missing.push("Nome da Embarcação");
+    }
+    if (field === "Proprietário da Embarcação" && !hasVesselOwner) {
+      missing.push("Proprietário da Embarcação");
     }
     if (field === "Número de Inscrição" && !hasVesselRegistration) {
       missing.push("Número de Inscrição da Embarcação");

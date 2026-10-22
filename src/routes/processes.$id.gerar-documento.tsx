@@ -158,7 +158,12 @@ function GerarDocumentoPage() {
   const [quickVesselName, setQuickVesselName] = useState("");
   const [quickVesselReg, setQuickVesselReg] = useState("");
   const [quickVesselType, setQuickVesselType] = useState("Lancha / Recreio");
+  const [quickVesselOwnerName, setQuickVesselOwnerName] = useState("");
+  const [quickVesselOwnerCpf, setQuickVesselOwnerCpf] = useState("");
   const [isSavingQuickVessel, setIsSavingQuickVessel] = useState(false);
+
+  // Estado de accordion para ver versões anteriores agrupadas
+  const [expandedPreviousVersions, setExpandedPreviousVersions] = useState<Record<string, boolean>>({});
 
   // Estado de detalhes recolhidos por documento ("Quando usar e ver detalhes")
   const [expandedDetails, setExpandedDetails] = useState<Record<string, boolean>>({});
@@ -210,7 +215,7 @@ function GerarDocumentoPage() {
               `
               *,
               customer:customers!processes_customer_id_fkey(id, name, cpf_cnpj, email, phone, address, city, state),
-              vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, category, vessel_type, length, material)
+              vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, category, vessel_type, length, material, current_owner_name, current_owner_cpf_cnpj)
             `,
             )
             .eq("id", id)
@@ -271,6 +276,8 @@ function GerarDocumentoPage() {
           setQuickVesselName(proc.vessel.name || "");
           setQuickVesselReg(proc.vessel.registration_number || "");
           setQuickVesselType(proc.vessel.vessel_type || "Lancha / Recreio");
+          setQuickVesselOwnerName(proc.vessel.current_owner_name || "");
+          setQuickVesselOwnerCpf(proc.vessel.current_owner_cpf_cnpj || "");
         }
 
         // 2. Carregar modelos reais do banco de dados (document_templates)
@@ -529,6 +536,8 @@ function GerarDocumentoPage() {
             name: quickVesselName.trim(),
             registration_number: quickVesselReg.trim() || null,
             vessel_type: quickVesselType.trim() || vessel.vessel_type || "Lancha / Recreio",
+            current_owner_name: quickVesselOwnerName.trim() || null,
+            current_owner_cpf_cnpj: quickVesselOwnerCpf.trim() || null,
             updated_at: now,
           })
           .eq("id", vessel.id)
@@ -549,6 +558,8 @@ function GerarDocumentoPage() {
             registration_number: quickVesselReg.trim() || null,
             vessel_type: quickVesselType.trim() || "Lancha / Recreio",
             category: vesselCategory,
+            current_owner_name: quickVesselOwnerName.trim() || null,
+            current_owner_cpf_cnpj: quickVesselOwnerCpf.trim() || null,
             status: "active",
             created_at: now,
             updated_at: now,
@@ -575,11 +586,57 @@ function GerarDocumentoPage() {
       setVessel(updatedVesselRecord);
       setShowQuickVesselModal(false);
       toast.success("Dados da embarcação salvos com sucesso!", {
-        description: "Os modelos que exigiam nome e inscrição foram desbloqueados.",
+        description: "Os modelos foram atualizados com os dados e proprietário informados.",
       });
     } catch (err: any) {
       console.error("Erro ao salvar embarcação rápida:", err);
       toast.error(err?.message || "Não foi possível atualizar a embarcação.");
+    } finally {
+      setIsSavingQuickVessel(false);
+    }
+  };
+
+  // Confirmar explicitamente o requerente como proprietário da embarcação
+  const handleConfirmCustomerAsOwner = async () => {
+    if (!vessel?.id || !companyId || !customer) {
+      toast.error("Vínculo indisponível. Preencha os dados no formulário.");
+      setShowQuickVesselModal(true);
+      return;
+    }
+
+    const customerOwnerName = customer.fantasy_name || customer.name || "";
+    const customerOwnerCpf = customer.cpf_cnpj || customer.document || "";
+
+    if (!customerOwnerName) {
+      toast.error("Nome do requerente não encontrado.");
+      return;
+    }
+
+    setIsSavingQuickVessel(true);
+    try {
+      const now = new Date().toISOString();
+      const { data: updated, error } = await supabase
+        .from("vessels")
+        .update({
+          current_owner_name: customerOwnerName,
+          current_owner_cpf_cnpj: customerOwnerCpf || null,
+          updated_at: now,
+        })
+        .eq("id", vessel.id)
+        .eq("company_id", companyId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      setVessel(updated);
+      setQuickVesselOwnerName(customerOwnerName);
+      setQuickVesselOwnerCpf(customerOwnerCpf);
+      toast.success("Vínculo confirmado com sucesso!", {
+        description: `${customerOwnerName} foi definido(a) como proprietário(a) da embarcação.`,
+      });
+    } catch (err: any) {
+      console.error("Erro ao confirmar proprietário:", err);
+      toast.error(err?.message || "Erro ao vincular proprietário.");
     } finally {
       setIsSavingQuickVessel(false);
     }
@@ -1051,6 +1108,7 @@ function GerarDocumentoPage() {
               `2. DADOS DA EMBARCAÇÃO`,
               `Nome da Embarcação: ${vesselName}`,
               `Número de Inscrição: ${vessel?.registration_number || "Em regularização"}`,
+              `Proprietário Atual da Embarcação: ${vessel?.current_owner_name ? `${vessel.current_owner_name}${vessel?.current_owner_cpf_cnpj ? ` (CPF/CNPJ: ${vessel.current_owner_cpf_cnpj})` : ""}` : "Não informado / Pendente de confirmação"}`,
               `Tipo de Embarcação: ${vessel?.vessel_type || "Embarcação"}`,
               `Categoria: ${isProf ? "Embarcação Profissional" : isJet ? "Moto Aquática" : "Esporte e Recreio"}`,
               `Comprimento Total: ${effectiveLength}${String(effectiveLength).includes("m") || effectiveLength === "Não informado" ? "" : " m"}`,
@@ -1388,6 +1446,46 @@ function GerarDocumentoPage() {
                         : "Não informado")}
                   </span>
                 </div>
+                {/* Proprietário: identificação clara ou alerta de pendência */}
+                {vessel?.current_owner_name ? (
+                  <div className="text-[11px] text-slate-600 mt-1 flex items-center gap-1.5 flex-wrap">
+                    <span className="font-semibold text-slate-700">Proprietário:</span>
+                    <span className="font-medium text-slate-900">{vessel.current_owner_name}</span>
+                    {vessel.current_owner_name === (customer?.fantasy_name || customer?.name) ? (
+                      <span className="px-1.5 py-0.2 rounded text-[10px] bg-blue-50 text-[#075BFF] font-semibold border border-blue-200">
+                        Mesmo que o requerente
+                      </span>
+                    ) : (
+                      <span className="px-1.5 py-0.2 rounded text-[10px] bg-amber-50 text-amber-800 font-semibold border border-amber-200">
+                        Proprietário distinto do requerente
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <div className="mt-1.5 p-2 bg-amber-50/80 border border-amber-200 rounded-lg text-[11px] space-y-1">
+                    <div className="flex items-center gap-1.5 text-amber-800 font-semibold">
+                      <AlertTriangle className="h-3 w-3 shrink-0 text-amber-600" />
+                      <span>Proprietário não informado (pendência)</span>
+                    </div>
+                    <div className="flex items-center gap-2 pt-0.5">
+                      <button
+                        type="button"
+                        onClick={handleConfirmCustomerAsOwner}
+                        className="text-[10px] font-bold text-[#075BFF] hover:underline cursor-pointer"
+                      >
+                        Confirmar {customer?.name || "cliente"} como proprietário
+                      </button>
+                      <span className="text-amber-400">•</span>
+                      <button
+                        type="button"
+                        onClick={() => setShowQuickVesselModal(true)}
+                        className="text-[10px] font-semibold text-amber-800 hover:underline cursor-pointer"
+                      >
+                        Informar outro proprietário
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -2132,9 +2230,9 @@ function GerarDocumentoPage() {
         </div>
 
         {/* ========================================================================= */}
-        {/* 8. DOCUMENTOS JÁ GERADOS */}
+        {/* 8. DOCUMENTOS JÁ GERADOS (HISTÓRICO COM VERSÕES ANTERIORES) */}
         {/* ========================================================================= */}
-        <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+        <div id="secao-documentos-gerados" className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <FileCheck2 className="h-5 w-5 text-[#075BFF]" />
@@ -2154,7 +2252,7 @@ function GerarDocumentoPage() {
           </div>
 
           <p className="text-xs text-slate-500">
-            Ao gerar novamente um documento existente, será criada uma nova versão no histórico.
+            Abaixo é exibida inicialmente a versão mais recente de cada documento. As versões anteriores permanecem preservadas e acessíveis.
           </p>
 
           {isLoadingGeneratedDocs ? (
@@ -2174,59 +2272,155 @@ function GerarDocumentoPage() {
             </div>
           ) : (
             <div className="divide-y divide-slate-100">
-              {generatedDocsList.map((doc) => (
-                <div
-                  key={doc.id}
-                  className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-                >
-                  <div className="flex items-start gap-3 min-w-0">
-                    <div className="w-8 h-9 rounded-lg bg-red-500 text-white flex flex-col items-center justify-center font-bold shrink-0 shadow-2xs select-none">
-                      <span className="text-[9px] font-black tracking-tighter leading-none mt-0.5">
-                        PDF
-                      </span>
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="text-xs font-bold text-slate-900 truncate">{doc.name}</h4>
-                        {doc.version && doc.version > 1 && (
-                          <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-600">
-                            v{doc.version}
+              {Object.entries(
+                generatedDocsList.reduce((acc, doc) => {
+                  const key = doc.template_id || (doc.metadata as any)?.template_slug || doc.name;
+                  if (!acc[key]) acc[key] = [];
+                  acc[key].push(doc);
+                  return acc;
+                }, {} as Record<string, any[]>)
+              ).map(([groupKey, docs]) => {
+                // Ordena por versão decrescente (ou created_at decrescente)
+                const sortedDocs = [...docs].sort((a, b) => {
+                  if (typeof b.version === "number" && typeof a.version === "number") {
+                    return b.version - a.version;
+                  }
+                  return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                });
+
+                const latestDoc = sortedDocs[0];
+                const previousDocs = sortedDocs.slice(1);
+                const isExpanded = !!expandedPreviousVersions[groupKey];
+
+                return (
+                  <div key={groupKey} className="py-4 space-y-2.5">
+                    {/* Versão Mais Recente */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className="w-8 h-9 rounded-lg bg-red-500 text-white flex flex-col items-center justify-center font-bold shrink-0 shadow-2xs select-none">
+                          <span className="text-[9px] font-black tracking-tighter leading-none mt-0.5">
+                            PDF
                           </span>
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="text-xs font-bold text-slate-900 truncate">
+                              {latestDoc.name}
+                            </h4>
+                            <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-blue-50 text-[#075BFF] border border-blue-200">
+                              v{latestDoc.version || 1} (mais recente)
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-500 mt-0.5">
+                            <span>
+                              Gerado em: {new Date(latestDoc.created_at).toLocaleString("pt-BR")}
+                            </span>
+                            <span>•</span>
+                            <span className="inline-flex items-center gap-1 font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/60">
+                              <Clock className="h-3 w-3" />
+                              <span>Aguardando assinatura GOV.BR</span>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => openStoredFile(latestDoc)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold cursor-pointer shadow-2xs"
+                        >
+                          <Eye className="h-3.5 w-3.5 text-[#075BFF]" />
+                          <span>Visualizar</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => downloadStoredFile(latestDoc)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-bold cursor-pointer shadow-2xs"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          <span>Baixar</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Botão e Accordion de Versões Anteriores */}
+                    {previousDocs.length > 0 && (
+                      <div className="pl-11 pt-1">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedPreviousVersions((prev) => ({
+                              ...prev,
+                              [groupKey]: !prev[groupKey],
+                            }))
+                          }
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#075BFF] hover:underline cursor-pointer"
+                        >
+                          <History className="h-3.5 w-3.5" />
+                          <span>
+                            {isExpanded
+                              ? `Ocultar versões anteriores`
+                              : `Ver versões anteriores (${previousDocs.length})`}
+                          </span>
+                          <ChevronDown
+                            className={`h-3.5 w-3.5 transition-transform duration-200 ${
+                              isExpanded ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+
+                        {isExpanded && (
+                          <div className="mt-2.5 p-3 rounded-xl bg-slate-50/80 border border-slate-200/80 space-y-2">
+                            <span className="text-[11px] font-bold text-slate-600 block">
+                              Histórico de versões deste documento:
+                            </span>
+                            <div className="divide-y divide-slate-200/60">
+                              {previousDocs.map((prevDoc) => (
+                                <div
+                                  key={prevDoc.id}
+                                  className="py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                                >
+                                  <div className="flex items-center gap-2 flex-wrap min-w-0">
+                                    <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-slate-200 text-slate-700">
+                                      v{prevDoc.version || 1}
+                                    </span>
+                                    <span className="text-xs text-slate-700 font-medium truncate">
+                                      {prevDoc.name}
+                                    </span>
+                                    <span className="text-[11px] text-slate-400">
+                                      ({new Date(prevDoc.created_at).toLocaleString("pt-BR")})
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-center gap-1.5 shrink-0">
+                                    <button
+                                      type="button"
+                                      onClick={() => openStoredFile(prevDoc)}
+                                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-[11px] font-semibold cursor-pointer"
+                                    >
+                                      <Eye className="h-3 w-3 text-[#075BFF]" />
+                                      <span>Visualizar</span>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => downloadStoredFile(prevDoc)}
+                                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-900 text-white text-[11px] font-bold cursor-pointer"
+                                    >
+                                      <Download className="h-3 w-3" />
+                                      <span>Baixar</span>
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-500 mt-0.5">
-                        <span>
-                          Gerado em: {new Date(doc.created_at).toLocaleString("pt-BR")}
-                        </span>
-                        <span>•</span>
-                        <span className="inline-flex items-center gap-1 font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/60">
-                          <Clock className="h-3 w-3" />
-                          <span>Aguardando assinatura GOV.BR</span>
-                        </span>
-                      </div>
-                    </div>
+                    )}
                   </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => openStoredFile(doc)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold cursor-pointer shadow-2xs"
-                    >
-                      <Eye className="h-3.5 w-3.5 text-[#075BFF]" />
-                      <span>Visualizar</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => downloadStoredFile(doc)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-bold cursor-pointer shadow-2xs"
-                    >
-                      <Download className="h-3.5 w-3.5" />
-                      <span>Baixar</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -2378,6 +2572,56 @@ function GerarDocumentoPage() {
                   placeholder="Ex: Lancha / Bote / Moto Aquática"
                   className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 />
+              </div>
+
+              {/* SEÇÃO PROPRIETÁRIO DA EMBARCAÇÃO (Sem fallback presumido) */}
+              <div className="pt-2 border-t border-slate-100 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-800">
+                    Proprietário atual da embarcação <strong className="text-red-500">*</strong>
+                  </label>
+                  {customer && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuickVesselOwnerName(customer.fantasy_name || customer.name || "");
+                        setQuickVesselOwnerCpf(customer.cpf_cnpj || customer.document || "");
+                      }}
+                      className="text-[11px] font-bold text-[#075BFF] hover:underline cursor-pointer"
+                    >
+                      Copiar do requerente
+                    </button>
+                  )}
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-slate-600">
+                    Nome completo / Razão Social do Proprietário
+                  </label>
+                  <input
+                    type="text"
+                    value={quickVesselOwnerName}
+                    onChange={(e) => setQuickVesselOwnerName(e.target.value)}
+                    placeholder="Ex: José Carlos da Silva (ou nome do requerente se for o mesmo)"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-slate-600">
+                    CPF / CNPJ do Proprietário
+                  </label>
+                  <input
+                    type="text"
+                    value={quickVesselOwnerCpf}
+                    onChange={(e) => setQuickVesselOwnerCpf(e.target.value)}
+                    placeholder="Ex: 000.000.000-00"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                  <p className="text-[10px] text-slate-400">
+                    A plataforma não presume que o requerente seja o proprietário. Informe o titular constante do documento ou confirme o vínculo.
+                  </p>
+                </div>
               </div>
             </div>
 
