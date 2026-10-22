@@ -486,7 +486,7 @@ function RevisarProcessoPage() {
               </div>
 
               <div className="divide-y divide-slate-100">
-                {parsedServices.map((srv, idx) => (
+                {parsedServices.map((srv: any, idx: number) => (
                   <div
                     key={srv.key + idx}
                     className="py-3.5 first:pt-1 last:pb-1 flex items-center justify-between gap-3"
