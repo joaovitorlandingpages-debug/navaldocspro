@@ -47,7 +47,7 @@ async function logActivity(params: {
 
 export const createPortalAccess = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: {
+  .validator((d: {
     processId: string;
     customerId?: string | null;
     daysValid?: number;
@@ -98,7 +98,7 @@ export const createPortalAccess = createServerFn({ method: "POST" })
 
 export const revokePortalAccess = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { accessId: string }) => d)
+  .validator((d: { accessId: string }) => d)
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: row, error } = await supabase
@@ -120,7 +120,7 @@ export const revokePortalAccess = createServerFn({ method: "POST" })
 
 export const renewPortalAccess = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { accessId: string; daysValid?: number }) => d)
+  .validator((d: { accessId: string; daysValid?: number }) => d)
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const days = Math.max(1, Math.min(365, data.daysValid ?? 30));
@@ -145,7 +145,7 @@ export const renewPortalAccess = createServerFn({ method: "POST" })
 
 export const sendCompanyMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { processId: string; message: string; accessId?: string | null }) => d)
+  .validator((d: { processId: string; message: string; accessId?: string | null }) => d)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const msg = (data.message || "").trim();
@@ -196,7 +196,7 @@ async function loadByToken(token: string) {
 }
 
 export const getPortalContext = createServerFn({ method: "POST" })
-  .inputValidator((d: { token: string }) => d)
+  .validator((d: { token: string }) => d)
   .handler(async ({ data }) => {
     const access = await loadByToken(data.token);
     const supa = await adminClient();
@@ -255,7 +255,7 @@ export const getPortalContext = createServerFn({ method: "POST" })
   });
 
 export const portalSendMessage = createServerFn({ method: "POST" })
-  .inputValidator((d: { token: string; message: string }) => d)
+  .validator((d: { token: string; message: string }) => d)
   .handler(async ({ data }) => {
     const access = await loadByToken(data.token);
     if (!(access.allowed_actions as any)?.message) throw new Error("Ação não permitida");
@@ -279,7 +279,7 @@ export const portalSendMessage = createServerFn({ method: "POST" })
   });
 
 export const portalUploadDocument = createServerFn({ method: "POST" })
-  .inputValidator((d: {
+  .validator((d: {
     token: string;
     fileName: string;
     contentType: string;
@@ -349,7 +349,7 @@ export const portalUploadDocument = createServerFn({ method: "POST" })
   });
 
 export const portalDownloadFile = createServerFn({ method: "POST" })
-  .inputValidator((d: { token: string; bucket: string; path: string }) => d)
+  .validator((d: { token: string; bucket: string; path: string }) => d)
   .handler(async ({ data }) => {
     const access = await loadByToken(data.token);
     if (!(access.allowed_actions as any)?.download) throw new Error("Download não permitido");
@@ -379,7 +379,7 @@ export const portalDownloadFile = createServerFn({ method: "POST" })
   });
 
 export const portalConfirmReceipt = createServerFn({ method: "POST" })
-  .inputValidator((d: { token: string; note?: string }) => d)
+  .validator((d: { token: string; note?: string }) => d)
   .handler(async ({ data }) => {
     const access = await loadByToken(data.token);
     await logActivity({
