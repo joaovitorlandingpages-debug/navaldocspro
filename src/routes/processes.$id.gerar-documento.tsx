@@ -37,6 +37,7 @@ import {
   XCircle,
   Image as ImageIcon,
   Droplet,
+  History,
 } from "lucide-react";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -474,6 +475,32 @@ function GerarDocumentoPage() {
   const templatesOmitted = useMemo(() => {
     return filteredTemplates.filter((tpl) => docSelections[tpl.id]?.mode === "omit");
   }, [filteredTemplates, docSelections]);
+
+  // Agrupamento de documentos gerados por modelo/slug para controle preciso de versões
+  const groupedGeneratedDocs = useMemo(() => {
+    const groups: Record<string, any[]> = {};
+    for (const doc of generatedDocsList) {
+      const key = doc.template_id || (doc.metadata as any)?.template_slug || doc.name;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(doc);
+    }
+
+    // Ordenar cada grupo por versão decrescente (mais recente primeiro)
+    return Object.entries(groups).map(([groupKey, docs]) => {
+      const sorted = [...docs].sort((a, b) => {
+        if (typeof b.version === "number" && typeof a.version === "number") {
+          return b.version - a.version;
+        }
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+      return {
+        groupKey,
+        latestDoc: sorted[0],
+        previousDocs: sorted.slice(1),
+        totalVersions: sorted.length,
+      };
+    });
+  }, [generatedDocsList]);
 
   // Documentos que o usuário selecionou para gerar, mas que possuem pendência de dados ou revisão
   const pendingTemplatesSelected = useMemo(() => {
@@ -2237,8 +2264,13 @@ function GerarDocumentoPage() {
             <div className="flex items-center gap-2">
               <FileCheck2 className="h-5 w-5 text-[#075BFF]" />
               <h2 className="text-base font-bold text-[#0B1739]">
-                Documentos gerados ({generatedDocsList.length})
+                Documentos gerados ({groupedGeneratedDocs.length})
               </h2>
+              {generatedDocsList.length > groupedGeneratedDocs.length && (
+                <span className="text-xs text-slate-500 font-medium">
+                  ({generatedDocsList.length} arquivos incluindo versões anteriores)
+                </span>
+              )}
             </div>
             <button
               type="button"
@@ -2252,7 +2284,7 @@ function GerarDocumentoPage() {
           </div>
 
           <p className="text-xs text-slate-500">
-            Abaixo é exibida inicialmente a versão mais recente de cada documento. As versões anteriores permanecem preservadas e acessíveis.
+            Abaixo é exibida a versão mais recente de cada documento ({groupedGeneratedDocs.length} agrupado{groupedGeneratedDocs.length === 1 ? "" : "s"}). As versões anteriores permanecem preservadas e acessíveis no expansível.
           </p>
 
           {isLoadingGeneratedDocs ? (
@@ -2260,7 +2292,7 @@ function GerarDocumentoPage() {
               <Loader2 className="h-4 w-4 animate-spin text-[#075BFF]" />
               <span>Carregando documentos persistidos...</span>
             </div>
-          ) : generatedDocsList.length === 0 ? (
+          ) : groupedGeneratedDocs.length === 0 ? (
             <div className="p-8 text-center border border-dashed border-slate-200 rounded-xl space-y-2">
               <FileText className="h-8 w-8 text-slate-300 mx-auto" />
               <p className="text-xs font-semibold text-slate-600">
@@ -2272,24 +2304,7 @@ function GerarDocumentoPage() {
             </div>
           ) : (
             <div className="divide-y divide-slate-100">
-              {Object.entries(
-                generatedDocsList.reduce((acc, doc) => {
-                  const key = doc.template_id || (doc.metadata as any)?.template_slug || doc.name;
-                  if (!acc[key]) acc[key] = [];
-                  acc[key].push(doc);
-                  return acc;
-                }, {} as Record<string, any[]>)
-              ).map(([groupKey, docs]) => {
-                // Ordena por versão decrescente (ou created_at decrescente)
-                const sortedDocs = [...docs].sort((a, b) => {
-                  if (typeof b.version === "number" && typeof a.version === "number") {
-                    return b.version - a.version;
-                  }
-                  return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-                });
-
-                const latestDoc = sortedDocs[0];
-                const previousDocs = sortedDocs.slice(1);
+              {groupedGeneratedDocs.map(({ groupKey, latestDoc, previousDocs, totalVersions }) => {
                 const isExpanded = !!expandedPreviousVersions[groupKey];
 
                 return (
@@ -2373,7 +2388,7 @@ function GerarDocumentoPage() {
                         {isExpanded && (
                           <div className="mt-2.5 p-3 rounded-xl bg-slate-50/80 border border-slate-200/80 space-y-2">
                             <span className="text-[11px] font-bold text-slate-600 block">
-                              Histórico de versões deste documento:
+                              Histórico de versões deste documento ({previousDocs.length} anterior{previousDocs.length === 1 ? "" : "es"}):
                             </span>
                             <div className="divide-y divide-slate-200/60">
                               {previousDocs.map((prevDoc) => (
