@@ -1,11 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  buildCustomerReview, 
-  buildVesselReview 
-} from "./documentOcrEngine";
-import { 
-  ExtractedDocumentReview 
-} from "./documentOcrTypes";
+import { buildCustomerReview, buildVesselReview } from "./documentOcrEngine";
+import { ExtractedDocumentReview } from "./documentOcrTypes";
 import { validateUpload, MAX_ATTACHMENT_BYTES } from "@/lib/storage";
 
 export interface ProcessDocumentOptions {
@@ -21,7 +16,7 @@ export interface ProcessDocumentOptions {
  * Pipeline completo de processamento com upload seguro, OCR idempotente e preparação para conferência
  */
 export async function processDocumentForReview(
-  options: ProcessDocumentOptions
+  options: ProcessDocumentOptions,
 ): Promise<ExtractedDocumentReview> {
   const { file, companyId, userId, targetEntity, existingData, onProgress } = options;
 
@@ -39,12 +34,17 @@ export async function processDocumentForReview(
   // 2. Upload seguro para o bucket de documentos com isolamento por empresa
   onProgress?.("Enviando arquivo com armazenamento isolado por empresa...");
   const fileExt = file.name.split(".").pop()?.toLowerCase() || "pdf";
-  const mimeType = file.type || (
-    fileExt === "png" ? "image/png" :
-    fileExt === "jpg" || fileExt === "jpeg" ? "image/jpeg" :
-    fileExt === "webp" ? "image/webp" :
-    fileExt === "pdf" ? "application/pdf" : "application/octet-stream"
-  );
+  const mimeType =
+    file.type ||
+    (fileExt === "png"
+      ? "image/png"
+      : fileExt === "jpg" || fileExt === "jpeg"
+        ? "image/jpeg"
+        : fileExt === "webp"
+          ? "image/webp"
+          : fileExt === "pdf"
+            ? "application/pdf"
+            : "application/octet-stream");
   const randomId = crypto.randomUUID();
   const folder = targetEntity === "customer" ? "customer-docs" : "vessel-docs";
   let storagePath = `${companyId}/${folder}/${randomId}.${fileExt}`;
@@ -59,7 +59,10 @@ export async function processDocumentForReview(
     .upload(storagePath, file, { contentType: mimeType, upsert: false });
 
   if (uploadResult.error) {
-    console.warn(`[SmartDocumentService] Falha no bucket principal '${bucketUsed}':`, uploadResult.error.message);
+    console.warn(
+      `[SmartDocumentService] Falha no bucket principal '${bucketUsed}':`,
+      uploadResult.error.message,
+    );
     // Tentativa resiliente no bucket de fallback 'ocr-documents'
     const fallbackBucket = "ocr-documents";
     const fallbackPath = `${companyId}/${folder}/${randomId}.${fileExt}`;
@@ -72,9 +75,12 @@ export async function processDocumentForReview(
       storagePath = fallbackPath;
       uploadResult = fallbackUp;
     } else {
-      console.error("[SmartDocumentService] Falha de upload em ambos os buckets:", fallbackUp.error.message);
+      console.error(
+        "[SmartDocumentService] Falha de upload em ambos os buckets:",
+        fallbackUp.error.message,
+      );
       throw new Error(
-        `Falha ao salvar o arquivo para leitura (${uploadResult.error.message || fallbackUp.error.message}). Por favor, tente novamente ou prossiga com o cadastro manual.`
+        `Falha ao salvar o arquivo para leitura (${uploadResult.error.message || fallbackUp.error.message}). Por favor, tente novamente ou prossiga com o cadastro manual.`,
       );
     }
   }
@@ -114,14 +120,16 @@ export async function processDocumentForReview(
         path: storagePath,
         folder,
         target_entity: targetEntity,
-      }
+      },
     })
     .select()
     .single();
 
   if (fileInsertErr || !uploadedFileRecord) {
     console.error("[SmartDocumentService] Erro ao registrar uploaded_files:", fileInsertErr);
-    throw new Error(`Falha técnica ao registrar documento: ${fileInsertErr?.message || "Registro não criado"}`);
+    throw new Error(
+      `Falha técnica ao registrar documento: ${fileInsertErr?.message || "Registro não criado"}`,
+    );
   }
 
   const fileRecordId = uploadedFileRecord.id;
@@ -140,7 +148,9 @@ export async function processDocumentForReview(
 
   if (jobInsertErr || !ocrJob) {
     console.error("[SmartDocumentService] Erro ao criar ocr_jobs:", jobInsertErr);
-    throw new Error(`Falha técnica ao inicializar o processamento OCR: ${jobInsertErr?.message || "Job não criado"}`);
+    throw new Error(
+      `Falha técnica ao inicializar o processamento OCR: ${jobInsertErr?.message || "Job não criado"}`,
+    );
   }
 
   const ocrJobId = ocrJob.id;
@@ -151,20 +161,27 @@ export async function processDocumentForReview(
   let extractedFields: Record<string, any> = {};
 
   const invokeRes = await supabase.functions.invoke("process-ocr-document", {
-    body: { 
+    body: {
       jobId: ocrJobId,
-      targetEntity: targetEntity
+      targetEntity: targetEntity,
     },
   });
 
   if (invokeRes.error) {
     console.error("[SmartDocumentService] Edge function invoke error:", invokeRes.error);
-    throw new Error(`Falha técnica na execução da leitura OCR (${invokeRes.error.message || "Erro na Edge Function"}).`);
+    throw new Error(
+      `Falha técnica na execução da leitura OCR (${invokeRes.error.message || "Erro na Edge Function"}).`,
+    );
   }
 
   if (invokeRes.data?.error) {
-    console.error("[SmartDocumentService] Erro retornado pela Edge Function:", invokeRes.data.error);
-    throw new Error(invokeRes.data.error.message || invokeRes.data.error || "Falha técnica no motor de leitura.");
+    console.error(
+      "[SmartDocumentService] Erro retornado pela Edge Function:",
+      invokeRes.data.error,
+    );
+    throw new Error(
+      invokeRes.data.error.message || invokeRes.data.error || "Falha técnica no motor de leitura.",
+    );
   }
 
   if (invokeRes.data) {
@@ -175,6 +192,12 @@ export async function processDocumentForReview(
     }
   }
 
+  if (invokeRes.data?.fields_found === 0 && (!rawText || rawText.trim().length === 0)) {
+    throw new Error(
+      "O documento enviado não contém texto ou campos legíveis identificáveis pelo motor de leitura. Verifique a qualidade do arquivo ou preencha os dados manualmente."
+    );
+  }
+
   // Consulta de confirmação do job
   const { data: updatedJob } = await supabase
     .from("ocr_jobs")
@@ -183,7 +206,8 @@ export async function processDocumentForReview(
     .single();
 
   if (updatedJob?.status === "failed") {
-    const errorMsg = updatedJob.error_message || "O documento não pôde ser interpretado pelo motor de OCR.";
+    const errorMsg =
+      updatedJob.error_message || "O documento não pôde ser interpretado pelo motor de OCR.";
     throw new Error(`Falha no processamento do documento: ${errorMsg}`);
   }
 
