@@ -1,0 +1,68 @@
+[
+  {
+    "scenario": "Cadastro e Login sem intervenção externa",
+    "status": "Passou",
+    "evidence": "03_dashboard_inicial.png",
+    "notes": "Conta criada: empresa.teste.681412@navaldocs-test.local"
+  },
+  {
+    "scenario": "Cadastro manual de cliente PF",
+    "status": "Passou",
+    "evidence": "06_cliente_salvo.png",
+    "notes": "Cliente: Carlos Alberto Pereira Teste 681412, CPF: 44843180599"
+  },
+  {
+    "scenario": "Alerta de CPF duplicado",
+    "status": "Passou",
+    "evidence": "07_cpf_duplicado_alerta.png",
+    "notes": "Modal de resolução de duplicidade exibido com sucesso"
+  },
+  {
+    "scenario": "Cadastro de embarcação vinculada",
+    "status": "Passou",
+    "evidence": "09_embarcacao_salva.png",
+    "notes": "Embarcação: Marlim Azul 681412"
+  },
+  {
+    "scenario": "Busca global de cliente e embarcação",
+    "status": "Passou",
+    "evidence": "10_busca_cliente_resultado.png",
+    "notes": "Resultados verificados"
+  },
+  {
+    "scenario": "Cadastro de funcionário preparador",
+    "status": "Passou",
+    "evidence": "13_funcionario_salvo.png",
+    "notes": "Funcionário: Despachante Claudio Naval 681412"
+  },
+  {
+    "scenario": "Preservação dos vínculos entre serviços, revisão e geração",
+    "status": "Passou",
+    "evidence": "17_tela_gerar_documento.png",
+    "notes": "URL: http://localhost:8080/processes/d295b04d-dea0-472c-bf02-0fe8683747e2/gerar-documento"
+  },
+  {
+    "scenario": "Procuração Outorgado PF e persistência após F5",
+    "status": "Passou",
+    "evidence": "21_apos_f5_outorgado_preservado.png",
+    "notes": "Outorgado mantido após reload"
+  },
+  {
+    "scenario": "Seletor de embarcação no processo",
+    "status": "Passou",
+    "evidence": "22_embarcacao_selecionada_no_processo.png",
+    "notes": "Embarcação vinculada: Marlim Azul 681412"
+  },
+  {
+    "scenario": "Geração e Download de PDF real",
+    "status": "Passou",
+    "evidence": "documento_baixado_681412.pdf",
+    "notes": "Tamanho: 841154 bytes"
+  },
+  {
+    "scenario": "Isolamento Multi-empresa (RLS)",
+    "status": "Passou",
+    "evidence": "25_empresa2_clientes_vazio.png",
+    "notes": "Empresa 2 não tem acesso aos dados da Empresa 1"
+  }
+]

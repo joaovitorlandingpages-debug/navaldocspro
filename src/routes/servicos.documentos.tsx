@@ -75,6 +75,7 @@ function DocumentosDoServicoPage() {
   const search = Route.useSearch();
   const { profile, user } = useAuth();
   const currentCompany = profile?.companies;
+  const companyId = currentCompany?.id || profile?.company_id;
 
   const category = search.category || "esporte_recreio";
   const customerId = search.customerId;

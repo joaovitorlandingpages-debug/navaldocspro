@@ -1181,6 +1181,7 @@ function GerarDocumentoPage() {
           const docTitle = `${tpl.name} - ${vesselName}`;
           const fileName = `${tpl.code}_${vesselName.replace(/[^a-zA-Z0-9]/g, "_")}_${Date.now()}.pdf`;
           const storagePath = `${companyId}/${id}/${fileName}`;
+          const effectiveLength = (processData?.draft_data as any)?.vessel_length || vessel?.length || vessel?.length_overall || "Não informado";
 
           // 2. Construir texto oficial detalhado do documento conforme sua natureza e regras normativas
           let content = "";
@@ -1392,8 +1393,6 @@ function GerarDocumentoPage() {
                 signerName: `Assinatura do Requerente`,
                 signerRole: `CPF/CNPJ: ${customer?.cpf_cnpj || customer?.document || ""}`,
               };
-
-          const effectiveLength = (processData?.draft_data as any)?.vessel_length || vessel?.length || vessel?.length_overall || "Não informado";
 
           const isOfficial = tpl.slug === "req-padrao-cpes" || tpl.slug === "decl-residencia-naval" || tpl.nature === "official_form";
 
