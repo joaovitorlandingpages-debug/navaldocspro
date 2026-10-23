@@ -86,15 +86,15 @@ const CATALOG: Record<string, DocumentKnowledge> = {
     ],
     howItWorks:
       "Petição inicial do processo protocolada junto à Capitania dos Portos, Delegacia ou Agência (CP/DL/AG) acompanhada dos documentos pertinentes.",
-    whoSigns: "Proprietário ou procurador legalmente constituído.",
+    whoSigns: "Proprietário ou procurador legalmente constituído. Assinatura física ou eletrônica (gov.br / ICP-Brasil nos órgãos com atendimento eletrônico habilitado).",
     whenMandatory: "Em todo processo administrativo perante a autoridade marítima.",
     commonErrors: ["Serviço solicitado incorreto", "Capitania errada", "Falta de assinatura"],
     relatedDocs: ["Procuração", "BSADE", "Documentos da embarcação"],
     legalBase: {
-      norm: "NORMAM-211/DPC",
-      annex: "Anexo 2-E",
-      template: "Requerimento para Inscrição, Transferência ou Alteração (embarcações não sujeitas a registro no TM)",
-      version: "2024",
+      norm: "NORMAM-211/DPC (Portaria DPC/MB nº 115/2023 consolidada 2026)",
+      annex: "Anexo 2-C",
+      template: "Requerimento para Inscrição, Transferência ou Alteração de Embarcação",
+      version: "2026",
     },
     averageTime: "3 minutos",
   },
@@ -123,7 +123,7 @@ const CATALOG: Record<string, DocumentKnowledge> = {
       "Categoria de navegação",
     ],
     howItWorks:
-      "Formulário técnico exigido em processos de inscrição, alteração e transferência de embarcações de esporte e recreio não registradas no Tribunal Marítimo.",
+      "Formulário técnico preenchido em 2 vias exigido em processos de inscrição, alteração e transferência de embarcações de esporte e recreio.",
     whoSigns: "Proprietário / Requerente ou Engenheiro Naval responsável (quando houver alteração técnica estrutural/motor).",
     whenMandatory: "Inscrição inicial, transferência de propriedade e alteração de características.",
     commonErrors: [
@@ -133,10 +133,10 @@ const CATALOG: Record<string, DocumentKnowledge> = {
     ],
     relatedDocs: ["TIE", "Nota fiscal do motor", "Requerimento"],
     legalBase: {
-      norm: "NORMAM-211/DPC",
-      annex: "Anexo 2-D",
+      norm: "NORMAM-211/DPC (Portaria DPC/MB nº 115/2023 consolidada 2026)",
+      annex: "Anexo 2-B",
       template: "BSADE oficial DPC (Esporte e Recreio)",
-      version: "2024",
+      version: "2026",
     },
     averageTime: "5 minutos",
   },
@@ -150,8 +150,8 @@ const CATALOG: Record<string, DocumentKnowledge> = {
       "Data de emissão",
     ],
     howItWorks:
-      "Documento substitutivo do comprovante de residência formal, aceito pela Capitania conforme Anexo 2-I da NORMAM-211/DPC.",
-    whoSigns: "Próprio declarante (adquirente ou proprietário). Assinatura presencial com firma ou eletrônica gov.br (nível prata/ouro).",
+      "Documento substitutivo do comprovante de residência formal, aceito pela Capitania conforme Anexo 2-G da NORMAM-211/DPC.",
+    whoSigns: "Próprio declarante (adquirente ou proprietário). Assinatura presencial com firma reconhecida quando exigido pela Capitania regional ou digital ICP-Brasil/gov.br quando aceita pelo órgão.",
     whenMandatory:
       "Somente quando o requerente não possuir comprovante de residência tradicional em seu próprio nome expedido nos últimos 120 dias.",
     whenWaived: "Se o proprietário/adquirente já possuir conta de consumo recente (até 120 dias) em seu nome.",
@@ -162,9 +162,9 @@ const CATALOG: Record<string, DocumentKnowledge> = {
     relatedDocs: ["Cópia do RG/CPF"],
     legalBase: {
       norm: "NORMAM-211/DPC c/c Lei 7.115/1983",
-      annex: "Anexo 2-I",
+      annex: "Anexo 2-G",
       template: "Declaração de Residência DPC",
-      version: "2024",
+      version: "2026",
     },
     averageTime: "2 minutos",
   },
@@ -179,7 +179,7 @@ const CATALOG: Record<string, DocumentKnowledge> = {
     howItWorks:
       "Conta de água, luz, gás, telefone fixo/celular ou contrato de locação vigente em que figure como locatário (NORMAM-211/DPC item 0212).",
     whenMandatory: "Sempre que exigida qualificação e domicílio do proprietário perante a Capitania.",
-    whenWaived: "Substituível pela Declaração de Residência (NORMAM-211 Anexo 2-I) quando não houver comprovante em nome próprio.",
+    whenWaived: "Substituível pela Declaração de Residência (NORMAM-211 Anexo 2-G) quando não houver comprovante em nome próprio.",
     commonErrors: ["Documento em nome de terceiro sem comprovação de parentesco", "Comprovante vencido há mais de 120 dias"],
     relatedDocs: ["Declaração de residência"],
     legalBase: { norm: "NORMAM-211/DPC, Cap. 2" },
