@@ -36,12 +36,12 @@ export const SERVICES: ServiceDef[] = [
     vesselDocs: [
       "TIE/TIEM original com validade vencida ou a vencer em até 30 dias (ou cópia simples se TIE digital)",
       "Boletim Simplificado de Atualização de Dados em 2 vias (BSADE - NORMAM-211 Anexo 2-B)",
+      "Comprovante de recolhimento da taxa GRU DPC emitida no canal oficial da Marinha",
     ],
     generatedDocs: [
       "Requerimento de Serviços à Capitania dos Portos (NORMAM-211/DPC Anexo 2-C)",
       "BSADE (NORMAM-211/DPC Anexo 2-B)",
       "Procuração Náutica específica",
-      "Guia de Recolhimento da União (GRU DPC)",
     ],
   },
   {
@@ -60,13 +60,13 @@ export const SERVICES: ServiceDef[] = [
       "Título de Inscrição da Embarcação (TIE/TIEM) original (se físico antigo) ou cópia com QR Code (se TIE digital)",
       "Autorização para Transferência de Propriedade (ATP / DUT Náutico - NORMAM-211 Anexo 2-K) com reconhecimento de firma por autenticidade em cartório de ambas as partes (prazo: 60 dias da data de reconhecimento)",
       "Boletim Simplificado de Atualização de Dados (BSADE - NORMAM-211 Anexo 2-B) preenchido em 2 vias",
+      "Comprovante de pagamento da GRU DPC correspondente à transferência emitida no canal oficial da Marinha",
     ],
     generatedDocs: [
       "Requerimento padrão à Capitania dos Portos (NORMAM-211/DPC Anexo 2-C)",
       "BSADE (NORMAM-211/DPC Anexo 2-B)",
       "Procuração Náutica específica",
       "Declaração de Residência do comprador (NORMAM-211 Anexo 2-G c/c Lei 7.115/1983)",
-      "Guia de Recolhimento da União (GRU DPC)",
     ],
   },
   {
@@ -87,13 +87,13 @@ export const SERVICES: ServiceDef[] = [
       "Declaração de Conformidade do Construtor / Memorial Descritivo com ART de Engenheiro Naval quando exigido pela norma",
       "Fotografias da embarcação (costado e popa com nome e porto de inscrição visíveis)",
       "BSADE preenchido em 2 vias (NORMAM-211 Anexo 2-B)",
+      "Comprovante de pagamento da taxa GRU DPC de inscrição inicial emitida no canal oficial da Marinha",
     ],
     generatedDocs: [
       "Requerimento de Serviços à Capitania dos Portos (NORMAM-211/DPC Anexo 2-C)",
       "BSADE (NORMAM-211/DPC Anexo 2-B)",
       "Termo de Responsabilidade e Guarda da Embarcação",
       "Procuração Náutica específica",
-      "Guia de Recolhimento da União (GRU DPC)",
     ],
   },
   {
@@ -113,12 +113,12 @@ export const SERVICES: ServiceDef[] = [
       "Termo de baixa/desinstalação do motor anterior",
       "BSADE retificado em 2 vias (NORMAM-211 Anexo 2-B)",
       "Laudo de Engenheiro Naval com ART (conforme exigência técnica aplicável ao caso)",
+      "Comprovante de pagamento da taxa GRU DPC emitida no canal oficial da Marinha",
     ],
     generatedDocs: [
       "Requerimento de Serviços para Alteração (NORMAM-211 Anexo 2-C)",
       "BSADE (NORMAM-211 Anexo 2-B)",
       "Procuração Náutica específica",
-      "Guia de Recolhimento da União (GRU DPC)",
     ],
   },
   {
@@ -137,12 +137,12 @@ export const SERVICES: ServiceDef[] = [
       "Memorial descritivo das alterações técnicas e plano de estabilidade",
       "ART quitada de Engenheiro Naval responsável",
       "BSADE preenchido com as novas dimensões (NORMAM-211 Anexo 2-B)",
+      "Comprovante de pagamento da taxa GRU DPC emitida no canal oficial da Marinha",
     ],
     generatedDocs: [
       "Requerimento de Serviços para Alteração (NORMAM-211 Anexo 2-C)",
       "BSADE (NORMAM-211 Anexo 2-B)",
       "Procuração Náutica específica",
-      "Guia de Recolhimento da União (GRU DPC)",
     ],
   },
   {
@@ -161,13 +161,13 @@ export const SERVICES: ServiceDef[] = [
       "Declaração de Perda / Extravio assinada (NORMAM-211/DPC Anexo 2-H, dispensado BO)",
       "Boletim de Ocorrência policial (BO) exclusivamente em caso comprovado de roubo ou furto",
       "BSADE em 2 vias (NORMAM-211 Anexo 2-B) e fotos da embarcação",
+      "Comprovante de recolhimento da taxa GRU DPC de 2ª via emitida no canal oficial da Marinha",
     ],
     generatedDocs: [
       "Requerimento de Segunda Via de Documento Náutico (NORMAM-211 Anexo 2-C)",
       "Declaração de Perda / Extravio de TIE/TIEM (NORMAM-211 Anexo 2-H)",
       "BSADE (NORMAM-211 Anexo 2-B)",
       "Procuração Náutica específica",
-      "Guia de Recolhimento da União (GRU DPC)",
     ],
   },
   {
@@ -186,6 +186,7 @@ export const SERVICES: ServiceDef[] = [
       "Documentos comprobatórios da posse/propriedade da embarcação",
       "BSADE preenchido em 2 vias (NORMAM-211 Anexo 2-B)",
       "Fotografias da embarcação e motor",
+      "Comprovante de pagamento de taxa GRU DPC correspondente emitida no canal oficial da Marinha",
     ],
     generatedDocs: [
       "Requerimento padrão à Capitania dos Portos (NORMAM-211/DPC Anexo 2-C)",
@@ -193,7 +194,6 @@ export const SERVICES: ServiceDef[] = [
       "Termo de Responsabilidade e Guarda da Embarcação",
       "Declaração de Residência (NORMAM-211 Anexo 2-G c/c Lei 7.115/1983)",
       "Procuração Náutica específica",
-      "Guia de Recolhimento da União (GRU DPC)",
     ],
   },
 ];
