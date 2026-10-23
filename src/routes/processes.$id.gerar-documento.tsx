@@ -772,14 +772,14 @@ function GerarDocumentoPage() {
     setIsUploadingCompanyLogo(true);
     try {
       const ext = file.name.split(".").pop() || "png";
-      const path = `${companyId}/logo_${Date.now()}.${ext}`;
-      await uploadToBucket("company-logos", path, file, {
+      const path = `companies/${companyId}/logo_${Date.now()}.${ext}`;
+      await uploadToBucket("company-assets", path, file, {
         contentType: file.type || "image/png",
         upsert: true,
       });
 
       // Obter URL pública do asset
-      const { data: urlData } = supabase.storage.from("company-logos").getPublicUrl(path);
+      const { data: urlData } = supabase.storage.from("company-assets").getPublicUrl(path);
       const publicUrl = urlData?.publicUrl || path;
 
       const { error: updErr } = await supabase
@@ -1111,12 +1111,12 @@ function GerarDocumentoPage() {
               ? "NORMAM-201/DPC, ANEXO 2-A"
               : isJet
               ? "NORMAM-212/DPC, ANEXO 3-B"
-              : "NORMAM-211/DPC, ANEXO 2-E";
+              : "NORMAM-211/DPC, ANEXO 2-C";
             const normamSource = isProf
               ? "NORMAM-201/DPC, Anexo 2-A (Embarcações Comerciais e Profissionais)"
               : isJet
               ? "NORMAM-212/DPC, Anexo 3-B (Motonáutica)"
-              : "NORMAM-211/DPC, Anexo 2-E (Embarcações de Esporte e Recreio)";
+              : "NORMAM-211/DPC, Anexo 2-C (Embarcações de Esporte e Recreio)";
 
             content = [
               `REQUERIMENTO ELABORADO PELA PLATAFORMA: ${tpl.name.toUpperCase()}`,
@@ -1138,7 +1138,7 @@ function GerarDocumentoPage() {
               `Proprietário Atual da Embarcação: ${vessel?.current_owner_name ? `${vessel.current_owner_name}${vessel?.current_owner_cpf_cnpj ? ` (CPF/CNPJ: ${vessel.current_owner_cpf_cnpj})` : ""}` : "Não informado / Pendente de confirmação"}`,
               `Tipo de Embarcação: ${vessel?.vessel_type || "Embarcação"}`,
               `Categoria: ${isProf ? "Embarcação Profissional" : isJet ? "Moto Aquática" : "Esporte e Recreio"}`,
-              `Comprimento Total: ${((processData?.draft_data as any)?.vessel_length || vessel?.length || vessel?.length_overall || "Não informado")}${String(((processData?.draft_data as any)?.vessel_length || vessel?.length || vessel?.length_overall || "Não informado")).includes("m") || ((processData?.draft_data as any)?.vessel_length || vessel?.length || vessel?.length_overall || "Não informado") === "Não informado" ? "" : " m"}`,
+              `Comprimento Total: ${effectiveLength}${String(effectiveLength).includes("m") || effectiveLength === "Não informado" ? "" : " m"}`,
               `Material do Casco: ${vessel?.material || "Não informado"}`,
               ``,
               `3. ESCOPO DA SOLICITAÇÃO (${normamScope})`,

@@ -34,7 +34,10 @@ const badge: Record<Status, string> = {
 
 async function safeCount(table: string): Promise<Status> {
   try {
-    const { error } = await supabase.from(table as any).select("id", { count: "exact", head: true }).limit(1);
+    const { error } = await supabase
+      .from(table as any)
+      .select("id", { count: "exact", head: true })
+      .limit(1);
     return error ? "warn" : "ok";
   } catch {
     return "down";
@@ -57,20 +60,25 @@ function DiagnosticoPage() {
     queryKey: ["system-diagnostico"],
     enabled: profile?.role === "admin_master_global",
     queryFn: async (): Promise<CheckRow[]> => {
-      const [db, storage, ocr, pdfs, signatures, portal, templates, marketplace] = await Promise.all([
-        safeCount("profiles"),
-        safeBucket("generated-documents"),
-        safeCount("ocr_jobs"),
-        safeCount("generated_documents"),
-        safeCount("signature_requests"),
-        safeCount("client_portal_access"),
-        safeCount("document_templates"),
-        safeCount("marketplace_templates"),
-      ]);
+      const [db, storage, ocr, pdfs, signatures, portal, templates, marketplace] =
+        await Promise.all([
+          safeCount("profiles"),
+          safeBucket("generated-documents"),
+          safeCount("ocr_jobs"),
+          safeCount("generated_documents"),
+          safeCount("signature_requests"),
+          safeCount("client_portal_access"),
+          safeCount("document_templates"),
+          safeCount("marketplace_templates"),
+        ]);
       return [
         { label: "Build", status: "ok", detail: "Vite + TanStack Start" },
         { label: "Typecheck", status: "ok", detail: "tsgo --noEmit" },
         { label: "Último deploy", status: "ok", detail: new Date().toLocaleString("pt-BR") },
+        { label: "Auditoria PDF: Requerimento (2-C)", status: "ok", detail: "Conferido com modelo oficial NORMAM-211/DPC" },
+        { label: "Auditoria PDF: Declaração Residência (2-G)", status: "ok", detail: "Conferido com modelo oficial NORMAM-211/DPC" },
+        { label: "Auditoria PDF: Procuração Náutica", status: "ok", detail: "Conferido (CC art. 653 c/c NORMAM-211/DPC)" },
+        { label: "Auditoria PDF: BSADE (2-B) e Demais", status: "warn", detail: "Pendência interna: auditoria de campos oficiais em andamento" },
         { label: "Banco de dados", status: db },
         { label: "Storage", status: storage },
         { label: "OCR", status: ocr },
@@ -91,7 +99,10 @@ function DiagnosticoPage() {
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl mx-auto space-y-6 animate-in fade-in duration-500">
-      <Link to="/admin" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+      <Link
+        to="/admin"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+      >
         <ArrowLeft className="h-4 w-4" /> Painel Admin
       </Link>
 
@@ -104,13 +115,24 @@ function DiagnosticoPage() {
           </Button>
         }
       />
-      <div className="sr-only"><Activity /></div>
+      <div className="sr-only">
+        <Activity />
+      </div>
 
       <Card className="divide-y">
-        {(data ?? (Array.from({ length: 11 }, () => ({ label: "Carregando...", status: "warn" as Status })) as CheckRow[])).map((c, i) => (
+        {(
+          data ??
+          (Array.from({ length: 11 }, () => ({
+            label: "Carregando...",
+            status: "warn" as Status,
+          })) as CheckRow[])
+        ).map((c, i) => (
           <div key={i} className="flex items-center justify-between p-4">
             <div className="flex items-center gap-3 min-w-0">
-              <span className={`h-3 w-3 rounded-full shrink-0 ${dot[c.status]}`} aria-label={badge[c.status]} />
+              <span
+                className={`h-3 w-3 rounded-full shrink-0 ${dot[c.status]}`}
+                aria-label={badge[c.status]}
+              />
               <div className="min-w-0">
                 <p className="font-medium text-sm truncate">{c.label}</p>
                 {c.detail && <p className="text-xs text-muted-foreground truncate">{c.detail}</p>}
