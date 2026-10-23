@@ -248,12 +248,16 @@ function RevisarProcessoPage() {
       return;
     }
 
-    let effectiveCustomerId = customerId || customer?.id;
+    const isValidUuid = (val?: string | null) =>
+      typeof val === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(val);
+
+    let effectiveCustomerId = isValidUuid(customerId) ? customerId : isValidUuid(customer?.id) ? customer?.id : null;
     if (!effectiveCustomerId) {
       const { data: firstCust } = await supabase
         .from("customers")
         .select("id")
         .eq("company_id", effectiveCompanyId)
+        .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       effectiveCustomerId = firstCust?.id;
@@ -336,12 +340,13 @@ function RevisarProcessoPage() {
       return;
     }
 
-    let effectiveCustomerId = customerId || customer?.id;
+    let effectiveCustomerId = isValidUuid(customerId) ? customerId : isValidUuid(customer?.id) ? customer?.id : null;
     if (!effectiveCustomerId) {
       const { data: firstCust } = await supabase
         .from("customers")
         .select("id")
         .eq("company_id", effectiveCompanyId)
+        .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       effectiveCustomerId = firstCust?.id;
@@ -364,12 +369,14 @@ function RevisarProcessoPage() {
       const vesselName = vessel?.name || "Embarcação";
       const processTitle = `${serviceSummary} - ${vesselName} (${customerName})`;
 
+      const validVesselId = isValidUuid(vessel?.id) ? vessel.id : isValidUuid(vesselId) ? vesselId : null;
+
       const { data: newProcess, error: procError } = await supabase
         .from("processes")
         .insert({
           company_id: effectiveCompanyId,
           customer_id: effectiveCustomerId,
-          vessel_id: vessel?.id || vesselId || null,
+          vessel_id: validVesselId,
           title: processTitle,
           process_type: parsedServices[0]?.key || "renovacao_inscricao",
           status: allServicesValidated ? "in_progress" : "draft",
