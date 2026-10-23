@@ -1080,39 +1080,35 @@ function GerarDocumentoPage() {
               .filter(Boolean)
               .join("\n");
           } else if (tpl.slug === "decl-residencia-naval") {
+            const customerCity = customer?.city || "Santos";
+            const customerUf = customer?.state || "SP";
+            const fullAddress = customer?.address
+              ? `${customer.address}, ${customerCity} - ${customerUf}`
+              : "Não informado";
+
             content = [
-              `MARINHA DO BRASIL - DIRETORIA DE PORTOS E COSTAS`,
-              `NORMAM-211/DPC - ANEXO 2-G`,
+              `NORMAM-211/DPC`,
+              `ANEXO 2-G`,
               `DECLARAÇÃO DE RESIDÊNCIA`,
               ``,
-              `ILMO. SR. CAPITÃO DOS PORTOS / DELEGADO / AGENTE`,
+              `Sr. Capitão dos Portos/Delegado/Agente`,
               ``,
-              `1. IDENTIFICAÇÃO DO DECLARANTE`,
-              `Nome Completo: ${customerName}`,
-              `CPF / CNPJ: ${customer?.cpf_cnpj || customer?.document || "Não informado"}`,
-              `Documento de Identidade (RG): ${customer?.rg || "Não informado"}`,
-              `Nacionalidade: Brasileira`,
-              `Naturalidade: ${(customer as any)?.birthplace || "Não informada"}`,
-              `Telefone / Celular: ${customer?.phone || "Não informado"}`,
-              `E-mail: ${customer?.email || "Não informado"}`,
+              `Eu, ${customerName}, CPF ${customer?.cpf_cnpj || customer?.document || "Não informado"}, nacionalidade Brasileira, naturalidade ${(customer as any)?.birthplace || "Brasileira"}, Telefone (DDD e nº) ${customer?.phone || "Não informado"}, celular ${customer?.phone || "Não informado"}, e-mail ${customer?.email || "Não informado"}.`,
               ``,
-              `2. DECLARAÇÃO DE DOMICÍLIO (LEI Nº 7.115/1983)`,
-              `Na falta de documento hábil para comprovação de residência, em conformidade com o disposto na Lei nº 7.115, de 29 de agosto de 1983, DECLARO para os devidos fins de direito, em especial para instrução de processo náutico perante a Autoridade Marítima referente à embarcação "${vesselName}" (Inscrição: ${vessel?.registration_number || "Em regularização"}), sob as penas da Lei, ser residente e domiciliado no seguinte endereço:`,
+              `Na falta de documentos para comprovação de residência, em conformidade com o disposto na Lei nº 7.115, de 29 de agosto de 1983, DECLARO para os devidos fins, sob as penas da Lei, ser residente e domiciliado no endereço:`,
+              `${fullAddress}`,
               ``,
-              `Endereço Completo Declarado: ${customer?.address || "Não informado"}, ${customer?.city || ""}/${customer?.state || ""}`,
+              `Declaro ainda, estar ciente de que a falsidade da presente declaração pode implicar na sanção penal prevista no Art. 299 do Código Penal, conforme transcrição abaixo:`,
               ``,
-              `3. ALERTA LEGAL OBRIGATÓRIO (ART. 299 DO CÓDIGO PENAL)`,
-              `Declaro, outrossim, estar ciente de que a falsidade da presente declaração configurará crime de falsidade ideológica, sujeitando-me às penalidades previstas no Artigo 299 do Código Penal Brasileiro:`,
-              `"Art. 299 - Omitir, em documento público ou particular, declaração que dele devia constar, ou nele inserir ou fazer inserir declaração falsa ou diversa da que devia ser escrita, com o fim de prejudicar direito, criar obrigação ou alterar a verdade sobre fato juridicamente relevante: Pena - reclusão, de 1 (um) a 5 (cinco) anos, e multa, se o documento é público, e reclusão de 1 (um) a 3 (três) anos, e multa, se o documento é particular."`,
+              `"Art. 299 - Omitir, em documento público ou particular, declaração que nele deveria constar, ou nele inserir ou fazer inserir Declaração falsa ou diversa da que deveria ser escrita, com o fim de prejudicar direito, criar obrigação ou alterar a verdade sobre o fato juridicamente relevante."`,
+              `"Pena: reclusão de 1 (um) a 5 (cinco) anos e multa, se o documento é público e reclusão de 1 (um) a 3 (três) anos, se o documento é particular."`,
               ``,
-              `Por ser a expressão da verdade, firmo a presente declaração sob minha inteira responsabilidade civil e criminal.`,
-              ``,
-              `Local e Data: ${customer?.city || "Local"}, ${new Date().toLocaleDateString("pt-BR")}`,
+              `${customerCity}/${customerUf}, ${new Date().toLocaleDateString("pt-BR")}`,
             ]
               .filter(Boolean)
               .join("\n");
           } else {
-            // Requerimento Padrão do Interessado - Alinhado estritamente à NORMAM-211/DPC Anexo 2-C
+            // Requerimento Padrão do Interessado - Alinhado estritamente à NORMAM-211/DPC Anexo 2-C (páginas 186-187)
             const isProf = vesselCategory === "profissional" || tpl.code === "REQ-PROF";
             const isJet = vesselCategory === "moto_aquatica" || tpl.code === "REQ-JET";
             const anexoLabel = isProf
@@ -1121,46 +1117,62 @@ function GerarDocumentoPage() {
               ? "NORMAM-212/DPC - ANEXO 3-B"
               : "NORMAM-211/DPC - ANEXO 2-C";
 
-            const selectedServicesStr =
-              translateServices((processData?.draft_data as any)?.services) ||
-              processData?.process_type ||
-              "Inscrição / Transferência / Regularização de Embarcação";
+            const customerCity = customer?.city || "Santos";
+            const customerUf = customer?.state || "SP";
+            const fullAddress = customer?.address || "Não informado";
+
+            // Detecção de serviço assinalado no formulário oficial
+            const servicesRaw = (processData?.draft_data as any)?.services || [];
+            const procType = (processData?.process_type || "").toLowerCase();
+
+            const isTransf = procType.includes("transfer") || servicesRaw.includes("transferencia_propriedade");
+            const isInscr = procType.includes("inscri") || procType.includes("registro") || servicesRaw.includes("registro_embarcacao");
+            const isRenov = procType.includes("renov") || servicesRaw.includes("renovacao_tie");
+            const isSegVia = procType.includes("segunda") || procType.includes("2") || servicesRaw.includes("segunda_via_tie");
+            const isMotor = procType.includes("motor") || servicesRaw.includes("troca_motor");
+            const isAltCad = procType.includes("altera") || servicesRaw.includes("alteracao_dados");
 
             content = [
-              `MARINHA DO BRASIL - DIRETORIA DE PORTOS E COSTAS`,
-              `${anexoLabel}`,
-              `REQUERIMENTO DE SERVIÇOS PARA EMBARCAÇÕES`,
+              `NORMAM-211/DPC`,
+              `ANEXO 2-C`,
+              `REQUERIMENTO DE SERVIÇOS PARA REGULARIZAÇÃO DE EMBARCAÇÕES`,
               ``,
-              `ILMO. SR. CAPITÃO DOS PORTOS / DELEGADO / AGENTE`,
+              `SR. CAPITÃO DOS PORTOS (DELEGADO) OU (AGENTE)`,
               ``,
-              `1. IDENTIFICAÇÃO DO REQUERENTE / INTERESSADO`,
-              `Nome Completo / Razão Social: ${customerName}`,
-              `CPF / CNPJ: ${customer?.cpf_cnpj || customer?.document || "Não informado"}`,
-              `Documento de Identidade (RG): ${customer?.rg || "Não informado"}`,
-              `Endereço Completo: ${customer?.address || "Não informado"}, ${customer?.city || ""}/${customer?.state || ""}`,
-              `Telefone de Contato: ${customer?.phone || "Não informado"}`,
-              `E-mail: ${customer?.email || "Não informado"}`,
+              `REQUERENTE: ${customerName}`,
+              `ENDEREÇO: ${fullAddress}`,
+              `CIDADE: ${customerCity}    UF: ${customerUf}    CEP: ${(customer as any)?.postal_code || "Não informado"}`,
+              `IDENT. Nº: ${customer?.rg || "Não informado"}    ORG EXP: ${(customer as any)?.rg_issuer || "SSP"}    CPF/CNPJ: ${customer?.cpf_cnpj || customer?.document || "Não informado"}`,
+              `TEL: ${customer?.phone || "Não informado"}    E-mail: ${customer?.email || "Não informado"}`,
+              `OBS: Processo instruído via NavalDocs Pro sob o código ${processCode}`,
               ``,
-              `2. DADOS CADASTRAIS DA EMBARCAÇÃO`,
-              `Nome da Embarcação: ${vesselName}`,
-              `Número de Inscrição: ${vessel?.registration_number || "Em regularização"}`,
-              `Proprietário da Embarcação: ${vessel?.current_owner_name ? `${vessel.current_owner_name}${vessel?.current_owner_cpf_cnpj ? ` (CPF/CNPJ: ${vessel.current_owner_cpf_cnpj})` : ""}` : customerName}`,
-              `Tipo de Embarcação: ${vessel?.vessel_type || "Lancha / Embarcação de Esporte e Recreio"}`,
-              `Classificação da Embarcação: ${isProf ? "Embarcação Comercial / Passageiros" : isJet ? "Moto Aquática" : "Esporte e/ou Recreio"}`,
-              `Área de Navegação: ${(vessel as any)?.navigation_area || "Interior / Mar Aberto"}`,
-              `Comprimento Total (LOA): ${effectiveLength}${String(effectiveLength).includes("m") || effectiveLength === "Não informado" ? "" : " m"}`,
-              `Número do Casco / Chassi (HIN): ${(vessel as any)?.hull_number || (vessel as any)?.chassis_number || "Conforme documentação anexa"}`,
-              `Material do Casco: ${vessel?.material || "Fibra de Vidro"}`,
+              `EMBARCAÇÃO: ${vesselName}    INSCRIÇÃO Nº: ${vessel?.registration_number || "Em regularização"}`,
+              `Comprimento: ${effectiveLength}${String(effectiveLength).includes("m") || effectiveLength === "Não informado" ? "" : " m"}    Nº DO CASCO: ${(vessel as any)?.hull_number || (vessel as any)?.chassis_number || "Conforme documentação anexa"}    CLASSIFICAÇÃO: ${isProf ? "Comercial" : isJet ? "Moto Aquática" : "Esporte e/ou Recreio"}`,
+              `Área de Navegação: [X] Interior   [ ] Costeira   [ ] Oceânica`,
               ``,
-              `3. ESPECIFICAÇÃO DO SERVIÇO SOLICITADO`,
-              `Serviço(s) Requerido(s): [X] ${selectedServicesStr}`,
+              `VEM REQUERER A V.Sa. os seguintes serviços:`,
+              `[${isInscr ? "X" : " "}] Inscrição`,
+              `[ ] Cancelamento de Inscrição da Embarcação`,
+              `[ ] Licença de Construção`,
+              `[ ] Licença de Alteração`,
+              `[ ] Licença de Reclassificação`,
+              `[${isTransf ? "X" : " "}] Transferência de Propriedade`,
+              `[ ] Transferência de Jurisdição`,
+              `[ ] Transferência de Propriedade e Jurisdição`,
+              `[ ] Mudança de Nome da Embarcação`,
+              `[${isRenov ? "X" : " "}] Renovação de TIE`,
+              `[${isAltCad ? "X" : " "}] Alteração de dados cadastrais da embarcação`,
+              `[ ] Alteração dados cadastrais do Proprietário`,
+              `[${isMotor ? "X" : " "}] Troca do Motor Propulsor`,
+              `[ ] Certidão Relativa a Situação da Embarcação`,
+              `[ ] Registro de Ônus e Averbações relativos a embarcação`,
+              `[ ] Cancelamento do Registro de Ônus e Averbações relativo a embarcação`,
+              `[ ] Vistoria de Arqueação`,
+              `[ ] Vistoria de Rearqueação`,
+              `[ ] Vistoria para alterar a classificação da embarcação`,
+              `[${isSegVia ? "X" : " "}] Outros serviços: ${isSegVia ? "Segunda Via de Documento Náutico (TIE/TIEM)" : "Regularização processual perante a Capitania dos Portos"}`,
               ``,
-              `4. TERMO DECLARATÓRIO DE COMPROMISSO`,
-              `Vem respeitosamente requerer a V. Sa. a concessão do serviço acima discriminado, declarando, sob as penas da lei e em conformidade com a Lei nº 9.537/1997 (LESTA) e com as Normas da Autoridade Marítima, a inteira exatidão e veracidade dos dados e documentos apresentados, assumindo total responsabilidade pelas declarações prestadas.`,
-              ``,
-              `Nestes termos, pede deferimento.`,
-              ``,
-              `Local e Data: ${customer?.city || "Local"}, ${new Date().toLocaleDateString("pt-BR")}`,
+              `Local e Data: ${customerCity}/${customerUf}, ${new Date().toLocaleDateString("pt-BR")}`,
             ]
               .filter(Boolean)
               .join("\n");
@@ -1174,11 +1186,11 @@ function GerarDocumentoPage() {
               }
             : tpl.slug === "decl-residencia-naval"
             ? {
-                signerName: `${customerName}\n(Declarante)`,
-                signerRole: `CPF/CNPJ: ${customer?.cpf_cnpj || customer?.document || ""}`,
+                signerName: `Assinatura do Requerente`,
+                signerRole: `(${customerName} - CPF: ${customer?.cpf_cnpj || customer?.document || ""})`,
               }
             : {
-                signerName: `${customerName}\n(Requerente / Interessado)`,
+                signerName: `Assinatura do Requerente`,
                 signerRole: `CPF/CNPJ: ${customer?.cpf_cnpj || customer?.document || ""}`,
               };
 

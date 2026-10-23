@@ -627,6 +627,9 @@ export async function buildBrandedDocumentPdf(opts: {
         color: primary,
       });
       y -= 18;
+    } else if (opts.isOfficialForm) {
+      // Formulário Oficial: o corpo do texto já inicia com os títulos e identificações oficiais
+      // (ex: NORMAM-211/DPC ANEXO 2-C / 2-G), portanto omitimos caixas corporativas ou linhas decorativas.
     } else {
       // classico
       drawWrappedTitle(15, CONTENT_W, ink);
