@@ -495,14 +495,18 @@ function GerarDocumentoPage() {
     >
   >({});
 
-  // Inicializa seleções padrão com base nos modelos aplicáveis
+  // Inicializa seleções padrão com base nos modelos aplicáveis (sem sobrescrever draft_data)
   useEffect(() => {
     if (filteredTemplates.length > 0) {
       setDocSelections((prev) => {
         const next = { ...prev };
+        // Se houver draft_data no processo carregado, preserva suas seleções
+        const savedDraftSelections = (processData?.draft_data as any)?.doc_selections || {};
         filteredTemplates.forEach((tpl) => {
           if (!next[tpl.id]) {
-            if (tpl.status === "em_revisao" || tpl.isConditional) {
+            if (savedDraftSelections[tpl.id]) {
+              next[tpl.id] = savedDraftSelections[tpl.id];
+            } else if (tpl.status === "em_revisao" || tpl.isConditional) {
               next[tpl.id] = { mode: "omit" };
             } else {
               next[tpl.id] = { mode: "generate" };
@@ -512,7 +516,7 @@ function GerarDocumentoPage() {
         return next;
       });
     }
-  }, [filteredTemplates]);
+  }, [filteredTemplates, processData]);
 
   // Atualizar e persistir escolha do documento no draft_data imediatamente
   const updateDocSelection = async (
@@ -2243,7 +2247,7 @@ function GerarDocumentoPage() {
                 const isDetailsExpanded = !!expandedDetails[tpl.id];
 
                 return (
-                  <div key={tpl.id} className="py-4 space-y-3">
+                  <div key={tpl.id} data-template-slug={tpl.slug} className="py-4 space-y-3">
                     {/* Linha Compacta Principal */}
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                       {/* Lado Esquerdo: Nome claro, finalidade e situação */}
@@ -2704,7 +2708,7 @@ function GerarDocumentoPage() {
                 const isExpanded = !!expandedPreviousVersions[groupKey];
 
                 return (
-                  <div key={groupKey} className="py-4 space-y-2.5">
+                  <div key={groupKey} data-doc-group={groupKey} data-doc-name={latestDoc.name} className="py-4 space-y-2.5">
                     {/* Versão Mais Recente */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="flex items-start gap-3 min-w-0">
