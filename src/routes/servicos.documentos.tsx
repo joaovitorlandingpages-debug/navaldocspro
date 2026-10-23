@@ -168,28 +168,32 @@ function DocumentosDoServicoPage() {
           setAvailableCustomerVessels(customerVesselsList);
         }
 
-        // Resolução da embarcação: se passou vesselId específico, busca diretamente
+        // Resolução da embarcação: se passou vesselId específico, busca e valida que pertence ao cliente e empresa
         let resolvedVessel: any = null;
         if (vesselId) {
-          const { data: vesData, error: vesErr } = await supabase
+          let vesQuery = supabase
             .from("vessels")
             .select("*")
             .eq("id", vesselId)
-            .maybeSingle();
+            .eq("company_id", companyId);
+
+          if (customerId) {
+            vesQuery = vesQuery.eq("customer_id", customerId);
+          }
+
+          const { data: vesData, error: vesErr } = await vesQuery.maybeSingle();
 
           if (vesErr) {
             console.error("Erro ao carregar embarcação por ID:", vesErr);
             setVesselLoadingError("Erro ao carregar dados da embarcação selecionada.");
           } else if (vesData) {
             resolvedVessel = vesData;
+          } else {
+            console.warn("Embarcação não pertence ao cliente ou empresa informados.");
           }
         }
 
-        // Se não veio vesselId ou não encontrou por ID, mas o cliente tem embarcação cadastrada, usa a primeira como padrão
-        if (!resolvedVessel && customerVesselsList.length > 0) {
-          resolvedVessel = customerVesselsList[0];
-        }
-
+        // Não escolher automaticamente a primeira do cliente: preservar escolha explícita do usuário
         if (resolvedVessel) {
           setVessel(resolvedVessel);
           if (resolvedVessel.vessel_type) {

@@ -235,7 +235,7 @@ function GerarDocumentoPage() {
               `
               *,
               customer:customers!processes_customer_id_fkey(id, name, cpf_cnpj, email, phone, address, city, state),
-              vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, category, vessel_type, length, material, current_owner_name, current_owner_cpf_cnpj)
+              vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, category, vessel_type, length, material, current_owner_name, current_owner_cpf_cnpj, customer_id, company_id)
             `,
             )
             .eq("id", id)
@@ -295,30 +295,30 @@ function GerarDocumentoPage() {
         let activeVessel = proc.vessel || null;
         let customerVesselsList: any[] = [];
 
-        // Carregar todas as embarcações associadas ao cliente para possibilitar seleção ou recuperação de vínculo
+        // Carregar todas as embarcações associadas ao cliente para possibilitar seleção manual ou troca
         if (proc.customer_id) {
           const { data: custVessels } = await supabase
             .from("vessels")
             .select("*")
             .eq("customer_id", proc.customer_id)
+            .eq("company_id", companyId)
             .order("name", { ascending: true });
           customerVesselsList = custVessels || [];
           setAvailableCustomerVessels(customerVesselsList);
         }
 
-        // Se o processo veio sem embarcação vinculada mas o cliente tem embarcações cadastradas, vincula automaticamente a primeira
-        if (!activeVessel && customerVesselsList.length > 0) {
-          activeVessel = customerVesselsList[0];
-          // Persiste o vínculo no processo para consolidar após F5
-          if (id && companyId) {
-            await supabase
-              .from("processes")
-              .update({ vessel_id: activeVessel.id, updated_at: new Date().toISOString() })
-              .eq("id", id)
-              .eq("company_id", companyId);
+        // Validar se a embarcação vinculada ao processo pertence ao cliente e à empresa do processo
+        if (activeVessel) {
+          const belongsToCustomer = !proc.customer_id || activeVessel.customer_id === proc.customer_id;
+          const belongsToCompany = !companyId || activeVessel.company_id === companyId;
+          if (!belongsToCustomer || !belongsToCompany) {
+            console.warn("Embarcação vinculada não pertence ao cliente ou empresa do processo.");
+            activeVessel = null;
           }
         }
 
+        // NÃO escolher automaticamente a primeira encontrada: preservar seleção explícita do usuário.
+        // Se não houver embarcação vinculada, activeVessel permanece null e o seletor fica disponível.
         setVessel(activeVessel);
         if (activeVessel) {
           setQuickVesselName(activeVessel.name || "");
@@ -799,25 +799,46 @@ function GerarDocumentoPage() {
 
       if (updErr) throw updErr;
 
-      // Também persistir a escolha explícita no draft_data do processo para que não se perca após F5
+      // Também persistir a escolha explícita no draft_data do processo preservando rigorosamente todos os demais dados
       if (id && companyId) {
-        const currentDraft = (processData?.draft_data as any) || {};
-        await supabase
+        // Obter o draft_data mais recente do banco para não perder atualizações concorrentes
+        const { data: latestProc, error: procFetchErr } = await supabase
+          .from("processes")
+          .select("draft_data")
+          .eq("id", id)
+          .eq("company_id", companyId)
+          .maybeSingle();
+
+        if (procFetchErr) {
+          console.error("Erro ao ler draft_data atual:", procFetchErr);
+        }
+
+        const currentDraft = (latestProc?.draft_data as any) || (processData?.draft_data as any) || {};
+        const updatedDraft = {
+          ...currentDraft,
+          outorgado_type: outorgadoType,
+          outorgado_pf_nome: outorgadoPfNome.trim(),
+          outorgado_pf_cpf: outorgadoPfCpf.trim(),
+          outorgado_pj_razao: outorgadoPjRazao.trim(),
+          outorgado_pj_cnpj: outorgadoPjCnpj.trim(),
+          doc_selections: docSelections,
+        };
+
+        const { error: draftUpdateErr } = await supabase
           .from("processes")
           .update({
-            draft_data: {
-              ...currentDraft,
-              outorgado_type: outorgadoType,
-              outorgado_pf_nome: outorgadoPfNome.trim(),
-              outorgado_pf_cpf: outorgadoPfCpf.trim(),
-              outorgado_pj_razao: outorgadoPjRazao.trim(),
-              outorgado_pj_cnpj: outorgadoPjCnpj.trim(),
-              doc_selections: docSelections,
-            },
+            draft_data: updatedDraft,
             updated_at: now,
           })
           .eq("id", id)
           .eq("company_id", companyId);
+
+        if (draftUpdateErr) {
+          console.error("Erro ao persistir draft_data no processo:", draftUpdateErr);
+          throw new Error("Erro ao salvar seleções e dados no rascunho do processo.");
+        }
+
+        setProcessData((prev: any) => (prev ? { ...prev, draft_data: updatedDraft } : prev));
       }
 
       setCompanyData(updatedComp);
@@ -1660,16 +1681,17 @@ function GerarDocumentoPage() {
                 <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
                   Embarcação
                 </span>
-                {vessel?.name ? (
-                  <span className="text-sm font-bold text-[#0B1739] whitespace-normal break-words block">
-                    {vessel.name}
-                  </span>
-                ) : availableCustomerVessels.length > 0 ? (
+                {availableCustomerVessels.length > 0 ? (
                   <div className="mt-0.5 space-y-1">
                     <select
                       value={vessel?.id || ""}
                       onChange={async (e) => {
-                        const selected = availableCustomerVessels.find((v) => v.id === e.target.value);
+                        const selectedId = e.target.value;
+                        if (!selectedId) {
+                          setVessel(null);
+                          return;
+                        }
+                        const selected = availableCustomerVessels.find((v) => v.id === selectedId);
                         if (selected) {
                           setVessel(selected);
                           setQuickVesselName(selected.name || "");
@@ -1678,18 +1700,36 @@ function GerarDocumentoPage() {
                           setQuickVesselOwnerName(selected.current_owner_name || "");
                           setQuickVesselOwnerCpf(selected.current_owner_cpf_cnpj || "");
                           if (id && companyId) {
-                            await supabase
-                              .from("processes")
-                              .update({ vessel_id: selected.id, updated_at: new Date().toISOString() })
-                              .eq("id", id)
-                              .eq("company_id", companyId);
-                            toast.success("Embarcação vinculada ao processo!");
+                            try {
+                              const { error: updErr } = await supabase
+                                .from("processes")
+                                .update({
+                                  vessel_id: selected.id,
+                                  updated_at: new Date().toISOString(),
+                                })
+                                .eq("id", id)
+                                .eq("company_id", companyId);
+
+                              if (updErr) {
+                                console.error("Erro ao vincular embarcação:", updErr);
+                                toast.error("Não foi possível salvar o vínculo da embarcação.");
+                              } else {
+                                toast.success(`Embarcação "${selected.name}" vinculada ao processo!`, {
+                                  description: "Os requisitos e formulários foram atualizados.",
+                                });
+                              }
+                            } catch (err: any) {
+                              console.error("Exceção ao vincular embarcação:", err);
+                              toast.error("Erro de conexão ao vincular embarcação.");
+                            }
                           }
                         }
                       }}
                       className="text-xs font-semibold text-[#075BFF] bg-blue-50 border border-blue-200 rounded-md px-2 py-1 cursor-pointer max-w-full"
                     >
-                      <option value="">Selecione embarcação cadastrada...</option>
+                      <option value="">
+                        {vessel?.name ? `Selecionada: ${vessel.name} (trocar...)` : "Selecione embarcação cadastrada..."}
+                      </option>
                       {availableCustomerVessels.map((v) => (
                         <option key={v.id} value={v.id}>
                           {v.name} {v.registration_number ? `(${v.registration_number})` : ""}
@@ -1697,6 +1737,10 @@ function GerarDocumentoPage() {
                       ))}
                     </select>
                   </div>
+                ) : vessel?.name ? (
+                  <span className="text-sm font-bold text-[#0B1739] whitespace-normal break-words block">
+                    {vessel.name}
+                  </span>
                 ) : (
                   <span className="text-sm font-bold text-slate-400 whitespace-normal break-words block">
                     Embarcação não informada
