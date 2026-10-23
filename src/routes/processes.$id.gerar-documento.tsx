@@ -162,6 +162,7 @@ function GerarDocumentoPage() {
   const [quickVesselOwnerName, setQuickVesselOwnerName] = useState("");
   const [quickVesselOwnerCpf, setQuickVesselOwnerCpf] = useState("");
   const [isSavingQuickVessel, setIsSavingQuickVessel] = useState(false);
+  const [availableCustomerVessels, setAvailableCustomerVessels] = useState<any[]>([]);
 
   // Estados de Outorgado da Procuração (distinção explícita PF vs PJ)
   const [outorgadoType, setOutorgadoType] = useState<"pf" | "pj">("pf");
@@ -290,13 +291,41 @@ function GerarDocumentoPage() {
 
         setProcessData(proc);
         setCustomer(proc.customer || null);
-        setVessel(proc.vessel || null);
-        if (proc.vessel) {
-          setQuickVesselName(proc.vessel.name || "");
-          setQuickVesselReg(proc.vessel.registration_number || "");
-          setQuickVesselType(proc.vessel.vessel_type || "Lancha / Recreio");
-          setQuickVesselOwnerName(proc.vessel.current_owner_name || "");
-          setQuickVesselOwnerCpf(proc.vessel.current_owner_cpf_cnpj || "");
+
+        let activeVessel = proc.vessel || null;
+        let customerVesselsList: any[] = [];
+
+        // Carregar todas as embarcações associadas ao cliente para possibilitar seleção ou recuperação de vínculo
+        if (proc.customer_id) {
+          const { data: custVessels } = await supabase
+            .from("vessels")
+            .select("*")
+            .eq("customer_id", proc.customer_id)
+            .order("name", { ascending: true });
+          customerVesselsList = custVessels || [];
+          setAvailableCustomerVessels(customerVesselsList);
+        }
+
+        // Se o processo veio sem embarcação vinculada mas o cliente tem embarcações cadastradas, vincula automaticamente a primeira
+        if (!activeVessel && customerVesselsList.length > 0) {
+          activeVessel = customerVesselsList[0];
+          // Persiste o vínculo no processo para consolidar após F5
+          if (id && companyId) {
+            await supabase
+              .from("processes")
+              .update({ vessel_id: activeVessel.id, updated_at: new Date().toISOString() })
+              .eq("id", id)
+              .eq("company_id", companyId);
+          }
+        }
+
+        setVessel(activeVessel);
+        if (activeVessel) {
+          setQuickVesselName(activeVessel.name || "");
+          setQuickVesselReg(activeVessel.registration_number || "");
+          setQuickVesselType(activeVessel.vessel_type || "Lancha / Recreio");
+          setQuickVesselOwnerName(activeVessel.current_owner_name || "");
+          setQuickVesselOwnerCpf(activeVessel.current_owner_cpf_cnpj || "");
         }
 
         // 2. Carregar modelos reais do banco de dados (document_templates)
@@ -323,21 +352,30 @@ function GerarDocumentoPage() {
 
         if (comp) {
           setCompanyData(comp);
-          const initialType = (comp as any)?.outorgado_tipo || (comp.cnpj ? "pj" : "pf");
+          const processDraftData = (proc?.draft_data as any) || {};
+          const initialType: "pf" | "pj" =
+            processDraftData?.outorgado_type ||
+            (comp as any)?.outorgado_tipo ||
+            (comp.cnpj ? "pj" : "pf");
           setOutorgadoType(initialType);
-          setOutorgadoPfNome(comp.procurador_nome || "");
-          setOutorgadoPfCpf(comp.procurador_cpf || "");
+          setOutorgadoPfNome(processDraftData?.outorgado_pf_nome || comp.procurador_nome || "");
+          setOutorgadoPfCpf(processDraftData?.outorgado_pf_cpf || comp.procurador_cpf || "");
           setOutorgadoPfRg(comp.procurador_rg || "");
           setOutorgadoPfNacionalidade(comp.procurador_nacionalidade || "Brasileira");
           setOutorgadoPfEndereco(comp.procurador_endereco || comp.contact_address || "");
           setOutorgadoPfTelefone(comp.procurador_telefone || comp.contact_phone || comp.phone || "");
           setOutorgadoPfEmail(comp.procurador_email || comp.contact_email || comp.email || "");
           setOutorgadoPfCrea(comp.procurador_crea || "");
-          setOutorgadoPjRazao(comp.name || "");
-          setOutorgadoPjCnpj(comp.cnpj || "");
+          setOutorgadoPjRazao(processDraftData?.outorgado_pj_razao || comp.name || "");
+          setOutorgadoPjCnpj(processDraftData?.outorgado_pj_cnpj || comp.cnpj || "");
           setOutorgadoPjEndereco(comp.contact_address || "");
           setOutorgadoPjTelefone(comp.contact_phone || comp.phone || "");
           setOutorgadoPjEmail(comp.contact_email || comp.email || "");
+
+          // Restaurar escolhas prévias de documentos salvas no rascunho
+          if (processDraftData?.doc_selections && typeof processDraftData.doc_selections === "object") {
+            setDocSelections(processDraftData.doc_selections);
+          }
 
           const docMap = (comp.document_template_map as any) || {};
           const savedEmployees: any[] =
@@ -760,6 +798,27 @@ function GerarDocumentoPage() {
         .single();
 
       if (updErr) throw updErr;
+
+      // Também persistir a escolha explícita no draft_data do processo para que não se perca após F5
+      if (id && companyId) {
+        const currentDraft = (processData?.draft_data as any) || {};
+        await supabase
+          .from("processes")
+          .update({
+            draft_data: {
+              ...currentDraft,
+              outorgado_type: outorgadoType,
+              outorgado_pf_nome: outorgadoPfNome.trim(),
+              outorgado_pf_cpf: outorgadoPfCpf.trim(),
+              outorgado_pj_razao: outorgadoPjRazao.trim(),
+              outorgado_pj_cnpj: outorgadoPjCnpj.trim(),
+              doc_selections: docSelections,
+            },
+            updated_at: now,
+          })
+          .eq("id", id)
+          .eq("company_id", companyId);
+      }
 
       setCompanyData(updatedComp);
       setShowOutorgadoModal(false);
@@ -1601,9 +1660,48 @@ function GerarDocumentoPage() {
                 <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
                   Embarcação
                 </span>
-                <span className="text-sm font-bold text-[#0B1739] whitespace-normal break-words block">
-                  {vessel?.name || "Embarcação não informada"}
-                </span>
+                {vessel?.name ? (
+                  <span className="text-sm font-bold text-[#0B1739] whitespace-normal break-words block">
+                    {vessel.name}
+                  </span>
+                ) : availableCustomerVessels.length > 0 ? (
+                  <div className="mt-0.5 space-y-1">
+                    <select
+                      value={vessel?.id || ""}
+                      onChange={async (e) => {
+                        const selected = availableCustomerVessels.find((v) => v.id === e.target.value);
+                        if (selected) {
+                          setVessel(selected);
+                          setQuickVesselName(selected.name || "");
+                          setQuickVesselReg(selected.registration_number || "");
+                          setQuickVesselType(selected.vessel_type || "Lancha / Recreio");
+                          setQuickVesselOwnerName(selected.current_owner_name || "");
+                          setQuickVesselOwnerCpf(selected.current_owner_cpf_cnpj || "");
+                          if (id && companyId) {
+                            await supabase
+                              .from("processes")
+                              .update({ vessel_id: selected.id, updated_at: new Date().toISOString() })
+                              .eq("id", id)
+                              .eq("company_id", companyId);
+                            toast.success("Embarcação vinculada ao processo!");
+                          }
+                        }
+                      }}
+                      className="text-xs font-semibold text-[#075BFF] bg-blue-50 border border-blue-200 rounded-md px-2 py-1 cursor-pointer max-w-full"
+                    >
+                      <option value="">Selecione embarcação cadastrada...</option>
+                      {availableCustomerVessels.map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.name} {v.registration_number ? `(${v.registration_number})` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <span className="text-sm font-bold text-slate-400 whitespace-normal break-words block">
+                    Embarcação não informada
+                  </span>
+                )}
                 <div className="flex items-center gap-2 flex-wrap text-xs text-slate-500 mt-0.5">
                   <span>Inscrição: {vessel?.registration_number || "Em regularização"}</span>
                   <span>•</span>

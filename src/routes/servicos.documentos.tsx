@@ -122,23 +122,32 @@ function DocumentosDoServicoPage() {
   const [isReviewBlockedModalOpen, setIsReviewBlockedModalOpen] = useState(false);
   const [isDraftSaving, setIsDraftSaving] = useState(false);
 
+  const [availableCustomerVessels, setAvailableCustomerVessels] = useState<any[]>([]);
+  const [vesselLoadingError, setVesselLoadingError] = useState<string | null>(null);
+
   // Carregamento dos dados do cliente e embarcação
   useEffect(() => {
     async function loadContextData() {
       setLoading(true);
+      setVesselLoadingError(null);
       try {
+        let loadedCustomer: any = null;
         if (customerId) {
-          const { data: custData } = await supabase
+          const { data: custData, error: custErr } = await supabase
             .from("customers")
             .select("*")
             .eq("id", customerId)
             .maybeSingle();
 
-          if (custData) {
+          if (custErr) {
+            console.error("Erro ao carregar cliente:", custErr);
+          } else if (custData) {
+            loadedCustomer = custData;
             setCustomer(custData);
             if (
               custData.document_type === "CNPJ" ||
-              (custData.document && custData.document.length > 14)
+              (custData.document && custData.document.length > 14) ||
+              (custData.cpf_cnpj && custData.cpf_cnpj.length > 14)
             ) {
               setOwnerType("pj");
             } else {
@@ -147,26 +156,53 @@ function DocumentosDoServicoPage() {
           }
         }
 
+        // Carregar todas as embarcações associadas ao cliente para vincular ou selecionar
+        let customerVesselsList: any[] = [];
+        if (customerId) {
+          const { data: custVessels } = await supabase
+            .from("vessels")
+            .select("*")
+            .eq("customer_id", customerId)
+            .order("name", { ascending: true });
+          customerVesselsList = custVessels || [];
+          setAvailableCustomerVessels(customerVesselsList);
+        }
+
+        // Resolução da embarcação: se passou vesselId específico, busca diretamente
+        let resolvedVessel: any = null;
         if (vesselId) {
-          const { data: vesData } = await supabase
+          const { data: vesData, error: vesErr } = await supabase
             .from("vessels")
             .select("*")
             .eq("id", vesselId)
             .maybeSingle();
 
-          if (vesData) {
-            setVessel(vesData);
-            if (vesData.vessel_type) {
-              setVesselType(vesData.vessel_type);
-            }
-            const actualLength = vesData.length || vesData.length_overall;
-            if (actualLength) {
-              setLengthMeters(`${actualLength}${String(actualLength).includes("m") ? "" : " m"}`);
-            }
+          if (vesErr) {
+            console.error("Erro ao carregar embarcação por ID:", vesErr);
+            setVesselLoadingError("Erro ao carregar dados da embarcação selecionada.");
+          } else if (vesData) {
+            resolvedVessel = vesData;
           }
         }
-      } catch (err) {
+
+        // Se não veio vesselId ou não encontrou por ID, mas o cliente tem embarcação cadastrada, usa a primeira como padrão
+        if (!resolvedVessel && customerVesselsList.length > 0) {
+          resolvedVessel = customerVesselsList[0];
+        }
+
+        if (resolvedVessel) {
+          setVessel(resolvedVessel);
+          if (resolvedVessel.vessel_type) {
+            setVesselType(resolvedVessel.vessel_type);
+          }
+          const actualLength = resolvedVessel.length || resolvedVessel.length_overall;
+          if (actualLength) {
+            setLengthMeters(`${actualLength}${String(actualLength).includes("m") ? "" : " m"}`);
+          }
+        }
+      } catch (err: any) {
         console.error("Erro ao carregar dados do processo:", err);
+        setVesselLoadingError(err?.message || "Erro de comunicação ao carregar embarcação.");
       } finally {
         setLoading(false);
       }
@@ -303,7 +339,7 @@ function DocumentosDoServicoPage() {
         .insert({
           company_id: effectiveCompanyId,
           customer_id: effectiveCustomerId,
-          vessel_id: vesselId || null,
+          vessel_id: vessel?.id || vesselId || null,
           title: processTitle,
           process_type: activeServiceKey || rawServices[0] || "renovacao_inscricao",
           status: "draft",
@@ -390,7 +426,7 @@ function DocumentosDoServicoPage() {
             <span className="text-xs font-semibold text-slate-500 shrink-0 mr-1">
               Serviço ativo:
             </span>
-            {rawServices.map((srvKey: any) => {
+            {rawServices.map((srvKey) => {
               const srvInfo = getServiceDefinition(srvKey);
               const isCurrent = srvKey === activeServiceKey;
               return (
@@ -435,13 +471,44 @@ function DocumentosDoServicoPage() {
             <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 shrink-0">
               <Ship className="h-5 w-5" />
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
                 Embarcação
               </span>
-              <span className="text-sm font-bold text-[#0B1739] truncate block">
-                {vessel?.name || "Embarcação não informada"}
-              </span>
+              {vessel?.name ? (
+                <span className="text-sm font-bold text-[#0B1739] truncate block">
+                  {vessel.name}
+                </span>
+              ) : vesselLoadingError ? (
+                <span className="text-xs font-semibold text-red-600 truncate block">
+                  Erro ao carregar embarcação
+                </span>
+              ) : availableCustomerVessels.length > 0 ? (
+                <select
+                  value={vessel?.id || ""}
+                  onChange={(e) => {
+                    const selected = availableCustomerVessels.find((v) => v.id === e.target.value);
+                    if (selected) {
+                      setVessel(selected);
+                      if (selected.vessel_type) setVesselType(selected.vessel_type);
+                      const len = selected.length || selected.length_overall;
+                      if (len) setLengthMeters(`${len}${String(len).includes("m") ? "" : " m"}`);
+                    }
+                  }}
+                  className="text-xs font-semibold text-[#075BFF] bg-blue-50 border border-blue-200 rounded-md px-1.5 py-0.5 cursor-pointer max-w-full truncate"
+                >
+                  <option value="">Selecione embarcação cadastrada...</option>
+                  {availableCustomerVessels.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.name} {v.registration_number ? `(${v.registration_number})` : ""}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <span className="text-xs font-medium text-slate-400 truncate block">
+                  Nenhuma embarcação vinculada
+                </span>
+              )}
             </div>
           </div>
 
@@ -736,15 +803,15 @@ function DocumentosDoServicoPage() {
                     </div>
                     <span className="text-xs font-semibold text-slate-800">Requerimento</span>
                   </div>
-                  {serviceDef.status === "validated" ? (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                  {customer?.name && (vessel?.name || vesselId) ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-[#075BFF] border border-blue-200">
                       <Check className="h-3 w-3 stroke-[2.5]" />
-                      <span>Pronto para gerar</span>
+                      <span>Modelo disponível</span>
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
                       <Clock className="h-3 w-3" />
-                      <span>Minuta em revisão</span>
+                      <span>Dados pendentes</span>
                     </span>
                   )}
                 </div>
@@ -757,15 +824,15 @@ function DocumentosDoServicoPage() {
                     </div>
                     <span className="text-xs font-semibold text-slate-800">Procuração</span>
                   </div>
-                  {serviceDef.status === "validated" ? (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                  {customer?.name ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-[#075BFF] border border-blue-200">
                       <Check className="h-3 w-3 stroke-[2.5]" />
-                      <span>Pronto para gerar</span>
+                      <span>Modelo disponível</span>
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
                       <Clock className="h-3 w-3" />
-                      <span>Minuta em revisão</span>
+                      <span>Dados pendentes</span>
                     </span>
                   )}
                 </div>
@@ -773,91 +840,43 @@ function DocumentosDoServicoPage() {
 
               {/* Legenda de liberação */}
               <p className="text-[11px] text-slate-400 pt-1">
-                {serviceDef.status === "validated"
-                  ? "Modelos padronizados pela NORMAM-03/DPC preenchidos automaticamente com os dados cadastrados."
-                  : "Modelos em revisão regulatória. Geração de minuta técnica sem efeito de protocolo final imediato."}
+                Modelos oficiais padronizados pela Autoridade Marítima (NORMAM-211/DPC). A disponibilidade do modelo não substitui a conferência dos dados cadastrais antes de gerar.
               </p>
             </div>
 
-            {/* CARD 4: SITUAÇÃO DOS REQUISITOS (VALIDADO vs EM REVISÃO) */}
-            {serviceDef.status === "validated" ? (
-              <div className="bg-emerald-50/50 border border-emerald-200/70 rounded-2xl p-5 sm:p-6 shadow-xs space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700 shrink-0 mt-0.5">
-                    <Check className="h-5 w-5 stroke-[2.5]" />
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold text-emerald-900">Requisitos conferidos</h3>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                        {serviceDef.validationDateFormatted}
-                      </span>
-                    </div>
-                    <p className="text-xs text-emerald-800 leading-relaxed">
-                      Requisitos cadastrados e documentação exigida auditados e conferidos.
-                    </p>
-                  </div>
+            {/* CARD 4: SITUAÇÃO DOS REQUISITOS (ORIENTAÇÃO REGULATÓRIA) */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-[#075BFF] shrink-0 mt-0.5">
+                  <Info className="h-5 w-5 stroke-[2.2]" />
                 </div>
-
-                <div className="pt-2 pl-12 space-y-2">
-                  <p className="text-[11px] font-medium text-emerald-900/90">
-                    Fonte oficial: {serviceDef.officialSource}
-                  </p>
-                  <div>
-                    <a
-                      href={serviceDef.sourceUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-xs font-bold text-[#075BFF] hover:text-blue-700 transition-colors"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      <span>Consultar orientação oficial na Capitania</span>
-                    </a>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-900">Orientações e base normativa</h3>
                   </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Confira os dados antes de gerar. Os modelos e checklists seguem as diretrizes da Capitania dos Portos (DPC / Marinha do Brasil).
+                  </p>
                 </div>
               </div>
-            ) : (
-              <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-2xl p-5 sm:p-6 shadow-xs space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-full bg-[#FEF3C7] border border-[#FCD34D] flex items-center justify-center text-[#D97706] shrink-0 mt-0.5">
-                    <Info className="h-5 w-5 stroke-[2.5]" />
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold text-[#92400E]">Requisitos em revisão</h3>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
-                        {serviceDef.validationDateFormatted}
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#B45309] leading-relaxed">
-                      {serviceDef.missingValidationNote ||
-                        "A lista oficial deste serviço ainda precisa ser validada com a Capitania local."}
-                    </p>
-                  </div>
-                </div>
 
-                <div className="pt-2 pl-12 space-y-2">
-                  <p className="text-[11px] font-medium text-[#B45309]/90">
-                    Fonte: {serviceDef.officialSource}
-                  </p>
-                  <p className="text-[11px] text-[#B45309]/80 font-medium">
-                    Trabalho salvo como rascunho: Este serviço ainda não está liberado para
-                    protocolo final automatizado.
-                  </p>
-                  <div>
-                    <a
-                      href={serviceDef.sourceUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-xs font-bold text-[#075BFF] hover:text-blue-700 transition-colors"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      <span>Consultar diretrizes na Capitania</span>
-                    </a>
-                  </div>
+              <div className="pt-2 pl-12 space-y-2 border-t border-slate-200">
+                <p className="text-[11px] font-medium text-slate-700">
+                  Referência: {serviceDef.officialSource}
+                </p>
+                <div>
+                  <a
+                    href={serviceDef.sourceUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-bold text-[#075BFF] hover:text-blue-700 transition-colors"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    <span>Consultar página oficial da Capitania</span>
+                  </a>
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
 
@@ -904,7 +923,7 @@ function DocumentosDoServicoPage() {
                 search: {
                   category,
                   customerId,
-                  vesselId,
+                  vesselId: vessel?.id || vesselId,
                   services: rawServices.join(","),
                   ...(lengthMeters ? { length: lengthMeters } : {}),
                 },

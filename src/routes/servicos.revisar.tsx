@@ -99,30 +99,67 @@ function RevisarProcessoPage() {
   const [selectedServiceDetail, setSelectedServiceDetail] = useState<any | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
+  const [availableCustomerVessels, setAvailableCustomerVessels] = useState<any[]>([]);
+  const [vesselLoadingError, setVesselLoadingError] = useState<string | null>(null);
+
   // Carregar dados de cliente e embarcação
   useEffect(() => {
     async function loadContext() {
       setLoading(true);
+      setVesselLoadingError(null);
       try {
+        let loadedCustomer: any = null;
         if (customerId) {
-          const { data: custData } = await supabase
+          const { data: custData, error: custErr } = await supabase
             .from("customers")
             .select("*")
             .eq("id", customerId)
             .maybeSingle();
-          if (custData) setCustomer(custData);
+          if (custErr) {
+            console.error("Erro ao carregar cliente em revisão:", custErr);
+          } else if (custData) {
+            loadedCustomer = custData;
+            setCustomer(custData);
+          }
         }
 
+        // Carregar todas as embarcações associadas ao cliente para vincular caso vesselId falte
+        let customerVesselsList: any[] = [];
+        if (customerId) {
+          const { data: custVessels } = await supabase
+            .from("vessels")
+            .select("*")
+            .eq("customer_id", customerId)
+            .order("name", { ascending: true });
+          customerVesselsList = custVessels || [];
+          setAvailableCustomerVessels(customerVesselsList);
+        }
+
+        let resolvedVessel: any = null;
         if (vesselId) {
-          const { data: vesData } = await supabase
+          const { data: vesData, error: vesErr } = await supabase
             .from("vessels")
             .select("*")
             .eq("id", vesselId)
             .maybeSingle();
-          if (vesData) setVessel(vesData);
+          if (vesErr) {
+            console.error("Erro ao carregar embarcação em revisão:", vesErr);
+            setVesselLoadingError("Erro ao carregar dados da embarcação.");
+          } else if (vesData) {
+            resolvedVessel = vesData;
+          }
         }
-      } catch (err) {
+
+        if (!resolvedVessel && customerVesselsList.length > 0) {
+          resolvedVessel = customerVesselsList[0];
+        }
+
+        if (resolvedVessel) {
+          setVessel(resolvedVessel);
+        }
+      } catch (err: any) {
         console.error("Erro ao carregar dados para revisão:", err);
+        setVesselLoadingError(err?.message || "Erro de comunicação ao carregar embarcação.");
       } finally {
         setLoading(false);
       }
@@ -162,7 +199,7 @@ function RevisarProcessoPage() {
 
   // Lista dos serviços com status
   const parsedServices = useMemo(() => {
-    return rawServices.map((key: any) => {
+    return rawServices.map((key) => {
       const def = getServiceDefinition(key);
       const isVal = def.status === "validated";
       const svcCategoryLabel =
@@ -194,7 +231,7 @@ function RevisarProcessoPage() {
   }, [rawServices, isJetSki, category]);
 
   const allServicesValidated = useMemo(() => {
-    return parsedServices.length > 0 && parsedServices.every((s: any) => s.isValidated);
+    return parsedServices.length > 0 && parsedServices.every((s) => s.isValidated);
   }, [parsedServices]);
 
   // Ação 1: Salvar Processo como Rascunho (apenas salva o processo sem gerar documentos)
@@ -240,7 +277,7 @@ function RevisarProcessoPage() {
         .insert({
           company_id: effectiveCompanyId,
           customer_id: effectiveCustomerId,
-          vessel_id: vesselId || null,
+          vessel_id: vessel?.id || vesselId || null,
           title: processTitle,
           process_type: parsedServices[0]?.key || "renovacao_inscricao",
           status: "draft",
@@ -326,7 +363,7 @@ function RevisarProcessoPage() {
         .insert({
           company_id: effectiveCompanyId,
           customer_id: effectiveCustomerId,
-          vessel_id: vesselId || null,
+          vessel_id: vessel?.id || vesselId || null,
           title: processTitle,
           process_type: parsedServices[0]?.key || "renovacao_inscricao",
           status: allServicesValidated ? "in_progress" : "draft",
@@ -486,7 +523,7 @@ function RevisarProcessoPage() {
               </div>
 
               <div className="divide-y divide-slate-100">
-                {parsedServices.map((srv: any, idx: number) => (
+                {parsedServices.map((srv, idx) => (
                   <div
                     key={srv.key + idx}
                     className="py-3.5 first:pt-1 last:pb-1 flex items-center justify-between gap-3"
@@ -629,11 +666,39 @@ function RevisarProcessoPage() {
                   </span>
                 </div>
 
-                <div className="flex justify-between py-1.5 border-b border-slate-100">
+                <div className="flex justify-between py-1.5 border-b border-slate-100 items-center">
                   <span className="text-slate-500">Embarcação:</span>
-                  <span className="font-bold text-[#0B1739] text-right truncate max-w-[200px]">
-                    {vessel?.name || "Embarcação não informada"}
-                  </span>
+                  <div className="text-right max-w-[240px]">
+                    {vessel?.name ? (
+                      <span className="font-bold text-[#0B1739] truncate block">
+                        {vessel.name}
+                      </span>
+                    ) : vesselLoadingError ? (
+                      <span className="text-xs font-semibold text-red-600 truncate block">
+                        Erro ao carregar embarcação
+                      </span>
+                    ) : availableCustomerVessels.length > 0 ? (
+                      <select
+                        value={vessel?.id || ""}
+                        onChange={(e) => {
+                          const selected = availableCustomerVessels.find((v) => v.id === e.target.value);
+                          if (selected) {
+                            setVessel(selected);
+                          }
+                        }}
+                        className="text-xs font-semibold text-[#075BFF] bg-blue-50 border border-blue-200 rounded-md px-1.5 py-0.5 cursor-pointer max-w-full truncate"
+                      >
+                        <option value="">Selecione embarcação...</option>
+                        {availableCustomerVessels.map((v) => (
+                          <option key={v.id} value={v.id}>
+                            {v.name}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="font-medium text-slate-400">Não selecionada</span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex justify-between py-1.5 border-b border-slate-100">
@@ -671,73 +736,31 @@ function RevisarProcessoPage() {
               </div>
             </div>
 
-            {/* CARTÃO 4: SITUAÇÃO DOS REQUISITOS (CONFERIDOS vs REVISÃO) */}
-            {allServicesValidated ? (
-              <div className="bg-emerald-50/60 border border-emerald-200 rounded-2xl p-5 sm:p-6 shadow-xs space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-700 shrink-0 mt-0.5">
-                    <CheckCircle2 className="h-5 w-5 stroke-[2.5]" />
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold text-emerald-900">Requisitos conferidos</h3>
-                      <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md">
-                        Oficial
-                      </span>
-                    </div>
-                    <p className="text-xs text-emerald-800 leading-relaxed">
-                      Todos os serviços selecionados possuem base normativa validada e modelos
-                      oficiais conferidos perante a Capitania dos Portos (DPC / Marinha do Brasil).
-                    </p>
-                  </div>
+            {/* CARTÃO 4: SITUAÇÃO REGULATÓRIA E BASE NORMATIVA */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-[#075BFF] shrink-0 mt-0.5">
+                  <Info className="h-5 w-5 stroke-[2.2]" />
                 </div>
-
-                <div className="pt-2 pl-12 space-y-1.5 border-t border-emerald-200/60">
-                  <p className="text-[11px] text-emerald-700 font-medium flex items-center gap-1.5">
-                    <Calendar className="h-3.5 w-3.5" />
-                    <span>Última conferência regulatória: Setembro de 2026</span>
-                  </p>
-                  <p className="text-[11px] text-emerald-700/90 leading-relaxed">
-                    Documentação necessária e formulários prontos para preenchimento, assinaturas e
-                    protocolo.
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-900">Orientações e base normativa</h3>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Confira os dados antes de gerar. Os modelos e checklists seguem as normas da Autoridade Marítima (DPC / Marinha do Brasil).
                   </p>
                 </div>
               </div>
-            ) : (
-              <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-2xl p-5 sm:p-6 shadow-xs space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-full bg-[#FEF3C7] border border-[#FCD34D] flex items-center justify-center text-[#D97706] shrink-0 mt-0.5">
-                    <AlertTriangle className="h-5 w-5 stroke-[2.2]" />
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold text-[#92400E]">
-                        Requisitos regulatórios em revisão
-                      </h3>
-                      <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md">
-                        Rascunho
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#B45309] leading-relaxed">
-                      Um ou mais serviços possuem requisitos técnicos ou minutas ainda sob
-                      conferência. A lista não é apresentada como definitiva ou oficial.
-                    </p>
-                  </div>
-                </div>
 
-                <div className="pt-2 pl-12 space-y-2 border-t border-amber-200/60">
-                  <p className="text-[11px] text-[#B45309] leading-relaxed">
-                    <strong>Trabalho salvo como rascunho:</strong> Para proteger a segurança
-                    jurídica e operacional, o protocolo direto está bloqueado até a conferência
-                    técnica das exigências da Capitania.
-                  </p>
-                  <p className="text-[11px] text-[#B45309]/80 leading-relaxed">
-                    Você pode salvar o rascunho e dar andamento ao upload prévio de documentos e
-                    triagem.
-                  </p>
-                </div>
+              <div className="pt-2 pl-12 space-y-1.5 border-t border-slate-200">
+                <p className="text-[11px] text-slate-700 font-medium">
+                  NORMAM-211/DPC • Capitania dos Portos
+                </p>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  A disponibilidade do modelo não substitui a conferência dos dados cadastrais antes da emissão.
+                </p>
               </div>
-            )}
+            </div>
           </div>
         </div>
 
@@ -747,14 +770,10 @@ function RevisarProcessoPage() {
         <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-0.5">
             <p className="text-xs font-medium text-slate-700">
-              {allServicesValidated
-                ? "Requisitos conferidos. Pronto para criação e tramitação do processo."
-                : "Serviço com requisitos em revisão: será registrado como rascunho (protocolo final bloqueado)."}
+              Confira os dados antes de gerar os documentos deste processo.
             </p>
             <p className="text-[11px] text-slate-400">
-              {allServicesValidated
-                ? "Processos criados ficam imediatamente disponíveis para conferência de documentos e assinaturas."
-                : "A lista de documentos gerados ainda passará por revisão profissional antes do protocolo."}
+              Na próxima tela você poderá escolher quais documentos gerar, anexar ou omitir.
             </p>
           </div>
 
@@ -802,12 +821,12 @@ function RevisarProcessoPage() {
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  <span>Registrando e abrindo...</span>
+                  <span>Abrindo geração...</span>
                 </>
               ) : (
                 <>
                   <FileText className="h-3.5 w-3.5" />
-                  <span>Gerar documentos</span>
+                  <span>Ir para geração</span>
                   <ArrowRight className="h-3.5 w-3.5" />
                 </>
               )}

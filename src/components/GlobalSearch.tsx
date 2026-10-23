@@ -58,6 +58,11 @@ export function GlobalSearch({
   const [customers, setCustomers] = React.useState<any[]>([]);
   const [vessels, setVessels] = React.useState<any[]>([]);
   const [processes, setProcesses] = React.useState<any[]>([]);
+  const [partialErrors, setPartialErrors] = React.useState<{
+    customers?: boolean;
+    vessels?: boolean;
+    processes?: boolean;
+  }>({});
 
   const { profile, companyId: authCompanyId } = useAuth();
   const companyId = profile?.company_id || authCompanyId;
@@ -128,23 +133,23 @@ export function GlobalSearch({
         // Normalização sem acentos para comparação caso o banco ou termo contenha variações
         const unaccented = cleanTerm.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-        // Filtro dinâmico para clientes
+        // Filtro dinâmico para clientes (apenas colunas existentes no schema: name, cpf_cnpj, email)
         let customerOrParts = [
           `name.ilike.%${cleanTerm}%`,
-          `fantasy_name.ilike.%${cleanTerm}%`,
+          `email.ilike.%${cleanTerm}%`,
           `cpf_cnpj.ilike.%${cleanTerm}%`,
         ];
         if (unaccented && unaccented !== cleanTerm) {
-          customerOrParts.push(`name.ilike.%${unaccented}%`, `fantasy_name.ilike.%${unaccented}%`);
+          customerOrParts.push(`name.ilike.%${unaccented}%`);
         }
         if (digitsOnly.length >= 3) {
           customerOrParts.push(`cpf_cnpj.ilike.%${digitsOnly}%`);
         }
 
-        // 1. Busca de Clientes (Nome, Nome Fantasia, CPF/CNPJ, E-mail)
+        // 1. Busca de Clientes (Name, CPF/CNPJ, E-mail, Phone, City, State)
         const customersPromise = supabase
           .from("customers")
-          .select("id, name, fantasy_name, cpf_cnpj, email, phone, city, state")
+          .select("id, name, cpf_cnpj, email, phone, city, state")
           .eq("company_id", companyId)
           .or(customerOrParts.join(","))
           .order("name", { ascending: true })
@@ -162,7 +167,7 @@ export function GlobalSearch({
           vesselOrParts.push(`registration_number.ilike.%${digitsOnly}%`);
         }
 
-        // 2. Busca de Embarcações (Nome ou Inscrição TIE)
+        // 2. Busca de Embarcações (Nome ou Inscrição TIE com cliente vinculado)
         const vesselsPromise = supabase
           .from("vessels")
           .select(
@@ -173,7 +178,7 @@ export function GlobalSearch({
             category,
             vessel_type,
             customer_id,
-            customer:customers!vessels_customer_id_fkey(id, name, fantasy_name, cpf_cnpj)
+            customer:customers!vessels_customer_id_fkey(id, name, cpf_cnpj)
           `,
           )
           .eq("company_id", companyId)
@@ -207,7 +212,7 @@ export function GlobalSearch({
             created_at,
             customer_id,
             vessel_id,
-            customer:customers!processes_customer_id_fkey(id, name, fantasy_name, cpf_cnpj),
+            customer:customers!processes_customer_id_fkey(id, name, cpf_cnpj),
             vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, category, vessel_type)
           `,
           )
@@ -232,7 +237,23 @@ export function GlobalSearch({
         if (results[0].status === "fulfilled") {
           if (results[0].value.error) {
             console.error("Erro na busca de clientes:", results[0].value.error);
-            anyError = true;
+            // Fallback simples sem or composto
+            try {
+              const { data: rawCust } = await supabase
+                .from("customers")
+                .select("id, name, cpf_cnpj, email, phone")
+                .eq("company_id", companyId)
+                .ilike("name", `%${cleanTerm}%`)
+                .order("name", { ascending: true })
+                .limit(10);
+              if (rawCust) {
+                matchedCustomers = rawCust;
+                anySuccess = true;
+              }
+            } catch (fallbackCustErr) {
+              console.error("Fallback de clientes falhou:", fallbackCustErr);
+              anyError = true;
+            }
           } else {
             matchedCustomers = results[0].value.data || [];
             anySuccess = true;
@@ -300,7 +321,17 @@ export function GlobalSearch({
           anyError = true;
         }
 
-        // Se nenhuma consulta teve sucesso e houve erro, exibe estado de erro
+        const custFailed = results[0].status === "rejected" || (results[0].status === "fulfilled" && !!results[0].value.error && matchedCustomers.length === 0);
+        const vesFailed = results[1].status === "rejected" || (results[1].status === "fulfilled" && !!results[1].value.error && matchedVessels.length === 0);
+        const procFailed = results[2].status === "rejected" || (results[2].status === "fulfilled" && !!results[2].value.error && matchedProcesses.length === 0);
+
+        setPartialErrors({
+          customers: custFailed,
+          vessels: vesFailed,
+          processes: procFailed,
+        });
+
+        // Se nenhuma consulta teve sucesso e houve erro geral, exibe estado de erro principal
         if (!anySuccess && anyError) {
           setIsError(true);
         } else {
@@ -667,6 +698,23 @@ export function GlobalSearch({
             {/* ESTADO 5: LISTAGEM ORGANIZADA EM 3 GRUPOS */}
             {!isLoading && !isError && totalResults > 0 && (
               <div className="space-y-5">
+                {/* Banner discreto de indisponibilidade parcial se alguma categoria falhar */}
+                {(partialErrors.customers || partialErrors.vessels || partialErrors.processes) && (
+                  <div className="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200/80 text-[11px] text-amber-800 flex items-center gap-2">
+                    <AlertCircle className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                    <span>
+                      Nota: Alguma categoria não pôde ser consultada completamente no momento (
+                      {[
+                        partialErrors.customers ? "Clientes" : null,
+                        partialErrors.vessels ? "Embarcações" : null,
+                        partialErrors.processes ? "Processos" : null,
+                      ]
+                        .filter(Boolean)
+                        .join(", ")}
+                      ). Os resultados acima são parciais.
+                    </span>
+                  </div>
+                )}
                 {/* ------------------------------------------------------------- */}
                 {/* GRUPO 1: CLIENTES */}
                 {/* ------------------------------------------------------------- */}
