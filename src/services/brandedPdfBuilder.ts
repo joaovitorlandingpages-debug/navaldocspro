@@ -27,6 +27,9 @@ export async function buildBrandedDocumentPdf(opts: {
   logoMode?: LogoModeOption;
   signerName?: string;
   signerRole?: string;
+  hideHeader?: boolean;
+  hideFooter?: boolean;
+  isOfficialForm?: boolean;
 }): Promise<{ bytes: Uint8Array; verificationCode: string }> {
   const {
     PDFDocument,
@@ -232,9 +235,15 @@ export async function buildBrandedDocumentPdf(opts: {
     template === "minimalista" || template === "protocolo" ? 56 :
     72;
 
-  const headerHeight = Math.max(baseHeaderHeight, 60 + maxHeaderLines * 11);
+  const effectiveHeaderHeight = opts.hideHeader
+    ? 24
+    : opts.isOfficialForm
+    ? (opts.logoMode === "company" && headerLogoTargetUrl ? 44 : 28)
+    : Math.max(baseHeaderHeight, 60 + maxHeaderLines * 11);
+
+  const headerHeight = effectiveHeaderHeight;
   const TOP_MARGIN = headerHeight + 14;
-  const BOTTOM_MARGIN = 48;
+  const BOTTOM_MARGIN = opts.hideFooter ? 32 : 48;
 
   // Reset text state operators that can bleed between text blocks.
   // With embedded TTF fonts, Tc/Tw default to 0 per page, so this is a safety guard only.
@@ -1009,9 +1018,22 @@ export async function buildBrandedDocumentPdf(opts: {
   pages.forEach((p, idx) => {
     // Header (isolamento de estado gráfico e reset de espaçamento de texto)
     p.pushOperators(pushGraphicsState());
-    resetPdfTextSpacing(p);
-
-    if (template === "executivo") {
+    if (opts.hideHeader) {
+      // Nenhum cabeçalho visual inserido
+    } else if (opts.isOfficialForm) {
+      // Modelo Oficial da Marinha: Não desenha faixas institucionais coloridas.
+      // Preserva exclusivamente o logo opcional da empresa de forma discreta no topo direito ou esquerdo
+      if (logoImg) {
+        const lw = Math.min(85, (logoImg.width / logoImg.height) * 26);
+        const lh = (logoImg.height / logoImg.width) * lw;
+        p.drawImage(logoImg, {
+          x: RIGHT_X - lw,
+          y: H - 38,
+          width: lw,
+          height: lh,
+        });
+      }
+    } else if (template === "executivo") {
       // Gradient simulation: 3 stacked bands
       p.drawRectangle({
         x: 0,
@@ -1318,121 +1340,138 @@ export async function buildBrandedDocumentPdf(opts: {
     const headerTextColor = onDarkHeader ? rgb(1, 1, 1) : ink;
 
     // Header text rendering: separated into strictly non-overlapping Left and Right areas
-    const maxLeftAreaW = 230; // Área da empresa: de LEFT (50) até 280
-    const rightAreaMaxW = 230; // Área do documento: alinhado à direita de RIGHT_X (545) até 315 (moat central livre de 35pt)
+    if (!opts.hideHeader && !opts.isOfficialForm) {
+      const maxLeftAreaW = 230; // Área da empresa: de LEFT (50) até 280
+      const rightAreaMaxW = 230; // Área do documento: alinhado à direita de RIGHT_X (545) até 315 (moat central livre de 35pt)
 
-    // Lado Esquerdo: Logo ou Nome da Empresa
-    if (logoImg) {
-      const maxLh = headerHeight - 18;
-      const lw = Math.min(115, (logoImg.width / logoImg.height) * maxLh);
-      const lh = (logoImg.height / logoImg.width) * lw;
-      p.drawImage(logoImg, {
-        x: LEFT,
-        y: H - headerHeight + (headerHeight - lh) / 2,
-        width: lw,
-        height: lh,
-      });
-      if (b?.company_name) {
-        const cLines = wrap(sanitize(b.company_name).toUpperCase(), 10, maxLeftAreaW - lw - 10, bold);
-        const compBlockH = cLines.length * 12;
-        let cy = H - (headerHeight - compBlockH) / 2 - 9;
-        for (const cln of cLines) {
-          p.drawText(cln, { x: LEFT + lw + 10, y: cy, size: 10, font: bold, color: headerTextColor });
-          cy -= 12;
+      // Lado Esquerdo: Logo ou Nome da Empresa
+      if (logoImg) {
+        const maxLh = headerHeight - 18;
+        const lw = Math.min(115, (logoImg.width / logoImg.height) * maxLh);
+        const lh = (logoImg.height / logoImg.width) * lw;
+        p.drawImage(logoImg, {
+          x: LEFT,
+          y: H - headerHeight + (headerHeight - lh) / 2,
+          width: lw,
+          height: lh,
+        });
+        if (b?.company_name) {
+          const cLines = wrap(sanitize(b.company_name).toUpperCase(), 10, maxLeftAreaW - lw - 10, bold);
+          const compBlockH = cLines.length * 12;
+          let cy = H - (headerHeight - compBlockH) / 2 - 9;
+          for (const cln of cLines) {
+            p.drawText(cln, { x: LEFT + lw + 10, y: cy, size: 10, font: bold, color: headerTextColor });
+            cy -= 12;
+          }
+        }
+      } else if (rawCompanyName) {
+        const compBlockH = headerCompLines.length * 13;
+        let cy = H - (headerHeight - compBlockH) / 2 - 10;
+        for (const cln of headerCompLines) {
+          p.drawText(cln, {
+            x: LEFT,
+            y: cy,
+            size: compFontSize,
+            font: bold,
+            color: headerTextColor,
+          });
+          cy -= 13;
         }
       }
-    } else if (rawCompanyName) {
-      const compBlockH = headerCompLines.length * 13;
-      let cy = H - (headerHeight - compBlockH) / 2 - 10;
-      for (const cln of headerCompLines) {
-        p.drawText(cln, {
-          x: LEFT,
-          y: cy,
-          size: compFontSize,
+
+      // Lado Direito: Identificação do Documento (rigorosamente delimitada e alinhada à direita)
+      const docBlockH = headerDocLines.length * 10;
+      let dy = H - (headerHeight - docBlockH) / 2 - 8;
+      for (const dln of headerDocLines) {
+        const dw = measure(dln, docFontSize, bold);
+        p.drawText(dln, {
+          x: RIGHT_X - dw,
+          y: dy,
+          size: docFontSize,
           font: bold,
           color: headerTextColor,
         });
-        cy -= 13;
+        dy -= 10;
       }
-    }
-
-    // Lado Direito: Identificação do Documento (rigorosamente delimitada e alinhada à direita)
-    const docBlockH = headerDocLines.length * 10;
-    let dy = H - (headerHeight - docBlockH) / 2 - 8;
-    for (const dln of headerDocLines) {
-      const dw = measure(dln, docFontSize, bold);
-      p.drawText(dln, {
-        x: RIGHT_X - dw,
-        y: dy,
-        size: docFontSize,
-        font: bold,
-        color: headerTextColor,
-      });
-      dy -= 10;
     }
     p.pushOperators(popGraphicsState());
     resetPdfTextSpacing(p);
 
     // Footer (isolamento de estado gráfico e reset de espaçamento de texto)
-    p.pushOperators(pushGraphicsState());
-    resetPdfTextSpacing(p);
-
-    p.drawLine({
-      start: { x: LEFT, y: 62 },
-      end: { x: RIGHT_X, y: 62 },
-      thickness: 0.4,
-      color: lightBorder,
-    });
-    const contactBits = [b?.contact_phone, b?.contact_email, b?.contact_website, b?.contact_address]
-      .filter(Boolean)
-      .join("  •  ");
-    if (contactBits) {
+    if (!opts.hideFooter && !opts.isOfficialForm) {
+      p.pushOperators(pushGraphicsState());
       resetPdfTextSpacing(p);
-      p.drawText(sanitize(contactBits), {
-        x: LEFT,
-        y: 48,
+
+      p.drawLine({
+        start: { x: LEFT, y: 62 },
+        end: { x: RIGHT_X, y: 62 },
+        thickness: 0.4,
+        color: lightBorder,
+      });
+      const contactBits = [b?.contact_phone, b?.contact_email, b?.contact_website, b?.contact_address]
+        .filter(Boolean)
+        .join("  •  ");
+      if (contactBits) {
+        resetPdfTextSpacing(p);
+        p.drawText(sanitize(contactBits), {
+          x: LEFT,
+          y: 48,
+          size: 7,
+          font,
+          color: muted,
+          maxWidth: CONTENT_W - 150,
+        });
+      }
+      if (b?.pdf_footer_text) {
+        resetPdfTextSpacing(p);
+        p.drawText(sanitize(b.pdf_footer_text), {
+          x: LEFT,
+          y: 36,
+          size: 6.5,
+          font: italic,
+          color: muted,
+          maxWidth: CONTENT_W - 150,
+        });
+      }
+      // Verification code pill (right)
+      const codeText = `Cód. verificação: ${verificationCode}`;
+      const ctw = measure(codeText, 7, bold);
+      p.drawRectangle({
+        x: RIGHT_X - ctw - 14,
+        y: 44,
+        width: ctw + 14,
+        height: 14,
+        color: lightBg,
+        borderColor: primary,
+        borderWidth: 0.5,
+      });
+      resetPdfTextSpacing(p);
+      p.drawText(codeText, { x: RIGHT_X - ctw - 7, y: 48, size: 7, font: bold, color: primary });
+      resetPdfTextSpacing(p);
+      p.drawText(`Página ${idx + 1} / ${total}`, {
+        x: RIGHT_X - 70,
+        y: 32,
+        size: 7,
+        font: bold,
+        color: muted,
+      });
+
+      p.pushOperators(popGraphicsState());
+      resetPdfTextSpacing(p);
+    } else if (total > 1) {
+      // Em formulário oficial com mais de 1 página, apenas número sutil de página
+      p.pushOperators(pushGraphicsState());
+      resetPdfTextSpacing(p);
+      p.drawText(`Página ${idx + 1} de ${total}`, {
+        x: RIGHT_X - 70,
+        y: 20,
         size: 7,
         font,
         color: muted,
-        maxWidth: CONTENT_W - 150,
       });
-    }
-    if (b?.pdf_footer_text) {
+      p.pushOperators(popGraphicsState());
       resetPdfTextSpacing(p);
-      p.drawText(sanitize(b.pdf_footer_text), {
-        x: LEFT,
-        y: 36,
-        size: 6.5,
-        font: italic,
-        color: muted,
-        maxWidth: CONTENT_W - 150,
-      });
     }
-    // Verification code pill (right)
-    const codeText = `Cód. verificação: ${verificationCode}`;
-    const ctw = measure(codeText, 7, bold);
-    p.drawRectangle({
-      x: RIGHT_X - ctw - 14,
-      y: 44,
-      width: ctw + 14,
-      height: 14,
-      color: lightBg,
-      borderColor: primary,
-      borderWidth: 0.5,
-    });
-    resetPdfTextSpacing(p);
-    p.drawText(codeText, { x: RIGHT_X - ctw - 7, y: 48, size: 7, font: bold, color: primary });
-    resetPdfTextSpacing(p);
-    p.drawText(`Página ${idx + 1} / ${total}`, {
-      x: RIGHT_X - 70,
-      y: 32,
-      size: 7,
-      font: bold,
-      color: muted,
-    });
-
-    p.pushOperators(popGraphicsState());
-    resetPdfTextSpacing(p);
   });
 
   const bytes = await pdfDoc.save();

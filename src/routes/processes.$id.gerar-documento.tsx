@@ -1081,78 +1081,86 @@ function GerarDocumentoPage() {
               .join("\n");
           } else if (tpl.slug === "decl-residencia-naval") {
             content = [
-              `DECLARAÇÃO DE RESIDÊNCIA ELABORADA PELA PLATAFORMA: ${tpl.name.toUpperCase()}`,
-              `CÓDIGO: ${tpl.code} | BASE LEGAL: ${tpl.officialSource}`,
-              `PROCESSO Nº: ${processCode}`,
-              `DATA: ${new Date().toLocaleDateString("pt-BR")}`,
+              `MARINHA DO BRASIL - DIRETORIA DE PORTOS E COSTAS`,
+              `NORMAM-211/DPC - ANEXO 2-G`,
+              `DECLARAÇÃO DE RESIDÊNCIA`,
               ``,
-              `DECLARANTE:`,
-              `Nome / Razão Social: ${customerName}`,
+              `ILMO. SR. CAPITÃO DOS PORTOS / DELEGADO / AGENTE`,
+              ``,
+              `1. IDENTIFICAÇÃO DO DECLARANTE`,
+              `Nome Completo: ${customerName}`,
               `CPF / CNPJ: ${customer?.cpf_cnpj || customer?.document || "Não informado"}`,
-              `RG: ${customer?.rg || "Não informado"}`,
+              `Documento de Identidade (RG): ${customer?.rg || "Não informado"}`,
+              `Nacionalidade: Brasileira`,
+              `Naturalidade: ${(customer as any)?.birthplace || "Não informada"}`,
+              `Telefone / Celular: ${customer?.phone || "Não informado"}`,
+              `E-mail: ${customer?.email || "Não informado"}`,
               ``,
-              `DECLARAÇÃO DE DOMICÍLIO:`,
-              `Eu, ${customerName}, acima qualificado(a), DECLARO para os devidos fins de direito, em especial para instrução de processo náutico perante a Autoridade Marítima (Capitania dos Portos / Delegacia / Agência) referente à embarcação "${vesselName}", sob as penas da Lei Federal nº 7.115/1983 e do art. 299 do Código Penal (Falsidade Ideológica), que resido e sou domiciliado(a) no seguinte endereço:`,
+              `2. DECLARAÇÃO DE DOMICÍLIO (LEI Nº 7.115/1983)`,
+              `Na falta de documento hábil para comprovação de residência, em conformidade com o disposto na Lei nº 7.115, de 29 de agosto de 1983, DECLARO para os devidos fins de direito, em especial para instrução de processo náutico perante a Autoridade Marítima referente à embarcação "${vesselName}" (Inscrição: ${vessel?.registration_number || "Em regularização"}), sob as penas da Lei, ser residente e domiciliado no seguinte endereço:`,
               ``,
-              `Endereço Declarado: ${customer?.address || "Não informado"}, ${customer?.city || ""}/${customer?.state || ""}`,
+              `Endereço Completo Declarado: ${customer?.address || "Não informado"}, ${customer?.city || ""}/${customer?.state || ""}`,
               ``,
-              `Por ser a expressão da verdade, firmo a presente declaração sob minha responsabilidade jurídica.`,
+              `3. ALERTA LEGAL OBRIGATÓRIO (ART. 299 DO CÓDIGO PENAL)`,
+              `Declaro, outrossim, estar ciente de que a falsidade da presente declaração configurará crime de falsidade ideológica, sujeitando-me às penalidades previstas no Artigo 299 do Código Penal Brasileiro:`,
+              `"Art. 299 - Omitir, em documento público ou particular, declaração que dele devia constar, ou nele inserir ou fazer inserir declaração falsa ou diversa da que devia ser escrita, com o fim de prejudicar direito, criar obrigação ou alterar a verdade sobre fato juridicamente relevante: Pena - reclusão, de 1 (um) a 5 (cinco) anos, e multa, se o documento é público, e reclusão de 1 (um) a 3 (três) anos, e multa, se o documento é particular."`,
               ``,
-              `PREPARADO POR (OPERADOR DO SISTEMA): ${selectedStaff.name} (${selectedStaff.role})`,
-              `Documento elaborado na plataforma NavalDocs Pro para conferência e assinatura externa (GOV.BR ou presencial) pelo(a) Declarante.`,
+              `Por ser a expressão da verdade, firmo a presente declaração sob minha inteira responsabilidade civil e criminal.`,
+              ``,
+              `Local e Data: ${customer?.city || "Local"}, ${new Date().toLocaleDateString("pt-BR")}`,
             ]
               .filter(Boolean)
               .join("\n");
           } else {
-            // Requerimento Padrão do Interessado
+            // Requerimento Padrão do Interessado - Alinhado estritamente à NORMAM-211/DPC Anexo 2-C
             const isProf = vesselCategory === "profissional" || tpl.code === "REQ-PROF";
             const isJet = vesselCategory === "moto_aquatica" || tpl.code === "REQ-JET";
-            const normamScope = isProf
-              ? "NORMAM-201/DPC, ANEXO 2-A"
+            const anexoLabel = isProf
+              ? "NORMAM-201/DPC - ANEXO 2-A"
               : isJet
-              ? "NORMAM-212/DPC, ANEXO 3-B"
-              : "NORMAM-211/DPC, ANEXO 2-C";
-            const normamSource = isProf
-              ? "NORMAM-201/DPC, Anexo 2-A (Embarcações Comerciais e Profissionais)"
-              : isJet
-              ? "NORMAM-212/DPC, Anexo 3-B (Motonáutica)"
-              : "NORMAM-211/DPC, Anexo 2-C (Embarcações de Esporte e Recreio)";
+              ? "NORMAM-212/DPC - ANEXO 3-B"
+              : "NORMAM-211/DPC - ANEXO 2-C";
+
+            const selectedServicesStr =
+              translateServices((processData?.draft_data as any)?.services) ||
+              processData?.process_type ||
+              "Inscrição / Transferência / Regularização de Embarcação";
 
             content = [
-              `REQUERIMENTO ELABORADO PELA PLATAFORMA: ${tpl.name.toUpperCase()}`,
-              `CÓDIGO: ${tpl.code} | BASE NORMATIVA: ${normamSource}`,
-              `PROCESSO Nº: ${processCode}`,
-              `DATA: ${new Date().toLocaleDateString("pt-BR")}`,
+              `MARINHA DO BRASIL - DIRETORIA DE PORTOS E COSTAS`,
+              `${anexoLabel}`,
+              `REQUERIMENTO DE SERVIÇOS PARA EMBARCAÇÕES`,
               ``,
-              `1. DADOS DO REQUERENTE / INTERESSADO`,
-              `Nome / Razão Social: ${customerName}`,
+              `ILMO. SR. CAPITÃO DOS PORTOS / DELEGADO / AGENTE`,
+              ``,
+              `1. IDENTIFICAÇÃO DO REQUERENTE / INTERESSADO`,
+              `Nome Completo / Razão Social: ${customerName}`,
               `CPF / CNPJ: ${customer?.cpf_cnpj || customer?.document || "Não informado"}`,
-              `RG: ${customer?.rg || "Não informado"}`,
-              `Endereço: ${customer?.address || "Não informado"}, ${customer?.city || ""}/${customer?.state || ""}`,
-              `Telefone: ${customer?.phone || "Não informado"}`,
+              `Documento de Identidade (RG): ${customer?.rg || "Não informado"}`,
+              `Endereço Completo: ${customer?.address || "Não informado"}, ${customer?.city || ""}/${customer?.state || ""}`,
+              `Telefone de Contato: ${customer?.phone || "Não informado"}`,
               `E-mail: ${customer?.email || "Não informado"}`,
               ``,
-              `2. DADOS DA EMBARCAÇÃO`,
+              `2. DADOS CADASTRAIS DA EMBARCAÇÃO`,
               `Nome da Embarcação: ${vesselName}`,
               `Número de Inscrição: ${vessel?.registration_number || "Em regularização"}`,
-              `Proprietário Atual da Embarcação: ${vessel?.current_owner_name ? `${vessel.current_owner_name}${vessel?.current_owner_cpf_cnpj ? ` (CPF/CNPJ: ${vessel.current_owner_cpf_cnpj})` : ""}` : "Não informado / Pendente de confirmação"}`,
-              `Tipo de Embarcação: ${vessel?.vessel_type || "Embarcação"}`,
-              `Categoria: ${isProf ? "Embarcação Profissional" : isJet ? "Moto Aquática" : "Esporte e Recreio"}`,
-              `Comprimento Total: ${effectiveLength}${String(effectiveLength).includes("m") || effectiveLength === "Não informado" ? "" : " m"}`,
-              `Material do Casco: ${vessel?.material || "Não informado"}`,
+              `Proprietário da Embarcação: ${vessel?.current_owner_name ? `${vessel.current_owner_name}${vessel?.current_owner_cpf_cnpj ? ` (CPF/CNPJ: ${vessel.current_owner_cpf_cnpj})` : ""}` : customerName}`,
+              `Tipo de Embarcação: ${vessel?.vessel_type || "Lancha / Embarcação de Esporte e Recreio"}`,
+              `Classificação da Embarcação: ${isProf ? "Embarcação Comercial / Passageiros" : isJet ? "Moto Aquática" : "Esporte e/ou Recreio"}`,
+              `Área de Navegação: ${(vessel as any)?.navigation_area || "Interior / Mar Aberto"}`,
+              `Comprimento Total (LOA): ${effectiveLength}${String(effectiveLength).includes("m") || effectiveLength === "Não informado" ? "" : " m"}`,
+              `Número do Casco / Chassi (HIN): ${(vessel as any)?.hull_number || (vessel as any)?.chassis_number || "Conforme documentação anexa"}`,
+              `Material do Casco: ${vessel?.material || "Fibra de Vidro"}`,
               ``,
-              `3. ESCOPO DA SOLICITAÇÃO (${normamScope})`,
-              `Serviços Requeridos: ${translateServices((processData?.draft_data as any)?.services) || processData?.process_type || 'Inscrição / Regularização / Transferência'}`,
+              `3. ESPECIFICAÇÃO DO SERVIÇO SOLICITADO`,
+              `Serviço(s) Requerido(s): [X] ${selectedServicesStr}`,
               ``,
-              `4. TERMO DE COMPROMISSO E DECLARAÇÃO`,
-              `Vem respeitosamente requerer a V. Sa. a realização dos serviços náuticos supracitados, declarando sob as penas da lei a inteira veracidade das informações e documentos apresentados, em estrita observância à Lei nº 9.537/1997 (LESTA) e às normas da Autoridade Marítima (${isProf ? "NORMAM-201/DPC" : isJet ? "NORMAM-212/DPC" : "NORMAM-211/DPC"}).`,
+              `4. TERMO DECLARATÓRIO DE COMPROMISSO`,
+              `Vem respeitosamente requerer a V. Sa. a concessão do serviço acima discriminado, declarando, sob as penas da lei e em conformidade com a Lei nº 9.537/1997 (LESTA) e com as Normas da Autoridade Marítima, a inteira exatidão e veracidade dos dados e documentos apresentados, assumindo total responsabilidade pelas declarações prestadas.`,
               ``,
-              `5. ELABORADO POR`,
-              `Responsável Técnico: ${selectedStaff.name} (${selectedStaff.role})`,
-              selectedStaff.professional_registry ? `Registro Profissional: ${selectedStaff.professional_registry}` : "",
-              `Empresa: ${companyData?.name || currentCompany?.name || "NavalDocs Pro"}`,
+              `Nestes termos, pede deferimento.`,
               ``,
-              `Requerimento elaborado pela plataforma NavalDocs Pro para protocolo perante a Capitania dos Portos / Del / Agência, com assinatura externa (GOV.BR ou presencial) pelo Requerente.`,
+              `Local e Data: ${customer?.city || "Local"}, ${new Date().toLocaleDateString("pt-BR")}`,
             ]
               .filter(Boolean)
               .join("\n");
@@ -1176,6 +1184,8 @@ function GerarDocumentoPage() {
 
           const effectiveLength = (processData?.draft_data as any)?.vessel_length || vessel?.length || vessel?.length_overall || "Não informado";
 
+          const isOfficial = tpl.slug === "req-padrao-cpes" || tpl.slug === "decl-residencia-naval" || tpl.nature === "official_form";
+
           const { bytes, verificationCode } = await buildBrandedDocumentPdf({
             docName: docTitle,
             content,
@@ -1186,6 +1196,7 @@ function GerarDocumentoPage() {
             },
             signerName: signerInfo.signerName,
             signerRole: signerInfo.signerRole,
+            isOfficialForm: isOfficial,
           });
 
           // 4. Converter para Blob e fazer upload seguro para o bucket 'generated-documents'
