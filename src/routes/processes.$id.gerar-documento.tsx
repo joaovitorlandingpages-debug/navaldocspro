@@ -514,6 +514,47 @@ function GerarDocumentoPage() {
     }
   }, [filteredTemplates]);
 
+  // Atualizar e persistir escolha do documento no draft_data imediatamente
+  const updateDocSelection = async (
+    tplId: string,
+    mode: "generate" | "attach" | "omit"
+  ) => {
+    const updated = {
+      ...docSelections,
+      [tplId]: { ...(docSelections[tplId] || {}), mode },
+    };
+    setDocSelections(updated);
+    if (mode === "generate") {
+      setSelectedTemplateId(tplId);
+    }
+
+    if (id && companyId) {
+      try {
+        const { data: latestProc } = await supabase
+          .from("processes")
+          .select("draft_data")
+          .eq("id", id)
+          .eq("company_id", companyId)
+          .maybeSingle();
+
+        const currentDraft = (latestProc?.draft_data as any) || (processData?.draft_data as any) || {};
+        await supabase
+          .from("processes")
+          .update({
+            draft_data: {
+              ...currentDraft,
+              doc_selections: updated,
+            },
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", id)
+          .eq("company_id", companyId);
+      } catch (err) {
+        console.warn("Falha silenciosa ao persistir doc_selections no rascunho:", err);
+      }
+    }
+  };
+
   // Mapa de validação individual por documento (bloqueia APENAS os documentos que exigem os campos ausentes)
   const templateValidationMap = useMemo(() => {
     const map = new Map<string, { isBlocked: boolean; missingFields: string[] }>();
@@ -1038,14 +1079,15 @@ function GerarDocumentoPage() {
 
       if (insErr) throw insErr;
 
-      setDocSelections((prev) => ({
-        ...prev,
+      const updatedSelections = {
+        ...docSelections,
         [tpl.id]: {
-          mode: "attach",
+          mode: "attach" as const,
           isUploading: false,
           attachedFile: { name: file.name, url: path, size: file.size, id: insertedFile?.id },
         },
-      }));
+      };
+      setDocSelections(updatedSelections);
 
       // Registra no histórico do processo dentro de draft_data (coluna metadata não existe em processes)
       const existingHistory = (processData?.draft_data as any)?.history || [];
@@ -1061,6 +1103,7 @@ function GerarDocumentoPage() {
         .update({
           draft_data: {
             ...((processData?.draft_data as any) || {}),
+            doc_selections: updatedSelections,
             history: [historyEntry, ...existingHistory],
           },
           updated_at: new Date().toISOString(),
@@ -2225,13 +2268,7 @@ function GerarDocumentoPage() {
                           {/* Opção 1: Gerar documento */}
                           <button
                             type="button"
-                            onClick={() => {
-                              setDocSelections((prev) => ({
-                                ...prev,
-                                [tpl.id]: { ...(prev[tpl.id] || {}), mode: "generate" },
-                              }));
-                              setSelectedTemplateId(tpl.id);
-                            }}
+                            onClick={() => updateDocSelection(tpl.id, "generate")}
                             className={`px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
                               isGeneratingThis
                                 ? "bg-[#075BFF] text-white font-bold shadow-2xs"
@@ -2244,12 +2281,7 @@ function GerarDocumentoPage() {
                           {/* Opção 2: Anexar documento pronto */}
                           <button
                             type="button"
-                            onClick={() => {
-                              setDocSelections((prev) => ({
-                                ...prev,
-                                [tpl.id]: { ...(prev[tpl.id] || {}), mode: "attach" },
-                              }));
-                            }}
+                            onClick={() => updateDocSelection(tpl.id, "attach")}
                             className={`px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
                               isAttachingThis
                                 ? "bg-emerald-600 text-white font-bold shadow-2xs"
@@ -2262,12 +2294,7 @@ function GerarDocumentoPage() {
                           {/* Opção 3: Não usar agora */}
                           <button
                             type="button"
-                            onClick={() => {
-                              setDocSelections((prev) => ({
-                                ...prev,
-                                [tpl.id]: { ...(prev[tpl.id] || {}), mode: "omit" },
-                              }));
-                            }}
+                            onClick={() => updateDocSelection(tpl.id, "omit")}
                             className={`px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
                               isOmittedThis
                                 ? "bg-slate-600 text-white font-bold shadow-2xs"
