@@ -1,27 +1,33 @@
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useState, useRef, useEffect, useMemo } from "react";
-import { 
-  ArrowLeft, 
-  Upload, 
-  Camera, 
-  FileText, 
-  Image as ImageIcon, 
-  Trash2, 
-  Eye, 
-  Sparkles, 
-  CheckCircle2, 
-  AlertCircle, 
-  Loader2, 
-  Ship, 
-  User, 
+import {
+  ArrowLeft,
+  Upload,
+  Camera,
+  FileText,
+  Image as ImageIcon,
+  Trash2,
+  Eye,
+  Sparkles,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  Ship,
+  User,
   X,
   FileCheck,
   ShieldCheck,
-  Maximize2
+  Maximize2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { validateUpload, MAX_ATTACHMENT_BYTES } from "@/lib/storage";
@@ -30,15 +36,21 @@ import { saveReviewSession } from "@/services/ocr/reviewSessionStorage";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/documentos/anexar")({
-  validateSearch: (search: Record<string, unknown>): {
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): {
     tipo?: "cliente" | "embarcacao";
     target?: "customer" | "vessel";
     modo?: "novo" | "editar";
     id?: string;
     returnTo?: string;
   } => ({
-    tipo: (search.tipo as "cliente" | "embarcacao") || (search.target === "vessel" ? "embarcacao" : "cliente"),
-    target: (search.target as "customer" | "vessel") || (search.tipo === "embarcacao" ? "vessel" : "customer"),
+    tipo:
+      (search.tipo as "cliente" | "embarcacao") ||
+      (search.target === "vessel" ? "embarcacao" : "cliente"),
+    target:
+      (search.target as "customer" | "vessel") ||
+      (search.tipo === "embarcacao" ? "vessel" : "customer"),
     modo: (search.modo as "novo" | "editar") || "novo",
     id: (search.id as string) || undefined,
     returnTo: (search.returnTo as string) || undefined,
@@ -68,7 +80,9 @@ function DocumentosAnexarPage() {
   const [filePreviews, setFilePreviews] = useState<Record<number, string>>({});
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStage, setProcessingStage] = useState<string>("");
-  const [activePreviewFile, setActivePreviewFile] = useState<{ file: File; url: string } | null>(null);
+  const [activePreviewFile, setActivePreviewFile] = useState<{ file: File; url: string } | null>(
+    null,
+  );
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -125,7 +139,9 @@ function DocumentosAnexarPage() {
   // Voltar ao cadastro sem perder rascunho
   const handleBack = () => {
     if (isProcessing) {
-      if (!confirm("A leitura está em andamento. Deseja realmente cancelar e voltar ao cadastro?")) {
+      if (
+        !confirm("A leitura está em andamento. Deseja realmente cancelar e voltar ao cadastro?")
+      ) {
         return;
       }
     }
@@ -174,7 +190,7 @@ function DocumentosAnexarPage() {
             path: uploadedPath,
             size: primaryFile.size,
           },
-        })
+        }),
       );
     }
 
@@ -239,7 +255,11 @@ function DocumentosAnexarPage() {
     } catch (err: any) {
       console.error("Erro na leitura de documento:", err);
       setIsProcessing(false);
-      toast.error(err?.message || "Erro ao processar documento. Tente novamente ou preencha manualmente.");
+      const isUnavailable = !err?.message || err.message.includes("indisponível") || err.message.includes("Falha");
+      const errorMsg = isUnavailable
+        ? "Leitura automática temporariamente indisponível. Você pode preencher os dados manualmente."
+        : err.message;
+      toast.error(errorMsg);
     }
   };
 
@@ -276,7 +296,9 @@ function DocumentosAnexarPage() {
                 </Badge>
               </div>
               <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">
-                {isEditing ? "Atualização cadastral via documento" : "Preenchimento automático do formulário com IA"}
+                {isEditing
+                  ? "Atualização cadastral via documento"
+                  : "Preenchimento automático do formulário com IA"}
               </p>
             </div>
           </div>
@@ -354,7 +376,8 @@ function DocumentosAnexarPage() {
               Selecione ou arraste os documentos aqui
             </h3>
             <p className="text-xs text-slate-500 max-w-md mx-auto">
-              Suporta arquivos em formato <strong>PDF, PNG, JPG ou JPEG</strong> de até <strong>20 MB</strong> por arquivo.
+              Suporta arquivos em formato <strong>PDF, PNG, JPG ou JPEG</strong> de até{" "}
+              <strong>20 MB</strong> por arquivo.
             </p>
           </div>
 
@@ -481,7 +504,8 @@ function DocumentosAnexarPage() {
                 {processingStage || "Extraindo campos cadastrais do documento..."}
               </p>
               <p className="text-xs text-slate-500 max-w-md mx-auto pt-1">
-                Aguarde alguns segundos. A tela de conferência abrirá automaticamente assim que os dados forem extraídos.
+                Aguarde alguns segundos. A tela de conferência abrirá automaticamente assim que os
+                dados forem extraídos.
               </p>
             </div>
 

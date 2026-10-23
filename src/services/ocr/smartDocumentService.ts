@@ -170,7 +170,7 @@ export async function processDocumentForReview(
   if (invokeRes.error) {
     console.error("[SmartDocumentService] Edge function invoke error:", invokeRes.error);
     throw new Error(
-      `Falha técnica na execução da leitura OCR (${invokeRes.error.message || "Erro na Edge Function"}).`,
+      "Leitura automática temporariamente indisponível. Você pode preencher os dados manualmente.",
     );
   }
 
@@ -179,8 +179,14 @@ export async function processDocumentForReview(
       "[SmartDocumentService] Erro retornado pela Edge Function:",
       invokeRes.data.error,
     );
+    const errObj = invokeRes.data.error;
+    if (errObj === "unreadable_document" || errObj?.error === "unreadable_document") {
+      throw new Error(
+        "O documento enviado não contém texto legível identificado. Você pode preencher os dados manualmente.",
+      );
+    }
     throw new Error(
-      invokeRes.data.error.message || invokeRes.data.error || "Falha técnica no motor de leitura.",
+      "Leitura automática temporariamente indisponível. Você pode preencher os dados manualmente.",
     );
   }
 
@@ -194,7 +200,7 @@ export async function processDocumentForReview(
 
   if (invokeRes.data?.fields_found === 0 && (!rawText || rawText.trim().length === 0)) {
     throw new Error(
-      "O documento enviado não contém texto ou campos legíveis identificáveis pelo motor de leitura. Verifique a qualidade do arquivo ou preencha os dados manualmente."
+      "O documento enviado não contém texto legível identificado. Você pode preencher os dados manualmente.",
     );
   }
 

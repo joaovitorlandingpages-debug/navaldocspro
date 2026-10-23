@@ -525,13 +525,13 @@ function PendenciasProcessoPage() {
         {
           id: "doc-residencia",
           title: "Comprovante de residência atualizado",
-          hint: "Contas de consumo (água, luz, telefone) emitidas nos últimos 90 dias.",
+          hint: "Contas de consumo (água, luz, telefone) expedidas nos últimos 120 dias ou a vencer (ou Declaração Anexo 2-I).",
           matchers: ["residencia", "endereco", "comprovante_residencia"],
         },
         {
           id: "doc-tie-anterior",
           title: "Título anterior (TIE/TIEM a renovar)",
-          hint: "Cópia do título de inscrição de embarcação atual a ser renovado.",
+          hint: "Cópia do título de inscrição atual a ser renovado (ou cópia digital com QR Code).",
           matchers: ["tie", "tiem", "titulo", "anterior"],
         },
       );
@@ -540,7 +540,7 @@ function PendenciasProcessoPage() {
         {
           id: "doc-comprador-id",
           title: "Documento de identificação do comprador",
-          hint: "CNH ou RG do adquirente e comprovante de endereço.",
+          hint: "CNH ou RG do adquirente e comprovante de endereço com até 120 dias.",
           matchers: ["comprador", "adquirente", "cnh_comprador"],
         },
         {
@@ -552,14 +552,14 @@ function PendenciasProcessoPage() {
         {
           id: "doc-tie-original",
           title: "Título de inscrição anterior (TIE/TIEM)",
-          hint: "Cópia autenticada ou original do TIE para cancelamento/averbação.",
+          hint: "TIE original físico (se verde antigo) ou cópia simples legível com QR Code (se TIE digital).",
           matchers: ["tie", "tiem", "titulo"],
         },
         {
           id: "doc-atpv-contrato",
-          title: "Autorização de Transferência (ATPV) ou Contrato",
-          hint: "Documento com firmas reconhecidas por autenticidade em cartório.",
-          matchers: ["atpv", "contrato", "compra_venda", "recibo"],
+          title: "Autorização de Transferência (ATP / DUT Náutico)",
+          hint: "Firmas reconhecidas por autenticidade em cartório de ambas as partes (prazo regulatório: 60 dias da data de reconhecimento na Capitania).",
+          matchers: ["atpv", "contrato", "compra_venda", "recibo", "atp"],
         },
       );
     } else if (rawKind === "registro_inicial") {

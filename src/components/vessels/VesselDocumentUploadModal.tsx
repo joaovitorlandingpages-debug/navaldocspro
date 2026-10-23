@@ -1,8 +1,25 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { UploadCloud, FileText, X, CheckCircle2, AlertCircle, Loader2, Sparkles, FileUp, Info, Ship } from "lucide-react";
+import {
+  UploadCloud,
+  FileText,
+  X,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  Sparkles,
+  FileUp,
+  Info,
+  Ship,
+} from "lucide-react";
 import { toast } from "sonner";
 import { validateUpload, MAX_ATTACHMENT_BYTES } from "@/lib/storage";
 import { processDocumentForReview } from "@/services/ocr/smartDocumentService";
@@ -53,13 +70,13 @@ interface Props {
   onDataExtracted: (data: ExtractedVesselData, files: UploadedVesselFile[]) => void;
 }
 
-export function VesselDocumentUploadModal({ 
-  isOpen, 
-  onClose, 
-  companyId, 
+export function VesselDocumentUploadModal({
+  isOpen,
+  onClose,
+  companyId,
   userId,
   existingVessel,
-  onDataExtracted 
+  onDataExtracted,
 }: Props) {
   const navigate = useNavigate();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -152,12 +169,18 @@ export function VesselDocumentUploadModal({
     } catch (err: any) {
       setIsProcessing(false);
       console.error("[VesselUpload] Erro OCR:", err);
-      const errorMsg = err?.message || "Não foi possível concluir a leitura automática do documento náutico.";
-      toast.error(`Falha na leitura automática: ${errorMsg}`, { duration: 7000 });
+      const isUnavailable = !err?.message || err.message.includes("indisponível") || err.message.includes("Falha");
+      const errorMsg = isUnavailable
+        ? "Leitura automática temporariamente indisponível. Você pode preencher os dados manualmente."
+        : err.message;
+      toast.error(errorMsg, { duration: 6000 });
     }
   };
 
-  const handleReviewConfirmed = (confirmedFields: Record<string, string>, review: ExtractedDocumentReview) => {
+  const handleReviewConfirmed = (
+    confirmedFields: Record<string, string>,
+    review: ExtractedDocumentReview,
+  ) => {
     const extracted: ExtractedVesselData = {
       name: confirmedFields.name,
       registration_number: confirmedFields.registration_number,
@@ -194,7 +217,10 @@ export function VesselDocumentUploadModal({
 
   return (
     <>
-      <Dialog open={isOpen && !isReviewOpen} onOpenChange={(open) => !open && !isProcessing && onClose()}>
+      <Dialog
+        open={isOpen && !isReviewOpen}
+        onOpenChange={(open) => !open && !isProcessing && onClose()}
+      >
         <DialogContent className="w-full max-w-xl h-[100dvh] max-h-[100dvh] sm:h-auto sm:max-h-[90vh] bg-white rounded-none sm:rounded-2xl p-4 sm:p-6 shadow-xl border-0 sm:border border-slate-200 overflow-y-auto flex flex-col justify-between">
           <DialogHeader className="border-b border-slate-100 pb-3 shrink-0">
             <div className="flex items-center gap-2">
@@ -206,7 +232,8 @@ export function VesselDocumentUploadModal({
               </DialogTitle>
             </div>
             <DialogDescription className="text-xs text-slate-500 mt-1">
-              Anexe TIE, TIEM, Provisório/BSADE ou Recibo de Compra e Venda (PDF, PNG, JPG até 20MB). A IA sugerirá os dados náuticos para você conferir antes de salvar.
+              Anexe TIE, TIEM, Provisório/BSADE ou Recibo de Compra e Venda (PDF, PNG, JPG até
+              20MB). A IA sugerirá os dados náuticos para você conferir antes de salvar.
             </DialogDescription>
           </DialogHeader>
 
@@ -301,13 +328,14 @@ export function VesselDocumentUploadModal({
             <div className="flex items-start gap-2 text-[11px] text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-100">
               <Info className="h-3.5 w-3.5 text-sky-500 shrink-0 mt-0.5" />
               <span>
-                Você poderá conferir cada dado sugerido lado a lado com a imagem do documento antes de salvar. Preenchimento manual permanece 100% disponível.
+                Você poderá conferir cada dado sugerido lado a lado com a imagem do documento antes
+                de salvar. Preenchimento manual permanece 100% disponível.
               </span>
             </div>
           </div>
 
           {/* Rodapé de Ações */}
-          <div 
+          <div
             className="border-t border-slate-100 pt-3 sm:pt-4 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3 shrink-0"
             style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom, 16px))" }}
           >
