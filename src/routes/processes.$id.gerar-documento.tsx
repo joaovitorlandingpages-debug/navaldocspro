@@ -163,6 +163,24 @@ function GerarDocumentoPage() {
   const [quickVesselOwnerCpf, setQuickVesselOwnerCpf] = useState("");
   const [isSavingQuickVessel, setIsSavingQuickVessel] = useState(false);
 
+  // Estados de Outorgado da Procuração (distinção explícita PF vs PJ)
+  const [outorgadoType, setOutorgadoType] = useState<"pf" | "pj">("pf");
+  const [showOutorgadoModal, setShowOutorgadoModal] = useState(false);
+  const [outorgadoPfNome, setOutorgadoPfNome] = useState("");
+  const [outorgadoPfCpf, setOutorgadoPfCpf] = useState("");
+  const [outorgadoPfRg, setOutorgadoPfRg] = useState("");
+  const [outorgadoPfNacionalidade, setOutorgadoPfNacionalidade] = useState("Brasileira");
+  const [outorgadoPfEndereco, setOutorgadoPfEndereco] = useState("");
+  const [outorgadoPfTelefone, setOutorgadoPfTelefone] = useState("");
+  const [outorgadoPfEmail, setOutorgadoPfEmail] = useState("");
+  const [outorgadoPfCrea, setOutorgadoPfCrea] = useState("");
+  const [outorgadoPjRazao, setOutorgadoPjRazao] = useState("");
+  const [outorgadoPjCnpj, setOutorgadoPjCnpj] = useState("");
+  const [outorgadoPjEndereco, setOutorgadoPjEndereco] = useState("");
+  const [outorgadoPjTelefone, setOutorgadoPjTelefone] = useState("");
+  const [outorgadoPjEmail, setOutorgadoPjEmail] = useState("");
+  const [isSavingOutorgado, setIsSavingOutorgado] = useState(false);
+
   // Estado de accordion para ver versões anteriores agrupadas
   const [expandedPreviousVersions, setExpandedPreviousVersions] = useState<Record<string, boolean>>({});
 
@@ -305,6 +323,22 @@ function GerarDocumentoPage() {
 
         if (comp) {
           setCompanyData(comp);
+          const initialType = (comp as any)?.outorgado_tipo || (comp.cnpj ? "pj" : "pf");
+          setOutorgadoType(initialType);
+          setOutorgadoPfNome(comp.procurador_nome || "");
+          setOutorgadoPfCpf(comp.procurador_cpf || "");
+          setOutorgadoPfRg(comp.procurador_rg || "");
+          setOutorgadoPfNacionalidade(comp.procurador_nacionalidade || "Brasileira");
+          setOutorgadoPfEndereco(comp.procurador_endereco || comp.contact_address || "");
+          setOutorgadoPfTelefone(comp.procurador_telefone || comp.contact_phone || comp.phone || "");
+          setOutorgadoPfEmail(comp.procurador_email || comp.contact_email || comp.email || "");
+          setOutorgadoPfCrea(comp.procurador_crea || "");
+          setOutorgadoPjRazao(comp.name || "");
+          setOutorgadoPjCnpj(comp.cnpj || "");
+          setOutorgadoPjEndereco(comp.contact_address || "");
+          setOutorgadoPjTelefone(comp.contact_phone || comp.phone || "");
+          setOutorgadoPjEmail(comp.contact_email || comp.email || "");
+
           const docMap = (comp.document_template_map as any) || {};
           const savedEmployees: any[] =
             docMap.employees || (comp as any)?.metadata?.employees || [];
@@ -446,10 +480,20 @@ function GerarDocumentoPage() {
   const templateValidationMap = useMemo(() => {
     const map = new Map<string, { isBlocked: boolean; missingFields: string[] }>();
     for (const tpl of CATALOG_TEMPLATES) {
-      map.set(tpl.slug, checkTemplateMissingRequirements(tpl, customer, vessel, selectedStaff, companyData));
+      map.set(
+        tpl.slug,
+        checkTemplateMissingRequirements(
+          tpl,
+          customer,
+          vessel,
+          selectedStaff,
+          companyData,
+          outorgadoType,
+        ),
+      );
     }
     return map;
-  }, [customer, vessel, selectedStaff, companyData]);
+  }, [customer, vessel, selectedStaff, companyData, outorgadoType]);
 
   // Contagens dinâmicas
   // IMPORTANTE: apenas documentos com mode === "generate", status aprovado, COM UUID resolvido no banco e com dados válidos!
@@ -666,6 +710,72 @@ function GerarDocumentoPage() {
       toast.error(err?.message || "Erro ao vincular proprietário.");
     } finally {
       setIsSavingQuickVessel(false);
+    }
+  };
+
+  // Salvar/Atualizar dados do Outorgado (PF ou PJ) para a procuração
+  const handleSaveOutorgado = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!companyId) return;
+
+    if (outorgadoType === "pf" && (!outorgadoPfNome.trim() || !outorgadoPfCpf.trim())) {
+      toast.error("Informe o Nome Completo e CPF do Outorgado Pessoa Física.");
+      return;
+    }
+
+    if (outorgadoType === "pj" && (!outorgadoPjRazao.trim() || !outorgadoPjCnpj.trim())) {
+      toast.error("Informe a Razão Social e CNPJ da Outorgada Pessoa Jurídica.");
+      return;
+    }
+
+    setIsSavingOutorgado(true);
+    try {
+      const now = new Date().toISOString();
+      const updatePayload: any = {
+        updated_at: now,
+      };
+
+      if (outorgadoType === "pf") {
+        updatePayload.procurador_nome = outorgadoPfNome.trim();
+        updatePayload.procurador_cpf = outorgadoPfCpf.trim();
+        updatePayload.procurador_rg = outorgadoPfRg.trim() || null;
+        updatePayload.procurador_nacionalidade = outorgadoPfNacionalidade.trim() || "Brasileira";
+        updatePayload.procurador_endereco = outorgadoPfEndereco.trim() || null;
+        updatePayload.procurador_telefone = outorgadoPfTelefone.trim() || null;
+        updatePayload.procurador_email = outorgadoPfEmail.trim() || null;
+        updatePayload.procurador_crea = outorgadoPfCrea.trim() || null;
+      } else {
+        updatePayload.name = outorgadoPjRazao.trim();
+        updatePayload.cnpj = outorgadoPjCnpj.trim();
+        updatePayload.contact_address = outorgadoPjEndereco.trim() || null;
+        updatePayload.contact_phone = outorgadoPjTelefone.trim() || null;
+        updatePayload.contact_email = outorgadoPjEmail.trim() || null;
+      }
+
+      const { data: updatedComp, error: updErr } = await supabase
+        .from("companies")
+        .update(updatePayload)
+        .eq("id", companyId)
+        .select()
+        .single();
+
+      if (updErr) throw updErr;
+
+      setCompanyData(updatedComp);
+      setShowOutorgadoModal(false);
+      toast.success(
+        outorgadoType === "pf"
+          ? "Dados do Outorgado (Pessoa Física) salvos com sucesso!"
+          : "Dados da Outorgada (Pessoa Jurídica) salvos com sucesso!",
+        {
+          description: "Os requisitos da procuração foram atualizados.",
+        },
+      );
+    } catch (err: any) {
+      console.error("Erro ao salvar outorgado:", err);
+      toast.error(err?.message || "Não foi possível salvar os dados do outorgado.");
+    } finally {
+      setIsSavingOutorgado(false);
     }
   };
 
@@ -964,7 +1074,14 @@ function GerarDocumentoPage() {
       for (const tpl of templatesToGenerate) {
         try {
           // 0. Validação estrita de campos obrigatórios (não permite emissão silenciosa)
-          const fieldValidation = checkTemplateMissingRequirements(tpl, customer, vessel, selectedStaff, companyData);
+          const fieldValidation = checkTemplateMissingRequirements(
+            tpl,
+            customer,
+            vessel,
+            selectedStaff,
+            companyData,
+            outorgadoType,
+          );
           if (fieldValidation.isBlocked) {
             throw new Error(
               `O modelo "${tpl.name}" possui campos obrigatórios não preenchidos: ${fieldValidation.missingFields.join(", ")}. Preencha todos os campos antes de gerar.`
@@ -989,9 +1106,10 @@ function GerarDocumentoPage() {
           let content = "";
 
           if (tpl.slug === "proc-representacao-naval") {
-            const isPF = !!(companyData?.procurador_nome || companyData?.procurador_cpf);
+            const isPF = outorgadoType === "pf";
 
             const resolvedCompanyEmail =
+              outorgadoPjEmail ||
               companyData?.contact_email ||
               companyData?.email ||
               companyData?.procurador_email ||
@@ -1003,6 +1121,7 @@ function GerarDocumentoPage() {
               "";
 
             const resolvedCompanyPhone =
+              outorgadoPjTelefone ||
               companyData?.contact_phone ||
               companyData?.phone ||
               companyData?.procurador_telefone ||
@@ -1012,44 +1131,44 @@ function GerarDocumentoPage() {
               "";
 
             const resolvedProcuradorEmail =
+              outorgadoPfEmail ||
               companyData?.procurador_email ||
               companyData?.contact_email ||
               companyData?.email ||
-              (currentCompany as any)?.contact_email ||
-              (currentCompany as any)?.email ||
               branding?.contact_email ||
               selectedStaff?.email ||
               user?.email ||
               "";
 
             const resolvedProcuradorPhone =
+              outorgadoPfTelefone ||
               companyData?.procurador_telefone ||
               companyData?.contact_phone ||
               companyData?.phone ||
-              (currentCompany as any)?.contact_phone ||
-              (currentCompany as any)?.phone ||
               branding?.contact_phone ||
               "";
 
             const outorgadoLines = isPF
               ? [
                   `OUTORGADO (PESSOA FÍSICA):`,
-                  `Nome do Procurador: ${companyData?.procurador_nome || selectedStaff.name}`,
-                  `Nacionalidade: ${companyData?.procurador_nacionalidade || "Brasileira"}`,
+                  `Nome do Procurador: ${outorgadoPfNome || companyData?.procurador_nome || selectedStaff.name}`,
+                  `Nacionalidade: ${outorgadoPfNacionalidade || companyData?.procurador_nacionalidade || "Brasileira"}`,
                   `Estado Civil: Casado(a)`,
-                  `CPF: ${companyData?.procurador_cpf || "Não informado"}`,
-                  `RG: ${companyData?.procurador_rg || "Não informado"}`,
-                  companyData?.procurador_crea ? `Registro Profissional / Habilitação: ${companyData.procurador_crea}` : "",
-                  `Endereço Profissional: ${companyData?.procurador_endereco || companyData?.contact_address || "Não informado"}`,
+                  `CPF: ${outorgadoPfCpf || companyData?.procurador_cpf || "Não informado"}`,
+                  `RG: ${outorgadoPfRg || companyData?.procurador_rg || "Não informado"}`,
+                  outorgadoPfCrea || companyData?.procurador_crea
+                    ? `Registro Profissional / Habilitação: ${outorgadoPfCrea || companyData.procurador_crea}`
+                    : "",
+                  `Endereço Profissional: ${outorgadoPfEndereco || companyData?.procurador_endereco || companyData?.contact_address || "Não informado"}`,
                   `Telefone: ${resolvedProcuradorPhone || "Não informado"}`,
                   `E-mail: ${resolvedProcuradorEmail || "Não informado"}`,
                   `Sociedade Vinculada: ${companyData?.name || currentCompany?.name || "NavalDocs Pro"} (CNPJ: ${companyData?.cnpj || currentCompany?.cnpj || "Não informado"})`,
                 ]
               : [
                   `OUTORGADA (PESSOA JURÍDICA):`,
-                  `Razão Social: ${companyData?.name || currentCompany?.name || "NavalDocs Pro"}`,
-                  `CNPJ: ${companyData?.cnpj || currentCompany?.cnpj || "Não informado"}`,
-                  `Sede Social: ${companyData?.contact_address || "Não informado"}`,
+                  `Razão Social: ${outorgadoPjRazao || companyData?.name || currentCompany?.name || "NavalDocs Pro"}`,
+                  `CNPJ: ${outorgadoPjCnpj || companyData?.cnpj || currentCompany?.cnpj || "Não informado"}`,
+                  `Sede Social: ${outorgadoPjEndereco || companyData?.contact_address || "Não informado"}`,
                   `Telefone: ${resolvedCompanyPhone || "Não informado"}`,
                   `E-mail: ${resolvedCompanyEmail || "Não informado"}`,
                   `Representação Legal: Representada neste ato por seus administradores ou procuradores com poderes específicos para a prática de atos perante a Autoridade Marítima.`,
@@ -1957,61 +2076,66 @@ function GerarDocumentoPage() {
                       </div>
 
                       {/* Lado Direito: Seletor das 3 Opções Simples */}
-                      <div className="flex items-center gap-1.5 shrink-0 bg-slate-50 p-1 rounded-xl border border-slate-200 text-xs">
-                        {/* Opção 1: Gerar documento */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setDocSelections((prev) => ({
-                              ...prev,
-                              [tpl.id]: { ...(prev[tpl.id] || {}), mode: "generate" },
-                            }));
-                            setSelectedTemplateId(tpl.id);
-                          }}
-                          className={`px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
-                            isGeneratingThis
-                              ? "bg-[#075BFF] text-white font-bold shadow-2xs"
-                              : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-                          }`}
-                        >
-                          Gerar documento
-                        </button>
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <span className="text-[10px] text-slate-400 font-medium">
+                          Ação para este documento:
+                        </span>
+                        <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-200 text-xs">
+                          {/* Opção 1: Gerar documento */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDocSelections((prev) => ({
+                                ...prev,
+                                [tpl.id]: { ...(prev[tpl.id] || {}), mode: "generate" },
+                              }));
+                              setSelectedTemplateId(tpl.id);
+                            }}
+                            className={`px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
+                              isGeneratingThis
+                                ? "bg-[#075BFF] text-white font-bold shadow-2xs"
+                                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                            }`}
+                          >
+                            Gerar documento
+                          </button>
 
-                        {/* Opção 2: Anexar documento pronto */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setDocSelections((prev) => ({
-                              ...prev,
-                              [tpl.id]: { ...(prev[tpl.id] || {}), mode: "attach" },
-                            }));
-                          }}
-                          className={`px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
-                            isAttachingThis
-                              ? "bg-emerald-600 text-white font-bold shadow-2xs"
-                              : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-                          }`}
-                        >
-                          Anexar documento pronto
-                        </button>
+                          {/* Opção 2: Anexar documento pronto */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDocSelections((prev) => ({
+                                ...prev,
+                                [tpl.id]: { ...(prev[tpl.id] || {}), mode: "attach" },
+                              }));
+                            }}
+                            className={`px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
+                              isAttachingThis
+                                ? "bg-emerald-600 text-white font-bold shadow-2xs"
+                                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                            }`}
+                          >
+                            Anexar documento pronto
+                          </button>
 
-                        {/* Opção 3: Não usar agora */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setDocSelections((prev) => ({
-                              ...prev,
-                              [tpl.id]: { ...(prev[tpl.id] || {}), mode: "omit" },
-                            }));
-                          }}
-                          className={`px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
-                            isOmittedThis
-                              ? "bg-slate-600 text-white font-bold shadow-2xs"
-                              : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-                          }`}
-                        >
-                          Não usar agora
-                        </button>
+                          {/* Opção 3: Não usar agora */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDocSelections((prev) => ({
+                                ...prev,
+                                [tpl.id]: { ...(prev[tpl.id] || {}), mode: "omit" },
+                              }));
+                            }}
+                            className={`px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
+                              isOmittedThis
+                                ? "bg-slate-600 text-white font-bold shadow-2xs"
+                                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                            }`}
+                          >
+                            Não usar agora
+                          </button>
+                        </div>
                       </div>
                     </div>
 
@@ -2025,6 +2149,75 @@ function GerarDocumentoPage() {
                       </div>
                     )}
 
+                    {/* Seletor explícito de Outorgado PF vs PJ na Procuração */}
+                    {tpl.slug === "proc-representacao-naval" && (
+                      <div className="p-3 bg-slate-50 border border-slate-200/90 rounded-xl space-y-2 text-xs">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div>
+                            <span className="font-bold text-[#0B1739] block">
+                              Quem receberá os poderes (Outorgado)?
+                            </span>
+                            <span className="text-[11px] text-slate-500">
+                              Defina se o procurador atuará como Pessoa Física (PF) ou como Pessoa Jurídica (PJ).
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0 bg-white p-1 rounded-lg border border-slate-200">
+                            <button
+                              type="button"
+                              onClick={() => setOutorgadoType("pf")}
+                              className={`px-3 py-1 rounded-md text-xs font-semibold cursor-pointer transition-all ${
+                                outorgadoType === "pf"
+                                  ? "bg-[#075BFF] text-white shadow-2xs font-bold"
+                                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                              }`}
+                            >
+                              Pessoa Física (PF)
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setOutorgadoType("pj")}
+                              className={`px-3 py-1 rounded-md text-xs font-semibold cursor-pointer transition-all ${
+                                outorgadoType === "pj"
+                                  ? "bg-[#075BFF] text-white shadow-2xs font-bold"
+                                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                              }`}
+                            >
+                              Pessoa Jurídica (PJ)
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="text-[11px] text-slate-600 flex items-center justify-between gap-2 pt-1 border-t border-slate-200/60">
+                          <span>
+                            {outorgadoType === "pf" ? (
+                              <>
+                                <strong>Outorgado PF:</strong>{" "}
+                                {outorgadoPfNome
+                                  ? `${outorgadoPfNome} (${outorgadoPfCpf ? `CPF: ${outorgadoPfCpf}` : "CPF pendente"})`
+                                  : "Nome e CPF pendentes"}
+                              </>
+                            ) : (
+                              <>
+                                <strong>Outorgada PJ:</strong>{" "}
+                                {outorgadoPjRazao
+                                  ? `${outorgadoPjRazao} (${outorgadoPjCnpj ? `CNPJ: ${outorgadoPjCnpj}` : "CNPJ pendente"})`
+                                  : "Razão social e CNPJ pendentes"}
+                              </>
+                            )}
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={() => setShowOutorgadoModal(true)}
+                            className="font-bold text-[#075BFF] hover:underline cursor-pointer shrink-0"
+                          >
+                            Alterar dados do outorgado
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Falta de Dados: Mensagem Clara + Botão "Completar dados" */}
                     {isGeneratingThis && isBlockedForRequiredFields && (
                       <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
@@ -2035,14 +2228,26 @@ function GerarDocumentoPage() {
                               Faltam: {missingForThisDoc.join(", ")}.
                             </span>
                             <span className="text-[11px] text-amber-800">
-                              Complete as informações pendentes para liberar a geração.
+                              Complete as informações pendentes para liberar a geração deste documento.
                             </span>
                           </div>
                         </div>
 
                         <button
                           type="button"
-                          onClick={() => setShowQuickVesselModal(true)}
+                          onClick={() => {
+                            if (tpl.slug === "proc-representacao-naval") {
+                              setShowOutorgadoModal(true);
+                            } else if (
+                              missingForThisDoc.some((f) => f.includes("Embarcação") || f.includes("Inscrição") || f.includes("Proprietário"))
+                            ) {
+                              setShowQuickVesselModal(true);
+                            } else if (missingForThisDoc.some((f) => f.includes("Responsável") || f.includes("Funcionário"))) {
+                              setShowQuickStaffModal(true);
+                            } else {
+                              setShowQuickVesselModal(true);
+                            }
+                          }}
                           className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-colors cursor-pointer shrink-0"
                         >
                           <Edit className="h-3 w-3" />
@@ -2682,6 +2887,279 @@ function GerarDocumentoPage() {
                   <Check className="h-3.5 w-3.5" />
                 )}
                 <span>Salvar e atualizar</span>
+              </button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* MODAL: CONFIGURAÇÃO E DADOS DO OUTORGADO DA PROCURAÇÃO (PF OU PJ) */}
+      <Dialog open={showOutorgadoModal} onOpenChange={setShowOutorgadoModal}>
+        <DialogContent className="max-w-lg p-6 rounded-2xl bg-white border border-slate-200 max-h-[90vh] overflow-y-auto">
+          <form onSubmit={handleSaveOutorgado}>
+            <DialogHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#075BFF] flex items-center justify-center shrink-0">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div>
+                  <DialogTitle className="text-base font-bold text-[#0B1739]">
+                    Dados do Outorgado (Procurador)
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-slate-500 mt-0.5">
+                    Defina quem recebe os poderes de representação náutica perante a Autoridade Marítima.
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4 text-xs">
+              {/* Seletor PF vs PJ */}
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                <label className="text-xs font-bold text-[#0B1739] block">
+                  Tipo de Outorgado
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setOutorgadoType("pf")}
+                    className={`p-2.5 rounded-lg border text-xs font-semibold cursor-pointer transition-all flex flex-col items-center gap-1 ${
+                      outorgadoType === "pf"
+                        ? "border-[#075BFF] bg-blue-50/60 text-[#075BFF] font-bold"
+                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
+                    }`}
+                  >
+                    <span>Pessoa Física (PF)</span>
+                    <span className="text-[10px] text-slate-400 font-normal">Exige Nome e CPF</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setOutorgadoType("pj")}
+                    className={`p-2.5 rounded-lg border text-xs font-semibold cursor-pointer transition-all flex flex-col items-center gap-1 ${
+                      outorgadoType === "pj"
+                        ? "border-[#075BFF] bg-blue-50/60 text-[#075BFF] font-bold"
+                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
+                    }`}
+                  >
+                    <span>Pessoa Jurídica (PJ)</span>
+                    <span className="text-[10px] text-slate-400 font-normal">Exige Razão Social e CNPJ</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* CAMPOS PESSOA FÍSICA */}
+              {outorgadoType === "pf" && (
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-700">
+                      Nome completo do Outorgado <strong className="text-red-500">*</strong>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={outorgadoPfNome}
+                      onChange={(e) => setOutorgadoPfNome(e.target.value)}
+                      placeholder="Ex: Carlos Eduardo de Oliveira"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#0B1739] font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-slate-700">
+                        CPF <strong className="text-red-500">*</strong>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={outorgadoPfCpf}
+                        onChange={(e) => setOutorgadoPfCpf(e.target.value)}
+                        placeholder="Ex: 000.000.000-00"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#0B1739] font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-slate-700">
+                        RG / Órgão Emissor
+                      </label>
+                      <input
+                        type="text"
+                        value={outorgadoPfRg}
+                        onChange={(e) => setOutorgadoPfRg(e.target.value)}
+                        placeholder="Ex: 12.345.678-9 SSP/SP"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#0B1739] font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-slate-700">
+                        Nacionalidade
+                      </label>
+                      <input
+                        type="text"
+                        value={outorgadoPfNacionalidade}
+                        onChange={(e) => setOutorgadoPfNacionalidade(e.target.value)}
+                        placeholder="Ex: Brasileira"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#0B1739] font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-slate-700">
+                        Registro Profissional / CREA
+                      </label>
+                      <input
+                        type="text"
+                        value={outorgadoPfCrea}
+                        onChange={(e) => setOutorgadoPfCrea(e.target.value)}
+                        placeholder="Ex: CREA-SP 123456 (opcional)"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#0B1739] font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-700">
+                      Endereço Profissional / Domicílio
+                    </label>
+                    <input
+                      type="text"
+                      value={outorgadoPfEndereco}
+                      onChange={(e) => setOutorgadoPfEndereco(e.target.value)}
+                      placeholder="Ex: Av. Ana Costa, 100, Sala 10 - Santos/SP"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#0B1739] font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-slate-700">
+                        Telefone
+                      </label>
+                      <input
+                        type="text"
+                        value={outorgadoPfTelefone}
+                        onChange={(e) => setOutorgadoPfTelefone(e.target.value)}
+                        placeholder="Ex: (13) 99999-9999"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#0B1739] font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-slate-700">
+                        E-mail
+                      </label>
+                      <input
+                        type="email"
+                        value={outorgadoPfEmail}
+                        onChange={(e) => setOutorgadoPfEmail(e.target.value)}
+                        placeholder="Ex: contato@despachante.com.br"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#0B1739] font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* CAMPOS PESSOA JURÍDICA */}
+              {outorgadoType === "pj" && (
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-700">
+                      Razão Social <strong className="text-red-500">*</strong>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={outorgadoPjRazao}
+                      onChange={(e) => setOutorgadoPjRazao(e.target.value)}
+                      placeholder="Ex: Despachadoria Náutica Santos Ltda"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#0B1739] font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-700">
+                      CNPJ <strong className="text-red-500">*</strong>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={outorgadoPjCnpj}
+                      onChange={(e) => setOutorgadoPjCnpj(e.target.value)}
+                      placeholder="Ex: 00.000.000/0001-00"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#0B1739] font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-700">
+                      Endereço da Sede Social <strong className="text-red-500">*</strong>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={outorgadoPjEndereco}
+                      onChange={(e) => setOutorgadoPjEndereco(e.target.value)}
+                      placeholder="Ex: Rua do Comércio, 120 - Centro, Santos/SP"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#0B1739] font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-slate-700">
+                        Telefone de Contato
+                      </label>
+                      <input
+                        type="text"
+                        value={outorgadoPjTelefone}
+                        onChange={(e) => setOutorgadoPjTelefone(e.target.value)}
+                        placeholder="Ex: (13) 3234-5678"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#0B1739] font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-slate-700">
+                        E-mail de Contato
+                      </label>
+                      <input
+                        type="email"
+                        value={outorgadoPjEmail}
+                        onChange={(e) => setOutorgadoPjEmail(e.target.value)}
+                        placeholder="Ex: contato@empresa.com.br"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#0B1739] font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <DialogFooter className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setShowOutorgadoModal(false)}
+                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={isSavingOutorgado}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-bold cursor-pointer disabled:opacity-50"
+              >
+                {isSavingOutorgado ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Check className="h-3.5 w-3.5" />
+                )}
+                <span>Salvar outorgado</span>
               </button>
             </DialogFooter>
           </form>

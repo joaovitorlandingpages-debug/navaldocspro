@@ -382,6 +382,7 @@ export function checkTemplateMissingRequirements(
   vessel: any,
   staff: any,
   company?: any,
+  outorgadoTypeOverride?: "pf" | "pj",
 ): { isBlocked: boolean; missingFields: string[] } {
   const missing: string[] = [];
 
@@ -393,10 +394,17 @@ export function checkTemplateMissingRequirements(
   const hasVesselRegistration = !!(vessel?.registration_number && vessel.registration_number.trim() !== "");
   const hasVesselOwner = !!(vessel?.current_owner_name && vessel.current_owner_name.trim() !== "");
 
-  // Outorgado da Procuração: verificação estrita de PF vs PJ
-  const isProcuradorPF = !!company?.procurador_nome;
+  // Outorgado da Procuração: identificação explícita de PF vs PJ
+  // Se explicitado pelo usuário/processo, usa a preferência.
+  // Caso contrário, se a empresa tiver outorgado_tipo configurado, usa ele.
+  // Se não houver preferência e a empresa NÃO tiver CNPJ de PJ (ou se tiver procurador_nome/cpf), considera PF.
+  const explicitType = outorgadoTypeOverride || company?.outorgado_tipo || (company?.cnpj ? "pj" : "pf");
+  const isOutorgadoPF = explicitType === "pf" || (!company?.cnpj && !outorgadoTypeOverride);
+
+  const hasProcuradorPFName = !!(company?.procurador_nome || staff?.name);
   const hasProcuradorPFCpf = !!company?.procurador_cpf;
   const hasCompanyPJDoc = !!(company?.cnpj && (company?.contact_address || company?.address));
+  const hasCompanyPJName = !!(company?.name || company?.razao_social);
 
   for (const field of tpl.requiredFields) {
     if (field === "Nome do Cliente" && !hasCustomerName) {
@@ -421,13 +429,19 @@ export function checkTemplateMissingRequirements(
       missing.push("Número de Inscrição da Embarcação");
     }
     if (field === "Outorgado") {
-      if (isProcuradorPF) {
+      if (isOutorgadoPF) {
+        if (!hasProcuradorPFName) {
+          missing.push("Nome Completo do Outorgado (Pessoa Física)");
+        }
         if (!hasProcuradorPFCpf) {
-          missing.push("CPF do Procurador Outorgado (obrigatório para Pessoa Física)");
+          missing.push("CPF do Outorgado (Pessoa Física)");
         }
       } else {
+        if (!hasCompanyPJName) {
+          missing.push("Razão Social da Outorgada (Pessoa Jurídica)");
+        }
         if (!hasCompanyPJDoc) {
-          missing.push("CNPJ e Endereço da Sede (obrigatórios para Outorgada Pessoa Jurídica)");
+          missing.push("CNPJ e Endereço da Sede (Outorgada Pessoa Jurídica)");
         }
       }
     }

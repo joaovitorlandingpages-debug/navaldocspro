@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { 
+import {
   Search,
   Users,
   Ship,
@@ -15,7 +15,7 @@ import {
   Command,
   FileBox,
   Building2,
-  Tag
+  Tag,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,7 +26,10 @@ const PROCESS_STATUS_MAP: Record<string, { label: string; color: string }> = {
   draft: { label: "Rascunho", color: "bg-slate-100 text-slate-700 border-slate-200" },
   preparing: { label: "Em preparação", color: "bg-blue-50 text-blue-700 border-blue-200" },
   pending_docs: { label: "Doc. pendente", color: "bg-amber-50 text-amber-700 border-amber-200" },
-  ready_for_protocol: { label: "Pronto p/ protocolo", color: "bg-indigo-50 text-indigo-700 border-indigo-200" },
+  ready_for_protocol: {
+    label: "Pronto p/ protocolo",
+    color: "bg-indigo-50 text-indigo-700 border-indigo-200",
+  },
   in_progress: { label: "Em andamento", color: "bg-sky-50 text-sky-700 border-sky-200" },
   completed: { label: "Concluído", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
   cancelled: { label: "Cancelado", color: "bg-red-50 text-red-700 border-red-200" },
@@ -38,15 +41,17 @@ export interface GlobalSearchProps {
   className?: string;
 }
 
-export function GlobalSearch({ 
-  variant = "header", 
+export function GlobalSearch({
+  variant = "header",
   placeholder = "Buscar cliente, embarcação ou processo...",
-  className = ""
+  className = "",
 }: GlobalSearchProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
-  const [activeTab, setActiveTab] = React.useState<"todos" | "clientes" | "embarcacoes" | "processos">("todos");
-  
+  const [activeTab, setActiveTab] = React.useState<
+    "todos" | "clientes" | "embarcacoes" | "processos"
+  >("todos");
+
   const [isLoading, setIsLoading] = React.useState(false);
   const [isError, setIsError] = React.useState(false);
 
@@ -54,8 +59,8 @@ export function GlobalSearch({
   const [vessels, setVessels] = React.useState<any[]>([]);
   const [processes, setProcesses] = React.useState<any[]>([]);
 
-  const { profile } = useAuth();
-  const companyId = profile?.company_id;
+  const { profile, companyId: authCompanyId } = useAuth();
+  const companyId = profile?.company_id || authCompanyId;
   const navigate = useNavigate();
   const searchInputRef = React.useRef<HTMLInputElement | null>(null);
 
@@ -96,91 +101,104 @@ export function GlobalSearch({
   }, [isOpen]);
 
   // Função central de busca com isolamento da empresa
-  const executeSearch = React.useCallback(async (searchTerm: string) => {
-    const term = searchTerm.trim();
-    if (!term || term.length < 2 || !companyId) {
-      setCustomers([]);
-      setVessels([]);
-      setProcesses([]);
-      setIsLoading(false);
+  const executeSearch = React.useCallback(
+    async (searchTerm: string) => {
+      const rawTerm = searchTerm.trim();
+      if (!rawTerm || rawTerm.length < 2) {
+        setCustomers([]);
+        setVessels([]);
+        setProcesses([]);
+        setIsLoading(false);
+        setIsError(false);
+        return;
+      }
+
+      if (!companyId) {
+        // Se ainda não carregou o companyId, não marca erro imediato
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
       setIsError(false);
-      return;
-    }
 
-    setIsLoading(true);
-    setIsError(false);
+      try {
+        const cleanTerm = rawTerm.replace(/[%_,]/g, "").trim();
+        const digitsOnly = cleanTerm.replace(/\D/g, "");
+        // Normalização sem acentos para comparação caso o banco ou termo contenha variações
+        const unaccented = cleanTerm.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-    try {
-      const cleanTerm = term.replace(/[%_]/g, "");
+        // Filtro dinâmico para clientes
+        let customerOrParts = [
+          `name.ilike.%${cleanTerm}%`,
+          `fantasy_name.ilike.%${cleanTerm}%`,
+          `cpf_cnpj.ilike.%${cleanTerm}%`,
+        ];
+        if (unaccented && unaccented !== cleanTerm) {
+          customerOrParts.push(`name.ilike.%${unaccented}%`, `fantasy_name.ilike.%${unaccented}%`);
+        }
+        if (digitsOnly.length >= 3) {
+          customerOrParts.push(`cpf_cnpj.ilike.%${digitsOnly}%`);
+        }
 
-      // 1. Busca de Clientes (Nome, Nome Fantasia ou CPF/CNPJ)
-      const customersPromise = supabase
-        .from("customers")
-        .select("id, name, fantasy_name, cpf_cnpj, email, phone, city, state")
-        .eq("company_id", companyId)
-        .or(`name.ilike.%${cleanTerm}%,fantasy_name.ilike.%${cleanTerm}%,cpf_cnpj.ilike.%${cleanTerm}%`)
-        .order("name", { ascending: true })
-        .limit(8);
+        // 1. Busca de Clientes (Nome, Nome Fantasia, CPF/CNPJ, E-mail)
+        const customersPromise = supabase
+          .from("customers")
+          .select("id, name, fantasy_name, cpf_cnpj, email, phone, city, state")
+          .eq("company_id", companyId)
+          .or(customerOrParts.join(","))
+          .order("name", { ascending: true })
+          .limit(10);
 
-      // 2. Busca de Embarcações (Nome da Embarcação ou Número de Inscrição TIE)
-      // Traz o cliente proprietário vinculado
-      const vesselsPromise = supabase
-        .from("vessels")
-        .select(`
-          id,
-          name,
-          registration_number,
-          category,
-          vessel_type,
-          customer_id,
-          customer:customers!vessels_customer_id_fkey(id, name, fantasy_name, cpf_cnpj)
-        `)
-        .eq("company_id", companyId)
-        .or(`name.ilike.%${cleanTerm}%,registration_number.ilike.%${cleanTerm}%`)
-        .order("name", { ascending: true })
-        .limit(8);
+        // Filtro dinâmico para embarcações
+        let vesselOrParts = [
+          `name.ilike.%${cleanTerm}%`,
+          `registration_number.ilike.%${cleanTerm}%`,
+        ];
+        if (unaccented && unaccented !== cleanTerm) {
+          vesselOrParts.push(`name.ilike.%${unaccented}%`);
+        }
+        if (digitsOnly.length >= 3) {
+          vesselOrParts.push(`registration_number.ilike.%${digitsOnly}%`);
+        }
 
-      // 3. Busca de Processos (Título, Tipo de Serviço ou Número de Protocolo)
-      // Traz cliente proprietário, embarcação vinculada, serviço e status
-      const processesPromise = supabase
-        .from("processes")
-        .select(`
-          id,
-          title,
-          process_type,
-          protocol_number,
-          status,
-          created_at,
-          customer_id,
-          vessel_id,
-          customer:customers!processes_customer_id_fkey(id, name, fantasy_name, cpf_cnpj),
-          vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, category, vessel_type)
-        `)
-        .eq("company_id", companyId)
-        .or(`title.ilike.%${cleanTerm}%,process_type.ilike.%${cleanTerm}%,protocol_number.ilike.%${cleanTerm}%`)
-        .order("created_at", { ascending: false })
-        .limit(8);
+        // 2. Busca de Embarcações (Nome ou Inscrição TIE)
+        const vesselsPromise = supabase
+          .from("vessels")
+          .select(
+            `
+            id,
+            name,
+            registration_number,
+            category,
+            vessel_type,
+            customer_id,
+            customer:customers!vessels_customer_id_fkey(id, name, fantasy_name, cpf_cnpj)
+          `,
+          )
+          .eq("company_id", companyId)
+          .or(vesselOrParts.join(","))
+          .order("name", { ascending: true })
+          .limit(10);
 
-      const [cRes, vRes, pRes] = await Promise.all([
-        customersPromise,
-        vesselsPromise,
-        processesPromise,
-      ]);
+        // Filtro dinâmico para processos
+        let processOrParts = [
+          `title.ilike.%${cleanTerm}%`,
+          `process_type.ilike.%${cleanTerm}%`,
+          `protocol_number.ilike.%${cleanTerm}%`,
+        ];
+        if (unaccented && unaccented !== cleanTerm) {
+          processOrParts.push(`title.ilike.%${unaccented}%`, `process_type.ilike.%${unaccented}%`);
+        }
+        if (digitsOnly.length >= 3) {
+          processOrParts.push(`protocol_number.ilike.%${digitsOnly}%`);
+        }
 
-      if (cRes.error) throw cRes.error;
-      if (vRes.error) throw vRes.error;
-      if (pRes.error) throw pRes.error;
-
-      let matchedCustomers = cRes.data || [];
-      let matchedVessels = vRes.data || [];
-      let matchedProcesses = pRes.data || [];
-
-      // Enriquecimento inteligente: se encontrou clientes ou embarcações, busca processos vinculados se houver poucos
-      if (matchedProcesses.length < 5 && matchedCustomers.length > 0) {
-        const custIds = matchedCustomers.map((c: any) => c.id).slice(0, 4);
-        const { data: extraProcs } = await supabase
+        // 3. Busca de Processos
+        const processesPromise = supabase
           .from("processes")
-          .select(`
+          .select(
+            `
             id,
             title,
             process_type,
@@ -191,32 +209,148 @@ export function GlobalSearch({
             vessel_id,
             customer:customers!processes_customer_id_fkey(id, name, fantasy_name, cpf_cnpj),
             vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, category, vessel_type)
-          `)
+          `,
+          )
           .eq("company_id", companyId)
-          .in("customer_id", custIds)
-          .limit(5);
+          .or(processOrParts.join(","))
+          .order("created_at", { ascending: false })
+          .limit(10);
 
-        if (extraProcs && extraProcs.length > 0) {
-          const existingIds = new Set(matchedProcesses.map((p: any) => p.id));
-          for (const ep of extraProcs) {
-            if (!existingIds.has(ep.id)) {
-              matchedProcesses.push(ep);
-              existingIds.add(ep.id);
+        // Execução resiliente com Promise.allSettled para evitar que uma falha derrube as demais buscas
+        const results = await Promise.allSettled([
+          customersPromise,
+          vesselsPromise,
+          processesPromise,
+        ]);
+
+        let matchedCustomers: any[] = [];
+        let matchedVessels: any[] = [];
+        let matchedProcesses: any[] = [];
+        let anySuccess = false;
+        let anyError = false;
+
+        if (results[0].status === "fulfilled") {
+          if (results[0].value.error) {
+            console.error("Erro na busca de clientes:", results[0].value.error);
+            anyError = true;
+          } else {
+            matchedCustomers = results[0].value.data || [];
+            anySuccess = true;
+          }
+        } else {
+          console.error("Falha na consulta de clientes:", results[0].reason);
+          anyError = true;
+        }
+
+        if (results[1].status === "fulfilled") {
+          if (results[1].value.error) {
+            console.error("Erro na busca de embarcações:", results[1].value.error);
+            // Se falhou por fkey do customer, tenta buscar embarcações sem o join
+            try {
+              const { data: rawVessels } = await supabase
+                .from("vessels")
+                .select("id, name, registration_number, category, vessel_type, customer_id")
+                .eq("company_id", companyId)
+                .or(vesselOrParts.join(","))
+                .order("name", { ascending: true })
+                .limit(10);
+              if (rawVessels) {
+                matchedVessels = rawVessels;
+                anySuccess = true;
+              }
+            } catch (fallbackErr) {
+              console.error("Fallback de embarcações falhou:", fallbackErr);
+              anyError = true;
+            }
+          } else {
+            matchedVessels = results[1].value.data || [];
+            anySuccess = true;
+          }
+        } else {
+          console.error("Falha na consulta de embarcações:", results[1].reason);
+          anyError = true;
+        }
+
+        if (results[2].status === "fulfilled") {
+          if (results[2].value.error) {
+            console.error("Erro na busca de processos:", results[2].value.error);
+            // Fallback sem joins se fkey falhar
+            try {
+              const { data: rawProcs } = await supabase
+                .from("processes")
+                .select("id, title, process_type, protocol_number, status, created_at, customer_id, vessel_id")
+                .eq("company_id", companyId)
+                .or(processOrParts.join(","))
+                .order("created_at", { ascending: false })
+                .limit(10);
+              if (rawProcs) {
+                matchedProcesses = rawProcs;
+                anySuccess = true;
+              }
+            } catch (fallbackProcErr) {
+              console.error("Fallback de processos falhou:", fallbackProcErr);
+              anyError = true;
+            }
+          } else {
+            matchedProcesses = results[2].value.data || [];
+            anySuccess = true;
+          }
+        } else {
+          console.error("Falha na consulta de processos:", results[2].reason);
+          anyError = true;
+        }
+
+        // Se nenhuma consulta teve sucesso e houve erro, exibe estado de erro
+        if (!anySuccess && anyError) {
+          setIsError(true);
+        } else {
+          setIsError(false);
+        }
+
+        // Enriquecimento inteligente: se encontrou clientes ou embarcações, busca processos vinculados se houver poucos
+        if (matchedProcesses.length < 5 && matchedCustomers.length > 0) {
+          const custIds = matchedCustomers.map((c: any) => c.id).slice(0, 4);
+          const { data: extraProcs } = await supabase
+            .from("processes")
+            .select(
+              `
+              id,
+              title,
+              process_type,
+              protocol_number,
+              status,
+              created_at,
+              customer_id,
+              vessel_id
+            `,
+            )
+            .eq("company_id", companyId)
+            .in("customer_id", custIds)
+            .limit(5);
+
+          if (extraProcs && extraProcs.length > 0) {
+            const existingIds = new Set(matchedProcesses.map((p: any) => p.id));
+            for (const ep of extraProcs) {
+              if (!existingIds.has(ep.id)) {
+                matchedProcesses.push(ep);
+                existingIds.add(ep.id);
+              }
             }
           }
         }
-      }
 
-      setCustomers(matchedCustomers);
-      setVessels(matchedVessels);
-      setProcesses(matchedProcesses);
-    } catch (err) {
-      console.error("Erro na busca geral:", err);
-      setIsError(true);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [companyId]);
+        setCustomers(matchedCustomers);
+        setVessels(matchedVessels);
+        setProcesses(matchedProcesses);
+      } catch (err) {
+        console.error("Erro inesperado na busca geral:", err);
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [companyId],
+  );
 
   // Debounce na digitação da busca
   React.useEffect(() => {
@@ -341,7 +475,6 @@ export function GlobalSearch({
       {/* ===================================================================== */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="p-0 max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden font-sans text-slate-800">
-          
           {/* 1. CAMPO DE ENTRADA DA BUSCA */}
           <div className="p-3.5 sm:p-4 border-b border-slate-100 flex items-center gap-3 bg-white">
             <Search className="h-5 w-5 text-[#075BFF] shrink-0" />
@@ -433,7 +566,6 @@ export function GlobalSearch({
 
           {/* 3. CORPO DOS RESULTADOS */}
           <div className="max-h-[60vh] sm:max-h-[460px] overflow-y-auto p-3 sm:p-4 space-y-4 custom-scrollbar">
-            
             {/* ESTADO 1: CARREGANDO */}
             {isLoading && (
               <div className="py-12 text-center space-y-3">
@@ -451,9 +583,7 @@ export function GlobalSearch({
                   <AlertCircle className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-[#0B1739]">
-                    Erro ao realizar a busca
-                  </h4>
+                  <h4 className="text-xs font-bold text-[#0B1739]">Erro ao realizar a busca</h4>
                   <p className="text-[11px] text-slate-400 mt-0.5">
                     Não foi possível consultar os registros. Tente novamente em alguns instantes.
                   </p>
@@ -479,7 +609,8 @@ export function GlobalSearch({
                     Nenhum resultado encontrado para &quot;{query}&quot;
                   </h4>
                   <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto leading-relaxed">
-                    Verifique se o nome do cliente, da embarcação, número de inscrição no TIE ou código do processo foram digitados corretamente.
+                    Verifique se o nome do cliente, da embarcação, número de inscrição no TIE ou
+                    código do processo foram digitados corretamente.
                   </p>
                 </div>
               </div>
@@ -492,11 +623,10 @@ export function GlobalSearch({
                   <Sparkles className="h-5 w-5" />
                 </div>
                 <div className="space-y-1">
-                  <h4 className="text-xs font-bold text-[#0B1739]">
-                    Busca geral e unificada
-                  </h4>
+                  <h4 className="text-xs font-bold text-[#0B1739]">Busca geral e unificada</h4>
                   <p className="text-[11px] text-slate-400 max-w-md mx-auto">
-                    Digite pelo menos 2 caracteres para localizar clientes, embarcações e processos de forma instantânea.
+                    Digite pelo menos 2 caracteres para localizar clientes, embarcações e processos
+                    de forma instantânea.
                   </p>
                 </div>
 
@@ -537,7 +667,6 @@ export function GlobalSearch({
             {/* ESTADO 5: LISTAGEM ORGANIZADA EM 3 GRUPOS */}
             {!isLoading && !isError && totalResults > 0 && (
               <div className="space-y-5">
-                
                 {/* ------------------------------------------------------------- */}
                 {/* GRUPO 1: CLIENTES */}
                 {/* ------------------------------------------------------------- */}
@@ -613,7 +742,10 @@ export function GlobalSearch({
 
                     <div className="divide-y divide-slate-100 border border-slate-200/80 rounded-xl overflow-hidden bg-white">
                       {vessels.map((v) => {
-                        const ownerName = v.customer?.fantasy_name || v.customer?.name || "Proprietário não informado";
+                        const ownerName =
+                          v.customer?.fantasy_name ||
+                          v.customer?.name ||
+                          "Proprietário não informado";
                         return (
                           <div
                             key={v.id}
@@ -642,7 +774,9 @@ export function GlobalSearch({
                                   </span>
                                   <span>•</span>
                                   <span className="font-mono text-slate-500">
-                                    {v.registration_number ? `TIE: ${v.registration_number}` : "Sem inscrição"}
+                                    {v.registration_number
+                                      ? `TIE: ${v.registration_number}`
+                                      : "Sem inscrição"}
                                   </span>
                                   {v.vessel_type && (
                                     <>
@@ -682,7 +816,8 @@ export function GlobalSearch({
 
                     <div className="divide-y divide-slate-100 border border-slate-200/80 rounded-xl overflow-hidden bg-white">
                       {processes.map((p) => {
-                        const clientName = p.customer?.fantasy_name || p.customer?.name || "Cliente não informado";
+                        const clientName =
+                          p.customer?.fantasy_name || p.customer?.name || "Cliente não informado";
                         const boatName = p.vessel?.name || "Embarcação não vinculada";
                         const serviceName = p.process_type || p.title || "Serviço Náutico";
                         const statusObj = PROCESS_STATUS_MAP[p.status] || {
@@ -713,20 +848,31 @@ export function GlobalSearch({
                                   <h4 className="text-xs sm:text-sm font-bold text-[#0B1739] group-hover:text-[#075BFF] transition-colors truncate">
                                     {p.title || p.process_type || "Processo Náutico"}
                                   </h4>
-                                  <span className={`px-2 py-0.2 rounded-full text-[10px] font-semibold border ${statusObj.color}`}>
+                                  <span
+                                    className={`px-2 py-0.2 rounded-full text-[10px] font-semibold border ${statusObj.color}`}
+                                  >
                                     {statusObj.label}
                                   </span>
                                 </div>
                                 <div className="text-[11px] text-slate-500 truncate flex items-center gap-1.5 flex-wrap">
-                                  <span>Cliente: <strong className="text-slate-700">{clientName}</strong></span>
+                                  <span>
+                                    Cliente:{" "}
+                                    <strong className="text-slate-700">{clientName}</strong>
+                                  </span>
                                   <span>•</span>
-                                  <span>Barco: <strong className="text-slate-700">{boatName}</strong></span>
+                                  <span>
+                                    Barco: <strong className="text-slate-700">{boatName}</strong>
+                                  </span>
                                   <span>•</span>
-                                  <span>Serviço: <span className="text-slate-600">{serviceName}</span></span>
+                                  <span>
+                                    Serviço: <span className="text-slate-600">{serviceName}</span>
+                                  </span>
                                   {p.protocol_number && (
                                     <>
                                       <span>•</span>
-                                      <span className="font-mono text-slate-500">Prot: {p.protocol_number}</span>
+                                      <span className="font-mono text-slate-500">
+                                        Prot: {p.protocol_number}
+                                      </span>
                                     </>
                                   )}
                                 </div>
@@ -743,7 +889,6 @@ export function GlobalSearch({
                     </div>
                   </div>
                 )}
-
               </div>
             )}
           </div>
@@ -755,10 +900,11 @@ export function GlobalSearch({
             </span>
             <div className="flex items-center gap-2 shrink-0">
               <span className="hidden sm:inline">Navegue com o mouse ou teclado</span>
-              <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200 text-[10px]">Enter para abrir</kbd>
+              <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200 text-[10px]">
+                Enter para abrir
+              </kbd>
             </div>
           </div>
-
         </DialogContent>
       </Dialog>
     </>
