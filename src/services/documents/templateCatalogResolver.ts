@@ -54,8 +54,6 @@ export const CATALOG_TEMPLATES: CatalogTemplateItem[] = [
       "Nome do Cliente",
       "CPF/CNPJ do Cliente",
       "Nome da Embarcação",
-      "Proprietário da Embarcação",
-      "Número de Inscrição",
     ],
     isMandatory: true,
     isConditional: false,
