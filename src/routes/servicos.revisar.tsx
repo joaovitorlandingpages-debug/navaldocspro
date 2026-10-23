@@ -112,6 +112,15 @@ function RevisarProcessoPage() {
       setLoading(true);
       setVesselLoadingError(null);
       try {
+        let effectiveComp = companyId;
+        if (!effectiveComp) {
+          const { data: { user: currentUser } } = await supabase.auth.getUser();
+          if (currentUser) {
+            const { data: prof } = await supabase.from("profiles").select("company_id").eq("id", currentUser.id).maybeSingle();
+            effectiveComp = prof?.company_id;
+          }
+        }
+
         let loadedCustomer: any = null;
         if (isValidUuid(customerId)) {
           const { data: custData, error: custErr } = await supabase
@@ -144,8 +153,11 @@ function RevisarProcessoPage() {
           let vesQuery = supabase
             .from("vessels")
             .select("*")
-            .eq("id", vesselId)
-            .eq("company_id", companyId);
+            .eq("id", vesselId);
+
+          if (effectiveComp) {
+            vesQuery = vesQuery.eq("company_id", effectiveComp);
+          }
 
           if (customerId) {
             vesQuery = vesQuery.eq("customer_id", customerId);
@@ -334,7 +346,15 @@ function RevisarProcessoPage() {
 
   // Ação 2: Gerar Documentos (salva o processo e abre o fluxo funcional de geração)
   const handleGenerateDocuments = async () => {
-    const effectiveCompanyId = currentCompany?.id || profile?.company_id;
+    let effectiveCompanyId = currentCompany?.id || profile?.company_id;
+    if (!effectiveCompanyId) {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (currentUser) {
+        const { data: prof } = await supabase.from("profiles").select("company_id").eq("id", currentUser.id).maybeSingle();
+        effectiveCompanyId = prof?.company_id;
+      }
+    }
+
     if (!effectiveCompanyId) {
       toast.error("Vínculo de empresa não identificado.");
       return;
