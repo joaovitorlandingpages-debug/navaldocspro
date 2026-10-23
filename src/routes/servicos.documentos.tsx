@@ -127,13 +127,16 @@ function DocumentosDoServicoPage() {
   const [vesselLoadingError, setVesselLoadingError] = useState<string | null>(null);
 
   // Carregamento dos dados do cliente e embarcação
+  const isValidUuid = (val?: string | null) =>
+    typeof val === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(val);
+
   useEffect(() => {
     async function loadContextData() {
       setLoading(true);
       setVesselLoadingError(null);
       try {
         let loadedCustomer: any = null;
-        if (customerId) {
+        if (isValidUuid(customerId)) {
           const { data: custData, error: custErr } = await supabase
             .from("customers")
             .select("*")
@@ -159,7 +162,7 @@ function DocumentosDoServicoPage() {
 
         // Carregar todas as embarcações associadas ao cliente para vincular ou selecionar
         let customerVesselsList: any[] = [];
-        if (customerId) {
+        if (isValidUuid(customerId)) {
           const { data: custVessels } = await supabase
             .from("vessels")
             .select("*")
@@ -171,14 +174,14 @@ function DocumentosDoServicoPage() {
 
         // Resolução da embarcação: se passou vesselId específico, busca e valida que pertence ao cliente e empresa
         let resolvedVessel: any = null;
-        if (vesselId) {
+        if (isValidUuid(vesselId)) {
           let vesQuery = supabase
             .from("vessels")
             .select("*")
             .eq("id", vesselId)
             .eq("company_id", companyId);
 
-          if (customerId) {
+          if (isValidUuid(customerId)) {
             vesQuery = vesQuery.eq("customer_id", customerId);
           }
 

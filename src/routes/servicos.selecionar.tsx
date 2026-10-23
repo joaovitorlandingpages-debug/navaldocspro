@@ -161,7 +161,8 @@ function SelecionarServicosPage() {
   const searchParams = Route.useSearch();
   const navigate = useNavigate();
   const { profile } = useAuth();
-  const companyId = profile?.company_id;
+  const currentCompany = (profile as any)?.companies;
+  const companyId = currentCompany?.id || profile?.company_id;
 
   const currentCategory = searchParams.category || "esporte_recreio";
   const categoryLabel = currentCategory === "profissional" 
@@ -199,18 +200,27 @@ function SelecionarServicosPage() {
       let custData: any[] = [];
       let vesData: any[] = [];
 
-      if (companyId) {
+      let effectiveCompany = companyId;
+      if (!effectiveCompany) {
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        if (currentUser) {
+          const { data: prof } = await supabase.from("profiles").select("company_id").eq("id", currentUser.id).maybeSingle();
+          effectiveCompany = prof?.company_id;
+        }
+      }
+
+      if (effectiveCompany) {
         const { data: cData } = await supabase
           .from("customers")
           .select("id, name, cpf_cnpj, email, phone")
-          .eq("company_id", companyId)
+          .eq("company_id", effectiveCompany)
           .order("name", { ascending: true });
         custData = cData || [];
 
         const { data: vData } = await supabase
           .from("vessels")
           .select("id, name, registration_number, category, vessel_type, customer_id")
-          .eq("company_id", companyId)
+          .eq("company_id", effectiveCompany)
           .order("name", { ascending: true });
         vesData = vData || [];
       }

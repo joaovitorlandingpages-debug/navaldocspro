@@ -75,6 +75,9 @@ export const Route = createFileRoute("/servicos/revisar")({
   ),
 });
 
+const isValidUuid = (val?: string | null): boolean =>
+  typeof val === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(val);
+
 function RevisarProcessoPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
@@ -110,7 +113,7 @@ function RevisarProcessoPage() {
       setVesselLoadingError(null);
       try {
         let loadedCustomer: any = null;
-        if (customerId) {
+        if (isValidUuid(customerId)) {
           const { data: custData, error: custErr } = await supabase
             .from("customers")
             .select("*")
@@ -126,7 +129,7 @@ function RevisarProcessoPage() {
 
         // Carregar todas as embarcações associadas ao cliente para vincular caso vesselId falte
         let customerVesselsList: any[] = [];
-        if (customerId) {
+        if (isValidUuid(customerId)) {
           const { data: custVessels } = await supabase
             .from("vessels")
             .select("*")
@@ -137,7 +140,7 @@ function RevisarProcessoPage() {
         }
 
         let resolvedVessel: any = null;
-        if (vesselId) {
+        if (isValidUuid(vesselId)) {
           let vesQuery = supabase
             .from("vessels")
             .select("*")
@@ -247,9 +250,6 @@ function RevisarProcessoPage() {
       toast.error("Vínculo de empresa não identificado.");
       return;
     }
-
-    const isValidUuid = (val?: string | null) =>
-      typeof val === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(val);
 
     let effectiveCustomerId = isValidUuid(customerId) ? customerId : isValidUuid(customer?.id) ? customer?.id : null;
     if (!effectiveCustomerId) {
