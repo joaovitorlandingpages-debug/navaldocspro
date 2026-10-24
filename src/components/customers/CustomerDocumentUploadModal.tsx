@@ -138,27 +138,20 @@ export function CustomerDocumentUploadModal({
         onProgress: (stage) => setProcessingStage(stage),
       });
 
-      const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
-      if (isMobile) {
-        const sessionId = review.fileId || review.jobId || crypto.randomUUID();
-        saveReviewSession(sessionId, {
-          review,
-          originUrl: window.location.pathname + window.location.search,
-          targetEntity: "customer",
-          draftData: existingCustomer,
-        });
-
-        setIsProcessing(false);
-        onClose();
-        navigate({
-          to: `/documentos/revisar/${sessionId}`,
-        });
-        return;
-      }
+      const sessionId = review.fileId || review.jobId || crypto.randomUUID();
+      saveReviewSession(sessionId, {
+        review,
+        originUrl: window.location.pathname + window.location.search,
+        targetEntity: "customer",
+        draftData: existingCustomer,
+      });
 
       setIsProcessing(false);
-      setReviewData(review);
-      setIsReviewOpen(true);
+      onClose();
+      navigate({
+        to: `/documentos/revisar/${sessionId}`,
+      });
+      return;
     } catch (err: any) {
       setIsProcessing(false);
       console.error("[CustomerUpload] Erro OCR:", err);

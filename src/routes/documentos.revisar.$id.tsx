@@ -477,7 +477,7 @@ function DocumentoRevisarPage() {
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2.5 text-xs text-amber-900">
                 <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
                 <div className="flex-1 font-medium leading-relaxed">
-                  <strong>Atenção:</strong> A leitura automática pode cometer erros. Confira todos os dados antes de salvar ou gerar documentos. Todos os campos são editáveis.
+                  Confira os dados extraídos antes de salvar. A leitura automática pode apresentar erros.
                 </div>
               </div>
             </div>
