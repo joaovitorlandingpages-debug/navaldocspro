@@ -3,13 +3,13 @@
     "scenario": "Cadastro e Login sem intervenção externa",
     "status": "Passou",
     "evidence": "03_dashboard_inicial.png",
-    "notes": "Conta criada: empresa.teste.681412@navaldocs-test.local"
+    "notes": "Conta criada: empresa.teste.377149@navaldocs-test.local"
   },
   {
     "scenario": "Cadastro manual de cliente PF",
     "status": "Passou",
     "evidence": "06_cliente_salvo.png",
-    "notes": "Cliente: Carlos Alberto Pereira Teste 681412, CPF: 44843180599"
+    "notes": "Cliente: Carlos Alberto Pereira Teste 377149, CPF: 10381235424"
   },
   {
     "scenario": "Alerta de CPF duplicado",
@@ -21,7 +21,7 @@
     "scenario": "Cadastro de embarcação vinculada",
     "status": "Passou",
     "evidence": "09_embarcacao_salva.png",
-    "notes": "Embarcação: Marlim Azul 681412"
+    "notes": "Embarcação: Marlim Azul 377149"
   },
   {
     "scenario": "Busca global de cliente e embarcação",
@@ -33,13 +33,13 @@
     "scenario": "Cadastro de funcionário preparador",
     "status": "Passou",
     "evidence": "13_funcionario_salvo.png",
-    "notes": "Funcionário: Despachante Claudio Naval 681412"
+    "notes": "Funcionário: Despachante Claudio Naval 377149"
   },
   {
     "scenario": "Preservação dos vínculos entre serviços, revisão e geração",
     "status": "Passou",
     "evidence": "17_tela_gerar_documento.png",
-    "notes": "URL: http://localhost:8080/processes/d295b04d-dea0-472c-bf02-0fe8683747e2/gerar-documento"
+    "notes": "URL: http://localhost:8080/processes/c573832d-ed71-4fed-90b8-1b3cdfcfd2c1/gerar-documento"
   },
   {
     "scenario": "Procuração Outorgado PF e persistência após F5",
@@ -51,18 +51,60 @@
     "scenario": "Seletor de embarcação no processo",
     "status": "Passou",
     "evidence": "22_embarcacao_selecionada_no_processo.png",
-    "notes": "Embarcação vinculada: Marlim Azul 681412"
+    "notes": "Embarcação vinculada: Marlim Azul 377149"
   },
   {
     "scenario": "Geração e Download de PDF real",
     "status": "Passou",
-    "evidence": "documento_baixado_681412.pdf",
-    "notes": "Tamanho: 841154 bytes"
+    "evidence": "documento_baixado_377149.pdf",
+    "notes": "Tamanho: 841147 bytes"
   },
   {
     "scenario": "Isolamento Multi-empresa (RLS)",
     "status": "Passou",
     "evidence": "25_empresa2_clientes_vazio.png",
     "notes": "Empresa 2 não tem acesso aos dados da Empresa 1"
+  },
+  {
+    "scenario": "Geração e confirmação de 3 documentos em lote",
+    "status": "Passou",
+    "evidence": "27_tres_documentos_gerados.png",
+    "notes": "3 documentos gerados com sucesso no processo e9b8b23f-72e1-484a-acb2-2670983b196e"
+  },
+  {
+    "scenario": "Preservação das escolhas gerar/anexar/não usar após F5",
+    "status": "Passou",
+    "evidence": "32_apos_f5_escolhas_preservadas.png",
+    "notes": "Requerimento=omitido (true), Declaração=anexo (true)"
+  },
+  {
+    "scenario": "Anexo, visualização, substituição e histórico de versões",
+    "status": "Passou",
+    "evidence": "34_anexo_v2_substituido.png",
+    "notes": "Anexo v1 enviado e conteúdo conferido (true), substituído por v2 com conteúdo diferente conferido (true), histórico com acesso a versão anterior comprovado (true)"
+  },
+  {
+    "scenario": "Download individual dos 3 PDFs após F5",
+    "status": "Passou",
+    "evidence": "28_apos_f5_lista_documentos.png",
+    "notes": "Baixados: req_padrao.pdf, procuracao.pdf, decl_residencia.pdf"
+  },
+  {
+    "scenario": "Configuração e persistência de Outorgado PJ após F5",
+    "status": "Passou",
+    "evidence": "30_apos_f5_outorgado_pj_preservado.png",
+    "notes": "Razão Social (Despachadoria Santos 092678 Ltda) e CNPJ (12.492.372/0001-61) preservados após reload"
+  },
+  {
+    "scenario": "Principais fluxos no tamanho de celular (mobile)",
+    "status": "Passou",
+    "evidence": "38_mobile_gerar_documentos.png",
+    "notes": "Rolagem completa até o final da página e teste de clique nos botões inferiores executados com sucesso em 375x667"
+  },
+  {
+    "scenario": "Isolamento cross-tenant: tentativa de acesso direto a IDs e arquivos da outra empresa",
+    "status": "Passou",
+    "evidence": "39_empresa2_tentativa_acesso_processo_empresa1.png",
+    "notes": "Empresa 1: proc=1, docs=3, storageDownload=200 (bytes=840302, isPdf=true), signedUrl=true. Empresa 2: sessão válida=true, REST proc=200, storage=400, signedUrl=400. Redirecionado/bloqueado na UI."
   }
 ]

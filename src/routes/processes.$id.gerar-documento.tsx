@@ -185,6 +185,12 @@ function GerarDocumentoPage() {
   const [outorgadoPjEmail, setOutorgadoPjEmail] = useState("");
   const [isSavingOutorgado, setIsSavingOutorgado] = useState(false);
 
+  // Estados de Nacionalidade e Naturalidade do Cliente (para Declaração de Residência)
+  const [showCustomerNatModal, setShowCustomerNatModal] = useState(false);
+  const [customerNacionalidade, setCustomerNacionalidade] = useState("");
+  const [customerNaturalidade, setCustomerNaturalidade] = useState("");
+  const [isSavingCustomerNat, setIsSavingCustomerNat] = useState(false);
+
   // Estado de accordion para ver versões anteriores agrupadas
   const [expandedPreviousVersions, setExpandedPreviousVersions] = useState<Record<string, boolean>>({});
 
@@ -294,6 +300,10 @@ function GerarDocumentoPage() {
 
         setProcessData(proc);
         setCustomer(proc.customer || null);
+        const draftNac = (proc?.draft_data as any)?.customer_nationality || (proc.customer as any)?.nationality || "";
+        const draftNat = (proc?.draft_data as any)?.customer_naturalidade || (proc.customer as any)?.birthplace || (proc.customer as any)?.naturalidade || "";
+        setCustomerNacionalidade(draftNac);
+        setCustomerNaturalidade(draftNat);
 
         let activeVessel = proc.vessel || null;
         let customerVesselsList: any[] = [];
@@ -919,6 +929,68 @@ function GerarDocumentoPage() {
     }
   };
 
+  // Salvar Nacionalidade e Naturalidade do Declarante (Declaração de Residência)
+  const handleSaveCustomerNat = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!id || !companyId) return;
+
+    setIsSavingCustomerNat(true);
+    try {
+      const now = new Date().toISOString();
+      const cleanNac = customerNacionalidade.trim();
+      const cleanNat = customerNaturalidade.trim();
+
+      // Salva no draft_data do processo
+      const { data: latestProc } = await supabase
+        .from("processes")
+        .select("draft_data")
+        .eq("id", id)
+        .eq("company_id", companyId)
+        .maybeSingle();
+
+      const currentDraft = (latestProc?.draft_data as any) || (processData?.draft_data as any) || {};
+      const updatedDraft = {
+        ...currentDraft,
+        customer_nationality: cleanNac,
+        customer_naturalidade: cleanNat,
+      };
+
+      await supabase
+        .from("processes")
+        .update({
+          draft_data: updatedDraft,
+          updated_at: now,
+        })
+        .eq("id", id)
+        .eq("company_id", companyId);
+
+      setProcessData((prev: any) => (prev ? { ...prev, draft_data: updatedDraft } : prev));
+
+      // Se o cliente possuir ID e colunas no banco, atualiza no registro do cliente também
+      if (customer?.id) {
+        await supabase
+          .from("customers")
+          .update({
+            nationality: cleanNac || null,
+            birthplace: cleanNat || null,
+            updated_at: now,
+          } as any)
+          .eq("id", customer.id)
+          .eq("company_id", companyId);
+      }
+
+      setShowCustomerNatModal(false);
+      toast.success("Nacionalidade e naturalidade salvas com sucesso!", {
+        description: "Os dados serão incluídos na Declaração de Residência.",
+      });
+    } catch (err: any) {
+      console.error("Erro ao salvar nacionalidade e naturalidade:", err);
+      toast.error(err?.message || "Não foi possível salvar os dados.");
+    } finally {
+      setIsSavingCustomerNat(false);
+    }
+  };
+
   // Cadastro Rápido de Funcionário inline
   const handleCreateQuickStaff = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1098,12 +1170,33 @@ function GerarDocumentoPage() {
 
       if (insErr) throw insErr;
 
+      const previousAttached = docSelections[tpl.id]?.attachedFile;
+      const existingVersions = (previousAttached as any)?.previousVersions || [];
+      const updatedVersions = previousAttached
+        ? [
+            {
+              id: previousAttached.id,
+              name: previousAttached.name,
+              url: previousAttached.url,
+              size: previousAttached.size,
+              replacedAt: new Date().toISOString(),
+            },
+            ...existingVersions,
+          ]
+        : [];
+
       const updatedSelections = {
         ...docSelections,
         [tpl.id]: {
           mode: "attach" as const,
           isUploading: false,
-          attachedFile: { name: file.name, url: path, size: file.size, id: insertedFile?.id },
+          attachedFile: {
+            name: file.name,
+            url: path,
+            size: file.size,
+            id: insertedFile?.id,
+            previousVersions: updatedVersions,
+          },
         },
       };
       setDocSelections(updatedSelections);
@@ -1352,8 +1445,10 @@ function GerarDocumentoPage() {
               : "Não informado";
 
             const customerDoc = customer?.cpf_cnpj || customer?.document || "";
-            const customerNac = (customer as any)?.nationality ? `, nacionalidade ${(customer as any).nationality}` : "";
-            const customerNat = (customer as any)?.birthplace || (customer as any)?.naturalidade ? `, naturalidade ${(customer as any).birthplace || (customer as any).naturalidade}` : "";
+            const resolvedNac = customerNacionalidade || (customer as any)?.nationality || (processData?.draft_data as any)?.customer_nationality || "";
+            const resolvedNat = customerNaturalidade || (customer as any)?.birthplace || (customer as any)?.naturalidade || (processData?.draft_data as any)?.customer_naturalidade || "";
+            const customerNac = resolvedNac ? `, nacionalidade ${resolvedNac}` : "";
+            const customerNat = resolvedNat ? `, naturalidade ${resolvedNat}` : "";
             const customerPhone = customer?.phone ? `, Telefone (DDD e nº) ${customer.phone}` : "";
             const customerEmail = customer?.email ? `, e-mail ${customer.email}` : "";
 
@@ -1439,7 +1534,7 @@ function GerarDocumentoPage() {
               `OBS: Processo instruído via NavalDocs Pro sob o código ${processCode}`,
               ``,
               `EMBARCAÇÃO: ${vesselName}    INSCRIÇÃO Nº: ${vessel?.registration_number || "Em regularização"}`,
-              `Comprimento: ${formattedLength || "Não informado"}${resolvedHull ? `    Nº DO CASCO: ${resolvedHull}` : ""}    CLASSIFICAÇÃO: ${isProf ? "Comercial" : isJet ? "Moto Aquática" : "Esporte e/ou Recreio"}`,
+              `Comprimento: ${formattedLength || "Não informado"}    Nº DO CASCO: ${resolvedHull || "Não informado"}    CLASSIFICAÇÃO: ${isProf ? "Comercial" : isJet ? "Moto Aquática" : "Esporte e/ou Recreio"}`,
               `Área de Navegação: [X] Interior   [ ] Costeira   [ ] Oceânica`,
               ``,
               `VEM REQUERER A V.Sa. os seguintes serviços:`,
@@ -2435,6 +2530,37 @@ function GerarDocumentoPage() {
                       </div>
                     )}
 
+                    {/* Seletor explícito de Nacionalidade e Naturalidade na Declaração de Residência */}
+                    {tpl.slug === "decl-residencia-naval" && (
+                      <div className="p-3 bg-slate-50 border border-slate-200/90 rounded-xl space-y-2 text-xs">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div>
+                            <span className="font-bold text-[#0B1739] block">
+                              Dados complementares do Declarante (Nacionalidade e Naturalidade)
+                            </span>
+                            <span className="text-[11px] text-slate-500">
+                              Informe ou confirme a nacionalidade e a cidade/estado natal para a declaração oficial.
+                            </span>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => setShowCustomerNatModal(true)}
+                            className="font-bold text-[#075BFF] hover:underline cursor-pointer shrink-0 text-xs"
+                          >
+                            Editar nacionalidade / naturalidade
+                          </button>
+                        </div>
+
+                        <div className="text-[11px] text-slate-600 flex items-center justify-between gap-2 pt-1 border-t border-slate-200/60">
+                          <span>
+                            <strong>Nacionalidade:</strong> {customerNacionalidade || "Não informada"} |{" "}
+                            <strong>Naturalidade:</strong> {customerNaturalidade || "Não informada"}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Falta de Dados: Mensagem Clara + Botão "Completar dados" */}
                     {isGeneratingThis && isBlockedForRequiredFields && (
                       <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
@@ -2477,61 +2603,110 @@ function GerarDocumentoPage() {
                     {isAttachingThis && (
                       <div className="p-3.5 bg-emerald-50/60 border border-emerald-200 rounded-xl space-y-2 text-xs">
                         {selection.attachedFile ? (
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 rounded-lg border border-emerald-200">
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
-                                <CheckCircle2 className="h-4 w-4" />
+                          <div className="space-y-2">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 rounded-lg border border-emerald-200">
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                                  <CheckCircle2 className="h-4 w-4" />
+                                </div>
+                                <div className="min-w-0">
+                                  <span className="font-bold text-slate-800 truncate block">
+                                    {selection.attachedFile.name}
+                                  </span>
+                                  <span className="text-[11px] text-emerald-700">
+                                    Documento pronto anexado ao processo.
+                                  </span>
+                                </div>
                               </div>
-                              <div className="min-w-0">
-                                <span className="font-bold text-slate-800 truncate block">
-                                  {selection.attachedFile.name}
-                                </span>
-                                <span className="text-[11px] text-emerald-700">
-                                  Documento pronto anexado ao processo.
-                                </span>
+
+                              <div className="flex items-center gap-2 shrink-0">
+                                {/* Visualizar */}
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    openStoredFile({
+                                      generated_file_url: selection.attachedFile?.url,
+                                      name: selection.attachedFile?.name,
+                                    })
+                                  }
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold cursor-pointer"
+                                >
+                                  <Eye className="h-3.5 w-3.5 text-[#075BFF]" />
+                                  <span>Visualizar</span>
+                                </button>
+
+                                {/* Substituir */}
+                                <label className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-emerald-300 hover:bg-emerald-50 text-emerald-800 text-xs font-semibold cursor-pointer">
+                                  <span>Substituir</span>
+                                  <input
+                                    type="file"
+                                    accept=".pdf,application/pdf"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const f = e.target.files?.[0];
+                                      if (f) handleAttachFileForTemplate(tpl, f);
+                                    }}
+                                  />
+                                </label>
+
+                                {/* Remover */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveAttachedFile(tpl.id)}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-red-600 hover:bg-red-50 text-xs font-semibold cursor-pointer"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                  <span>Remover</span>
+                                </button>
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-2 shrink-0">
-                              {/* Visualizar */}
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  openStoredFile({
-                                    generated_file_url: selection.attachedFile?.url,
-                                    name: selection.attachedFile?.name,
-                                  })
-                                }
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold cursor-pointer"
-                              >
-                                <Eye className="h-3.5 w-3.5 text-[#075BFF]" />
-                                <span>Visualizar</span>
-                              </button>
-
-                              {/* Substituir */}
-                              <label className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-emerald-300 hover:bg-emerald-50 text-emerald-800 text-xs font-semibold cursor-pointer">
-                                <span>Substituir</span>
-                                <input
-                                  type="file"
-                                  accept=".pdf,application/pdf"
-                                  className="hidden"
-                                  onChange={(e) => {
-                                    const f = e.target.files?.[0];
-                                    if (f) handleAttachFileForTemplate(tpl, f);
-                                  }}
-                                />
-                              </label>
-
-                              {/* Remover */}
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveAttachedFile(tpl.id)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-red-600 hover:bg-red-50 text-xs font-semibold cursor-pointer"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                                <span>Remover</span>
-                              </button>
-                            </div>
+                            {/* Histórico de versões anteriores do anexo */}
+                            {Array.isArray((selection.attachedFile as any)?.previousVersions) &&
+                              (selection.attachedFile as any).previousVersions.length > 0 && (
+                                <div className="mt-2.5 pt-2 border-t border-emerald-100 space-y-1.5">
+                                  <span className="text-[11px] font-semibold text-emerald-900 block">
+                                    Versões anteriores deste anexo:
+                                  </span>
+                                  <div className="space-y-1">
+                                    {(selection.attachedFile as any).previousVersions.map(
+                                      (prevVer: any, vIdx: number) => (
+                                        <div
+                                          key={prevVer.id || vIdx}
+                                          className="flex items-center justify-between bg-emerald-50/80 px-2.5 py-1.5 rounded border border-emerald-200/60 text-[11px]"
+                                        >
+                                          <div className="flex items-center gap-1.5 truncate mr-2">
+                                            <span className="text-slate-500 font-mono text-[10px]">
+                                              v{(selection.attachedFile as any).previousVersions.length - vIdx}:
+                                            </span>
+                                            <span className="truncate text-slate-700 font-medium">
+                                              {prevVer.name}
+                                            </span>
+                                            {prevVer.replacedAt && (
+                                              <span className="text-[10px] text-slate-400">
+                                                ({new Date(prevVer.replacedAt).toLocaleDateString()})
+                                              </span>
+                                            )}
+                                          </div>
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              openStoredFile({
+                                                generated_file_url: prevVer.url,
+                                                name: prevVer.name,
+                                              })
+                                            }
+                                            className="btn-prev-ver inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-medium cursor-pointer shrink-0"
+                                          >
+                                            <Eye className="h-3 w-3" />
+                                            <span>Visualizar versão anterior</span>
+                                          </button>
+                                        </div>
+                                      )
+                                    )}
+                                  </div>
+                                </div>
+                              )}
                           </div>
                         ) : (
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -3418,6 +3593,79 @@ function GerarDocumentoPage() {
                   <Check className="h-3.5 w-3.5" />
                 )}
                 <span>Salvar outorgado</span>
+              </button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* MODAL: NACIONALIDADE E NATURALIDADE DO DECLARANTE */}
+      <Dialog open={showCustomerNatModal} onOpenChange={setShowCustomerNatModal}>
+        <DialogContent className="max-w-md p-6 rounded-2xl bg-white border border-slate-200">
+          <form onSubmit={handleSaveCustomerNat}>
+            <DialogHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#075BFF] flex items-center justify-center shrink-0">
+                  <User className="h-5 w-5" />
+                </div>
+                <div>
+                  <DialogTitle className="text-base font-bold text-[#0B1739]">
+                    Nacionalidade e Naturalidade
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-slate-500 mt-0.5">
+                    Preencha ou confirme estes dados documentais para emissão da Declaração de Residência.
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4 text-xs">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700">
+                  Nacionalidade
+                </label>
+                <input
+                  type="text"
+                  value={customerNacionalidade}
+                  onChange={(e) => setCustomerNacionalidade(e.target.value)}
+                  placeholder="Ex: Brasileira"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700">
+                  Naturalidade (Cidade / Estado ou País de Origem)
+                </label>
+                <input
+                  type="text"
+                  value={customerNaturalidade}
+                  onChange={(e) => setCustomerNaturalidade(e.target.value)}
+                  placeholder="Ex: Santos/SP ou São Paulo/SP"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setShowCustomerNatModal(false)}
+                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={isSavingCustomerNat}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white text-xs font-bold cursor-pointer disabled:opacity-50"
+              >
+                {isSavingCustomerNat ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Check className="h-3.5 w-3.5" />
+                )}
+                <span>Salvar dados</span>
               </button>
             </DialogFooter>
           </form>
