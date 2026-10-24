@@ -159,6 +159,8 @@ function GerarDocumentoPage() {
   const [quickVesselName, setQuickVesselName] = useState("");
   const [quickVesselReg, setQuickVesselReg] = useState("");
   const [quickVesselType, setQuickVesselType] = useState("Lancha / Recreio");
+  const [quickVesselLength, setQuickVesselLength] = useState("");
+  const [quickVesselHull, setQuickVesselHull] = useState("");
   const [quickVesselOwnerName, setQuickVesselOwnerName] = useState("");
   const [quickVesselOwnerCpf, setQuickVesselOwnerCpf] = useState("");
   const [isSavingQuickVessel, setIsSavingQuickVessel] = useState(false);
@@ -170,7 +172,8 @@ function GerarDocumentoPage() {
   const [outorgadoPfNome, setOutorgadoPfNome] = useState("");
   const [outorgadoPfCpf, setOutorgadoPfCpf] = useState("");
   const [outorgadoPfRg, setOutorgadoPfRg] = useState("");
-  const [outorgadoPfNacionalidade, setOutorgadoPfNacionalidade] = useState("Brasileira");
+  const [outorgadoPfNacionalidade, setOutorgadoPfNacionalidade] = useState("");
+  const [outorgadoPfEstadoCivil, setOutorgadoPfEstadoCivil] = useState("");
   const [outorgadoPfEndereco, setOutorgadoPfEndereco] = useState("");
   const [outorgadoPfTelefone, setOutorgadoPfTelefone] = useState("");
   const [outorgadoPfEmail, setOutorgadoPfEmail] = useState("");
@@ -234,8 +237,8 @@ function GerarDocumentoPage() {
             .select(
               `
               *,
-              customer:customers!processes_customer_id_fkey(id, name, cpf_cnpj, email, phone, address, city, state),
-              vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, category, vessel_type, length, material, current_owner_name, current_owner_cpf_cnpj, customer_id, company_id)
+              customer:customers!processes_customer_id_fkey(id, name, cpf_cnpj, email, phone, address, city, state, rg, notes),
+              vessel:vessels!processes_vessel_id_fkey(id, name, registration_number, category, vessel_type, length, material, hull_number, current_owner_name, current_owner_cpf_cnpj, customer_id, company_id)
             `,
             )
             .eq("id", id)
@@ -324,6 +327,8 @@ function GerarDocumentoPage() {
           setQuickVesselName(activeVessel.name || "");
           setQuickVesselReg(activeVessel.registration_number || "");
           setQuickVesselType(activeVessel.vessel_type || "Lancha / Recreio");
+          setQuickVesselLength(activeVessel.length ? String(activeVessel.length) : "");
+          setQuickVesselHull(activeVessel.hull_number || "");
           setQuickVesselOwnerName(activeVessel.current_owner_name || "");
           setQuickVesselOwnerCpf(activeVessel.current_owner_cpf_cnpj || "");
         }
@@ -682,6 +687,9 @@ function GerarDocumentoPage() {
       const now = new Date().toISOString();
       let updatedVesselRecord: any = null;
 
+      const parsedLength = quickVesselLength ? parseFloat(quickVesselLength.replace(",", ".")) : null;
+      const cleanHull = quickVesselHull.trim() || null;
+
       if (vessel?.id) {
         // Atualiza a embarcação existente
         const { data: updated, error: updErr } = await supabase
@@ -690,6 +698,8 @@ function GerarDocumentoPage() {
             name: quickVesselName.trim(),
             registration_number: quickVesselReg.trim() || null,
             vessel_type: quickVesselType.trim() || vessel.vessel_type || "Lancha / Recreio",
+            length: parsedLength || vessel.length || null,
+            hull_number: cleanHull || vessel.hull_number || null,
             current_owner_name: quickVesselOwnerName.trim() || null,
             current_owner_cpf_cnpj: quickVesselOwnerCpf.trim() || null,
             updated_at: now,
@@ -712,6 +722,8 @@ function GerarDocumentoPage() {
             registration_number: quickVesselReg.trim() || null,
             vessel_type: quickVesselType.trim() || "Lancha / Recreio",
             category: vesselCategory,
+            length: parsedLength,
+            hull_number: cleanHull,
             current_owner_name: quickVesselOwnerName.trim() || null,
             current_owner_cpf_cnpj: quickVesselOwnerCpf.trim() || null,
             status: "active",
@@ -822,7 +834,7 @@ function GerarDocumentoPage() {
         updatePayload.procurador_nome = outorgadoPfNome.trim();
         updatePayload.procurador_cpf = outorgadoPfCpf.trim();
         updatePayload.procurador_rg = outorgadoPfRg.trim() || null;
-        updatePayload.procurador_nacionalidade = outorgadoPfNacionalidade.trim() || "Brasileira";
+        updatePayload.procurador_nacionalidade = outorgadoPfNacionalidade.trim() || null;
         updatePayload.procurador_endereco = outorgadoPfEndereco.trim() || null;
         updatePayload.procurador_telefone = outorgadoPfTelefone.trim() || null;
         updatePayload.procurador_email = outorgadoPfEmail.trim() || null;
@@ -864,6 +876,9 @@ function GerarDocumentoPage() {
           outorgado_type: outorgadoType,
           outorgado_pf_nome: outorgadoPfNome.trim(),
           outorgado_pf_cpf: outorgadoPfCpf.trim(),
+          outorgado_pf_rg: outorgadoPfRg.trim() || null,
+          outorgado_pf_nacionalidade: outorgadoPfNacionalidade.trim() || null,
+          outorgado_pf_estado_civil: outorgadoPfEstadoCivil.trim() || null,
           outorgado_pj_razao: outorgadoPjRazao.trim(),
           outorgado_pj_cnpj: outorgadoPjCnpj.trim(),
           doc_selections: docSelections,
@@ -1276,20 +1291,23 @@ function GerarDocumentoPage() {
               branding?.contact_phone ||
               "";
 
+            const resolvedNacionalidade = outorgadoPfNacionalidade || companyData?.procurador_nacionalidade || (processData?.draft_data as any)?.outorgado_pf_nacionalidade || "";
+            const resolvedEstadoCivil = outorgadoPfEstadoCivil || (processData?.draft_data as any)?.outorgado_pf_estado_civil || "";
+
             const outorgadoLines = isPF
               ? [
                   `OUTORGADO (PESSOA FÍSICA):`,
                   `Nome do Procurador: ${outorgadoPfNome || companyData?.procurador_nome || selectedStaff.name}`,
-                  `Nacionalidade: ${outorgadoPfNacionalidade || companyData?.procurador_nacionalidade || "Brasileira"}`,
-                  `Estado Civil: Casado(a)`,
+                  resolvedNacionalidade ? `Nacionalidade: ${resolvedNacionalidade}` : "",
+                  resolvedEstadoCivil ? `Estado Civil: ${resolvedEstadoCivil}` : "",
                   `CPF: ${outorgadoPfCpf || companyData?.procurador_cpf || "Não informado"}`,
-                  `RG: ${outorgadoPfRg || companyData?.procurador_rg || "Não informado"}`,
+                  outorgadoPfRg || companyData?.procurador_rg ? `RG: ${outorgadoPfRg || companyData?.procurador_rg}` : "",
                   outorgadoPfCrea || companyData?.procurador_crea
                     ? `Registro Profissional / Habilitação: ${outorgadoPfCrea || companyData.procurador_crea}`
                     : "",
                   `Endereço Profissional: ${outorgadoPfEndereco || companyData?.procurador_endereco || companyData?.contact_address || "Não informado"}`,
-                  `Telefone: ${resolvedProcuradorPhone || "Não informado"}`,
-                  `E-mail: ${resolvedProcuradorEmail || "Não informado"}`,
+                  resolvedProcuradorPhone ? `Telefone: ${resolvedProcuradorPhone}` : "",
+                  resolvedProcuradorEmail ? `E-mail: ${resolvedProcuradorEmail}` : "",
                   `Sociedade Vinculada: ${companyData?.name || currentCompany?.name || "NavalDocs Pro"} (CNPJ: ${companyData?.cnpj || currentCompany?.cnpj || "Não informado"})`,
                 ]
               : [
@@ -1297,8 +1315,8 @@ function GerarDocumentoPage() {
                   `Razão Social: ${outorgadoPjRazao || companyData?.name || currentCompany?.name || "NavalDocs Pro"}`,
                   `CNPJ: ${outorgadoPjCnpj || companyData?.cnpj || currentCompany?.cnpj || "Não informado"}`,
                   `Sede Social: ${outorgadoPjEndereco || companyData?.contact_address || "Não informado"}`,
-                  `Telefone: ${resolvedCompanyPhone || "Não informado"}`,
-                  `E-mail: ${resolvedCompanyEmail || "Não informado"}`,
+                  resolvedCompanyPhone ? `Telefone: ${resolvedCompanyPhone}` : "",
+                  resolvedCompanyEmail ? `E-mail: ${resolvedCompanyEmail}` : "",
                   `Representação Legal: Representada neste ato por seus administradores ou procuradores com poderes específicos para a prática de atos perante a Autoridade Marítima.`,
                 ];
 
@@ -1310,11 +1328,11 @@ function GerarDocumentoPage() {
               ``,
               `OUTORGANTE:`,
               `Nome / Razão Social: ${customerName}`,
-              `CPF / CNPJ: ${customer?.cpf_cnpj || customer?.document || "Não informado"}`,
-              `RG: ${customer?.rg || "Não informado"}`,
+              `CPF / CNPJ: ${customer?.cpf_cnpj || customer?.document || ""}`,
+              customer?.rg ? `RG: ${customer.rg}` : "",
               `Endereço: ${customer?.address || "Não informado"}, ${customer?.city || ""}/${customer?.state || ""}`,
-              `Telefone: ${customer?.phone || "Não informado"}`,
-              `E-mail: ${customer?.email || "Não informado"}`,
+              customer?.phone ? `Telefone: ${customer.phone}` : "",
+              customer?.email ? `E-mail: ${customer.email}` : "",
               ``,
               ...outorgadoLines.filter(Boolean),
               ``,
@@ -1333,6 +1351,12 @@ function GerarDocumentoPage() {
               ? `${customer.address}, ${customerCity} - ${customerUf}`
               : "Não informado";
 
+            const customerDoc = customer?.cpf_cnpj || customer?.document || "";
+            const customerNac = (customer as any)?.nationality ? `, nacionalidade ${(customer as any).nationality}` : "";
+            const customerNat = (customer as any)?.birthplace || (customer as any)?.naturalidade ? `, naturalidade ${(customer as any).birthplace || (customer as any).naturalidade}` : "";
+            const customerPhone = customer?.phone ? `, Telefone (DDD e nº) ${customer.phone}` : "";
+            const customerEmail = customer?.email ? `, e-mail ${customer.email}` : "";
+
             content = [
               `NORMAM-211/DPC`,
               `ANEXO 2-G`,
@@ -1340,7 +1364,7 @@ function GerarDocumentoPage() {
               ``,
               `Sr. Capitão dos Portos/Delegado/Agente`,
               ``,
-              `Eu, ${customerName}, CPF ${customer?.cpf_cnpj || customer?.document || "Não informado"}, nacionalidade Brasileira, naturalidade ${(customer as any)?.birthplace || "Brasileira"}, Telefone (DDD e nº) ${customer?.phone || "Não informado"}, celular ${customer?.phone || "Não informado"}, e-mail ${customer?.email || "Não informado"}.`,
+              `Eu, ${customerName}, CPF ${customerDoc}${customerNac}${customerNat}${customerPhone}${customerEmail}.`,
               ``,
               `Na falta de documentos para comprovação de residência, em conformidade com o disposto na Lei nº 7.115, de 29 de agosto de 1983, DECLARO para os devidos fins, sob as penas da Lei, ser residente e domiciliado no endereço:`,
               `${fullAddress}`,
@@ -1379,6 +1403,27 @@ function GerarDocumentoPage() {
             const isMotor = procType.includes("motor") || servicesRaw.includes("troca_motor");
             const isAltCad = procType.includes("altera") || servicesRaw.includes("alteracao_dados");
 
+            // Extração fiel do CEP: campo dedicado, anotações ou regex no endereço
+            let resolvedCep = (customer as any)?.postal_code || (customer as any)?.cep || "";
+            if (!resolvedCep && customer?.address) {
+              const cepMatch = customer.address.match(/\b\d{5}-?\d{3}\b/);
+              if (cepMatch) resolvedCep = cepMatch[0];
+            }
+            if (!resolvedCep && (customer as any)?.notes) {
+              const cepMatchNotes = (customer as any).notes.match(/\b\d{5}-?\d{3}\b/);
+              if (cepMatchNotes) resolvedCep = cepMatchNotes[0];
+            }
+
+            // Identidade / RG fiel do cliente
+            const resolvedRg = customer?.rg || (customer as any)?.identity_number || (customer as any)?.rg_number || "";
+
+            // Comprimento da embarcação fiel
+            const resolvedLength = (processData?.draft_data as any)?.vessel_length || vessel?.length || vessel?.length_overall || "";
+            const formattedLength = resolvedLength ? `${resolvedLength}${String(resolvedLength).includes("m") ? "" : " m"}` : "";
+
+            // Número do Casco fiel
+            const resolvedHull = (vessel as any)?.hull_number || (vessel as any)?.chassis_number || (processData?.draft_data as any)?.vessel_hull || "";
+
             content = [
               `NORMAM-211/DPC`,
               `ANEXO 2-C`,
@@ -1388,13 +1433,13 @@ function GerarDocumentoPage() {
               ``,
               `REQUERENTE: ${customerName}`,
               `ENDEREÇO: ${fullAddress}`,
-              `CIDADE: ${customerCity}    UF: ${customerUf}    CEP: ${(customer as any)?.postal_code || "Não informado"}`,
-              `IDENT. Nº: ${customer?.rg || "Não informado"}    ORG EXP: ${(customer as any)?.rg_issuer || "SSP"}    CPF/CNPJ: ${customer?.cpf_cnpj || customer?.document || "Não informado"}`,
-              `TEL: ${customer?.phone || "Não informado"}    E-mail: ${customer?.email || "Não informado"}`,
+              `CIDADE: ${customerCity}    UF: ${customerUf}${resolvedCep ? `    CEP: ${resolvedCep}` : ""}`,
+              `IDENT. Nº: ${resolvedRg || (customer?.cpf_cnpj || customer?.document || "")}${resolvedRg ? `    ORG EXP: ${(customer as any)?.rg_issuer || "SSP"}` : ""}    CPF/CNPJ: ${customer?.cpf_cnpj || customer?.document || ""}`,
+              `TEL: ${customer?.phone || ""}    E-mail: ${customer?.email || ""}`.trim(),
               `OBS: Processo instruído via NavalDocs Pro sob o código ${processCode}`,
               ``,
               `EMBARCAÇÃO: ${vesselName}    INSCRIÇÃO Nº: ${vessel?.registration_number || "Em regularização"}`,
-              `Comprimento: ${effectiveLength}${String(effectiveLength).includes("m") || effectiveLength === "Não informado" ? "" : " m"}    Nº DO CASCO: ${(vessel as any)?.hull_number || (vessel as any)?.chassis_number || "Conforme documentação anexa"}    CLASSIFICAÇÃO: ${isProf ? "Comercial" : isJet ? "Moto Aquática" : "Esporte e/ou Recreio"}`,
+              `Comprimento: ${formattedLength || "Não informado"}${resolvedHull ? `    Nº DO CASCO: ${resolvedHull}` : ""}    CLASSIFICAÇÃO: ${isProf ? "Comercial" : isJet ? "Moto Aquática" : "Esporte e/ou Recreio"}`,
               `Área de Navegação: [X] Interior   [ ] Costeira   [ ] Oceânica`,
               ``,
               `VEM REQUERER A V.Sa. os seguintes serviços:`,
@@ -2989,6 +3034,34 @@ function GerarDocumentoPage() {
                 />
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-700">
+                    Comprimento (metros)
+                  </label>
+                  <input
+                    type="text"
+                    value={quickVesselLength}
+                    onChange={(e) => setQuickVesselLength(e.target.value)}
+                    placeholder="Ex: 7.50"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-700">
+                    Nº do Casco / Chassi
+                  </label>
+                  <input
+                    type="text"
+                    value={quickVesselHull}
+                    onChange={(e) => setQuickVesselHull(e.target.value)}
+                    placeholder="Ex: BR-XYZ12345678"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#0B1739] font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
               {/* SEÇÃO PROPRIETÁRIO DA EMBARCAÇÃO (Sem fallback presumido) */}
               <div className="pt-2 border-t border-slate-100 space-y-3">
                 <div className="flex items-center justify-between">
@@ -3166,7 +3239,7 @@ function GerarDocumentoPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-slate-700">
                         Nacionalidade
@@ -3175,7 +3248,20 @@ function GerarDocumentoPage() {
                         type="text"
                         value={outorgadoPfNacionalidade}
                         onChange={(e) => setOutorgadoPfNacionalidade(e.target.value)}
-                        placeholder="Ex: Brasileira"
+                        placeholder="Ex: Brasileira (opcional)"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#0B1739] font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-slate-700">
+                        Estado Civil
+                      </label>
+                      <input
+                        type="text"
+                        value={outorgadoPfEstadoCivil}
+                        onChange={(e) => setOutorgadoPfEstadoCivil(e.target.value)}
+                        placeholder="Ex: Casado(a) / Solteiro(a)"
                         className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#0B1739] font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                       />
                     </div>

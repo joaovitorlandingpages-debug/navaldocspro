@@ -475,7 +475,10 @@ function NovoClientePage() {
         if (formData.bairro.trim()) line += ` - ${formData.bairro.trim()}`;
         fullAddressParts.push(line);
       }
-      const fullAddress = fullAddressParts.join(" ") || null;
+      if (formData.cep.trim()) {
+        fullAddressParts.push(`CEP: ${formData.cep.trim()}`);
+      }
+      const fullAddress = fullAddressParts.join(" - ") || null;
 
       // 3. Inserção no banco de dados
       const { data: newCustomer, error: insertError } = await supabase
@@ -824,6 +827,23 @@ function NovoClientePage() {
                     />
                     <Calendar className="absolute right-3.5 top-3 h-4 w-4 text-slate-400 pointer-events-none" />
                   </div>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="rg"
+                    className="block text-xs font-semibold text-slate-700 mb-1.5"
+                  >
+                    RG / Documento de Identidade
+                  </label>
+                  <input
+                    id="rg"
+                    type="text"
+                    value={formData.rg}
+                    onChange={(e) => handleChange("rg", e.target.value)}
+                    placeholder="Ex: 12.345.678-9 SSP/SP"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#075BFF]/20 focus:border-[#075BFF] transition-all"
+                  />
                 </div>
               </div>
 

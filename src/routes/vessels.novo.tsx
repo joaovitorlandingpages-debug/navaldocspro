@@ -443,6 +443,7 @@ function NovaEmbarcacaoPage() {
           length: normalizedLength,
           boca: normalizedBoca,
           pontal: normalizedPontal,
+          hull_number: formData.hull_identifier.trim() || null,
           capacity: normalizedCapacity,
           current_owner_name: selectedCustomer?.name || null,
           current_owner_cpf_cnpj: selectedCustomer?.cpf_cnpj || null,
