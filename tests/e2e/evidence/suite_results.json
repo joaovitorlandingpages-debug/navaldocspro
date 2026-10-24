@@ -69,7 +69,7 @@
     "scenario": "Geração e confirmação de 3 documentos em lote",
     "status": "Passou",
     "evidence": "27_tres_documentos_gerados.png",
-    "notes": "3 documentos gerados com sucesso no processo e9b8b23f-72e1-484a-acb2-2670983b196e"
+    "notes": "3 documentos gerados com sucesso no processo fce038ea-32df-448e-90bb-9cad5f7d2466"
   },
   {
     "scenario": "Preservação das escolhas gerar/anexar/não usar após F5",
@@ -81,7 +81,7 @@
     "scenario": "Anexo, visualização, substituição e histórico de versões",
     "status": "Passou",
     "evidence": "34_anexo_v2_substituido.png",
-    "notes": "Anexo v1 enviado e conteúdo conferido (true), substituído por v2 com conteúdo diferente conferido (true), histórico com acesso a versão anterior comprovado (true)"
+    "notes": "Anexo v1 enviado e conteúdo original estrito conferido, substituído por v2 com conteúdo distinto conferido, e histórico com abertura e conferência de v1 aprovado."
   },
   {
     "scenario": "Download individual dos 3 PDFs após F5",
@@ -93,7 +93,7 @@
     "scenario": "Configuração e persistência de Outorgado PJ após F5",
     "status": "Passou",
     "evidence": "30_apos_f5_outorgado_pj_preservado.png",
-    "notes": "Razão Social (Despachadoria Santos 092678 Ltda) e CNPJ (12.492.372/0001-61) preservados após reload"
+    "notes": "Razão Social (Despachadoria Santos 556489 Ltda) e CNPJ (62.759.054/0001-92) preservados após reload"
   },
   {
     "scenario": "Principais fluxos no tamanho de celular (mobile)",
@@ -105,6 +105,6 @@
     "scenario": "Isolamento cross-tenant: tentativa de acesso direto a IDs e arquivos da outra empresa",
     "status": "Passou",
     "evidence": "39_empresa2_tentativa_acesso_processo_empresa1.png",
-    "notes": "Empresa 1: proc=1, docs=3, storageDownload=200 (bytes=840302, isPdf=true), signedUrl=true. Empresa 2: sessão válida=true, REST proc=200, storage=400, signedUrl=400. Redirecionado/bloqueado na UI."
+    "notes": "Empresa 1: proc=1, docs=3, storageDownload=200 (bytes=840298, isPdf=true), signedUrl=true. Empresa 2: sessão válida=true, REST proc=200, storage=400, signedUrl=400. Redirecionado/bloqueado na UI."
   }
 ]

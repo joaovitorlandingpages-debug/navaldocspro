@@ -1401,7 +1401,9 @@ function GerarDocumentoPage() {
                   `Endereço Profissional: ${outorgadoPfEndereco || companyData?.procurador_endereco || companyData?.contact_address || "Não informado"}`,
                   resolvedProcuradorPhone ? `Telefone: ${resolvedProcuradorPhone}` : "",
                   resolvedProcuradorEmail ? `E-mail: ${resolvedProcuradorEmail}` : "",
-                  `Sociedade Vinculada: ${companyData?.name || currentCompany?.name || "NavalDocs Pro"} (CNPJ: ${companyData?.cnpj || currentCompany?.cnpj || "Não informado"})`,
+                  (companyData?.cnpj || currentCompany?.cnpj)
+                    ? `Sociedade Vinculada: ${companyData?.name || currentCompany?.name || "NavalDocs Pro"} (CNPJ: ${companyData?.cnpj || currentCompany?.cnpj})`
+                    : "",
                 ]
               : [
                   `OUTORGADA (PESSOA JURÍDICA):`,

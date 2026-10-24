@@ -620,105 +620,110 @@ startxref
     await page.waitForTimeout(5000);
     await page.screenshot({ path: path.join(EVIDENCE_DIR, '33_anexo_v1_enviado.png') });
 
-    // Testa abertura do conteúdo do anexo v1 através de popup ou URL
+    // Testa abertura do conteúdo do anexo v1 através de popup ou download
     console.log('Testando abertura e conteúdo do anexo v1...');
     let v1ContentVerified = false;
     const [v1Popup] = await Promise.all([
-      page.waitForEvent('popup', { timeout: 10000 }).catch(() => null),
+      page.waitForEvent('popup', { timeout: 15000 }),
       (async () => {
         const viewBtn = await page.$('button:has-text("Visualizar")');
         if (viewBtn) await viewBtn.click();
       })()
     ]);
 
-    if (v1Popup) {
-      await v1Popup.waitForLoadState('domcontentloaded');
-      const v1Url = v1Popup.url();
-      console.log('Popup do anexo v1 aberto:', v1Url);
-      const resp = await v1Popup.request.get(v1Url);
-      const text = await resp.text();
-      if (text.includes('CONTEUDO_DOCUMENTAL_VERSAO_1_ORIGINAL') || v1Url.includes('attached_')) {
-        v1ContentVerified = true;
-      }
-      await v1Popup.close();
-    } else {
-      // Fallback de verificação se não abrir popup
-      v1ContentVerified = true;
+    if (!v1Popup) {
+      throw new Error('Falha ao abrir popup de visualização do anexo v1');
     }
+    await v1Popup.waitForLoadState('domcontentloaded');
+    const v1Url = v1Popup.url();
+    console.log('Popup do anexo v1 aberto com URL:', v1Url);
+    const respV1 = await v1Popup.request.get(v1Url);
+    const textV1 = await respV1.text();
+    if (!textV1.includes('CONTEUDO_DOCUMENTAL_VERSAO_1_ORIGINAL')) {
+      throw new Error('Conteúdo do anexo v1 não contém o texto exclusivo esperado: CONTEUDO_DOCUMENTAL_VERSAO_1_ORIGINAL');
+    }
+    v1ContentVerified = true;
+    await v1Popup.close();
 
     // Testar botão de substituir com v2
     console.log('Substituindo anexo com v2 (conteúdo diferente)...');
     const replaceFileInput = await page.$('input[type="file"][accept*="pdf"]');
-    if (replaceFileInput) {
-      await replaceFileInput.setInputFiles(mockPdfPathV2);
-      await page.waitForTimeout(5000);
-      await page.screenshot({ path: path.join(EVIDENCE_DIR, '34_anexo_v2_substituido.png') });
+    if (!replaceFileInput) {
+      throw new Error('Input de substituição de arquivo não encontrado');
     }
+    await replaceFileInput.setInputFiles(mockPdfPathV2);
+    await page.waitForTimeout(6000);
+    await page.screenshot({ path: path.join(EVIDENCE_DIR, '34_anexo_v2_substituido.png') });
 
     // Testa abertura do conteúdo do anexo v2
     console.log('Testando abertura e conteúdo do anexo v2...');
     let v2ContentVerified = false;
     const [v2Popup] = await Promise.all([
-      page.waitForEvent('popup', { timeout: 10000 }).catch(() => null),
+      page.waitForEvent('popup', { timeout: 15000 }),
       (async () => {
         const viewBtn = await page.$('button:has-text("Visualizar")');
         if (viewBtn) await viewBtn.click();
       })()
     ]);
 
-    if (v2Popup) {
-      await v2Popup.waitForLoadState('domcontentloaded');
-      const v2Url = v2Popup.url();
-      console.log('Popup do anexo v2 aberto:', v2Url);
-      const resp = await v2Popup.request.get(v2Url);
-      const text = await resp.text();
-      if (text.includes('CONTEUDO_DOCUMENTAL_VERSAO_2_SUBSTITUIDA') || v2Url.includes('attached_')) {
-        v2ContentVerified = true;
-      }
-      await v2Popup.close();
-    } else {
-      v2ContentVerified = true;
+    if (!v2Popup) {
+      throw new Error('Falha ao abrir popup de visualização do anexo v2');
     }
+    await v2Popup.waitForLoadState('domcontentloaded');
+    const v2Url = v2Popup.url();
+    console.log('Popup do anexo v2 aberto com URL:', v2Url);
+    const respV2 = await v2Popup.request.get(v2Url);
+    const textV2 = await respV2.text();
+    if (!textV2.includes('CONTEUDO_DOCUMENTAL_VERSAO_2_SUBSTITUIDA')) {
+      throw new Error('Conteúdo do anexo v2 não contém o texto exclusivo esperado: CONTEUDO_DOCUMENTAL_VERSAO_2_SUBSTITUIDA');
+    }
+    v2ContentVerified = true;
+    await v2Popup.close();
 
     // Testa acesso à versão anterior v1 pelo histórico de versões anteriores do anexo
     console.log('Testando visualização da versão anterior v1 no histórico do anexo...');
     let prevVerContentVerified = false;
     const prevVerBtn = await page.$('button.btn-prev-ver, button:has-text("Visualizar versão anterior")');
-    if (prevVerBtn) {
-      const [prevPopup] = await Promise.all([
-        page.waitForEvent('popup', { timeout: 10000 }).catch(() => null),
-        prevVerBtn.click()
-      ]);
-      if (prevPopup) {
-        await prevPopup.waitForLoadState('domcontentloaded');
-        const prevUrl = prevPopup.url();
-        console.log('Popup da versão anterior do anexo aberto:', prevUrl);
-        const resp = await prevPopup.request.get(prevUrl);
-        const text = await resp.text();
-        if (text.includes('CONTEUDO_DOCUMENTAL_VERSAO_1_ORIGINAL') || prevUrl.includes('attached_')) {
-          prevVerContentVerified = true;
-        }
-        await prevPopup.close();
-      } else {
-        prevVerContentVerified = true;
-      }
-    } else {
-      console.log('Botão de versão anterior não visível diretamente, verificando se há no HTML...');
+    if (!prevVerBtn) {
+      throw new Error('Botão de visualização da versão anterior não encontrado na interface de histórico do anexo');
     }
+
+    const [prevPopup] = await Promise.all([
+      page.waitForEvent('popup', { timeout: 15000 }),
+      prevVerBtn.click()
+    ]);
+
+    if (!prevPopup) {
+      throw new Error('Falha ao abrir popup da versão anterior v1');
+    }
+    await prevPopup.waitForLoadState('domcontentloaded');
+    const prevUrl = prevPopup.url();
+    console.log('Popup da versão anterior do anexo aberto:', prevUrl);
+    const respPrev = await prevPopup.request.get(prevUrl);
+    const textPrev = await respPrev.text();
+    if (!textPrev.includes('CONTEUDO_DOCUMENTAL_VERSAO_1_ORIGINAL')) {
+      throw new Error('Versão anterior aberta não contém o conteúdo original esperado de v1: CONTEUDO_DOCUMENTAL_VERSAO_1_ORIGINAL');
+    }
+    prevVerContentVerified = true;
+    await prevPopup.close();
 
     await page.screenshot({ path: path.join(EVIDENCE_DIR, '35_historico_versoes_expandido.png') });
 
     const cardContent = await page.content();
-    const hasV1InHistory = cardContent.includes('documento_anexo_v1') || cardContent.includes('v1') || prevVerBtn !== null;
+    const hasV1InHistory = cardContent.includes('documento_anexo_v1') || cardContent.includes('v1');
     const hasV2Active = cardContent.includes('documento_anexo_v2_substituido') || cardContent.includes('v2');
 
-    const anexoApproved = v1ContentVerified && v2ContentVerified && hasV2Active && hasV1InHistory;
+    const anexoApproved = v1ContentVerified && v2ContentVerified && prevVerContentVerified && hasV2Active && hasV1InHistory;
+
+    if (!anexoApproved) {
+      throw new Error('Reprovação no teste de anexo: uma das validações de conteúdo v1, v2 ou versão anterior falhou.');
+    }
 
     recordResult(
       'Anexo, visualização, substituição e histórico de versões',
-      anexoApproved ? 'Passou' : 'Falhou',
+      'Passou',
       '34_anexo_v2_substituido.png',
-      `Anexo v1 enviado e conteúdo conferido (${v1ContentVerified}), substituído por v2 com conteúdo diferente conferido (${v2ContentVerified}), histórico com acesso a versão anterior comprovado (${hasV1InHistory})`
+      `Anexo v1 enviado e conteúdo original estrito conferido, substituído por v2 com conteúdo distinto conferido, e histórico com abertura e conferência de v1 aprovado.`
     );
 
     // -------------------------------------------------------------
