@@ -334,8 +334,9 @@ async function runOnlineValidation() {
       const docName = (await row.getAttribute('data-doc-name')) || 'documento';
       const downloadBtn = await row.$('button:has-text("Baixar")');
       if (downloadBtn) {
+        await page.waitForTimeout(2000);
         const [download] = await Promise.all([
-          page.waitForEvent('download', { timeout: 20000 }),
+          page.waitForEvent('download', { timeout: 35000 }),
           downloadBtn.click()
         ]);
         const cleanName = docName.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 20);
