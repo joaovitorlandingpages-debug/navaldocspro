@@ -70,7 +70,7 @@ serve(async (req) => {
     const companyId = profile.company_id;
 
     // Validação de autorização financeira no servidor
-    // Verifica permissão via RPC segura ou verificação direta de perfil se RPC estiver pendente de grant
+    // A RPC can_manage_company_billing é a autoridade primária.
     let canManage = false;
     const { data: canManageRpc, error: permErr } = await ctx.admin
       .rpc('can_manage_company_billing', {
@@ -78,17 +78,23 @@ serve(async (req) => {
         p_company_id: companyId
       });
 
-    if (!permErr && typeof canManageRpc === 'boolean') {
-      canManage = canManageRpc;
+    if (!permErr) {
+      // Se a RPC respondeu (true ou false), seu resultado é soberano e NUNCA é substituído
+      canManage = Boolean(canManageRpc);
     } else {
-      if (permErr) {
-        console.warn("[stripe-checkout] can_manage_company_billing RPC falhou ou não publicada:", permErr.message);
+      // O fallback SÓ é executado se a RPC estiver ausente/indisponível no PostgREST (PGRST202 ou 42883)
+      const isRpcUnavailable = permErr.code === 'PGRST202' || permErr.code === '42883' || permErr.message?.includes('schema cache');
+      if (isRpcUnavailable) {
+        console.warn("[stripe-checkout] can_manage_company_billing indisponível no schema cache, aplicando fallback estrito:", permErr.message);
+        const isCompanyFinancialManager = profile.company_id === companyId && 
+          ['company_admin', 'admin', 'owner', 'finance'].includes(profile.role);
+        const isMasterAdmin = ['admin_master', 'admin_master_global', 'superadmin'].includes(profile.role);
+        canManage = isCompanyFinancialManager || isMasterAdmin;
+      } else {
+        // Qualquer outro erro de execução no banco interrompe imediatamente a operação
+        console.error("[stripe-checkout] Erro inesperado ao validar permissões financeiras:", permErr);
+        return errorResponse("Erro ao validar permissões de faturamento", 500);
       }
-      // Validação estrita equivalente no servidor (papéis financeiros da empresa ou admin master)
-      const isCompanyFinancialManager = profile.company_id === companyId && 
-        ['company_admin', 'admin', 'owner', 'finance'].includes(profile.role);
-      const isMasterAdmin = ['admin_master', 'admin_master_global', 'superadmin'].includes(profile.role);
-      canManage = isCompanyFinancialManager || isMasterAdmin;
     }
 
     if (!canManage) {

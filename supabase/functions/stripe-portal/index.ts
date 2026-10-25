@@ -53,24 +53,34 @@ serve(async (req) => {
     }
 
     // Validação estrita de permissão financeira no servidor
+    // A RPC can_manage_company_billing é a autoridade primária.
     let canManage = false;
     const { data: canManageRpc, error: permErr } = await supabase.rpc("can_manage_company_billing", {
       p_user_id: ctx.userId,
       p_company_id: companyId,
     });
 
-    if (!permErr && typeof canManageRpc === 'boolean') {
-      canManage = canManageRpc;
+    if (!permErr) {
+      // Se a RPC respondeu (true ou false), seu resultado é soberano e NUNCA é substituído
+      canManage = Boolean(canManageRpc);
     } else {
-      if (permErr) {
-        console.warn("[stripe-portal] can_manage_company_billing RPC falhou ou não publicada:", permErr.message);
+      // O fallback SÓ é executado se a RPC estiver ausente/indisponível no PostgREST (PGRST202 ou 42883)
+      const isRpcUnavailable = permErr.code === 'PGRST202' || permErr.code === '42883' || permErr.message?.includes('schema cache');
+      if (isRpcUnavailable) {
+        console.warn("[stripe-portal] can_manage_company_billing indisponível no schema cache, aplicando fallback estrito:", permErr.message);
+        const isCompanyFinancialManager = ctx.companyId === companyId && 
+          ['company_admin', 'admin', 'owner', 'finance'].includes(ctx.role || '');
+        const isMasterAdmin = ctx.isAdminMaster || 
+          ['admin_master', 'admin_master_global', 'superadmin'].includes(ctx.role || '');
+        canManage = isCompanyFinancialManager || isMasterAdmin;
+      } else {
+        // Qualquer outro erro de execução no banco interrompe imediatamente a operação
+        console.error("[stripe-portal] Erro inesperado ao validar permissões financeiras:", permErr);
+        throw new HttpError(500, {
+          error: "billing_permission_error",
+          message: "Erro ao validar permissões financeiras no servidor."
+        });
       }
-      // Validação estrita equivalente no servidor com base no perfil carregado no context
-      const isCompanyFinancialManager = ctx.companyId === companyId && 
-        ['company_admin', 'admin', 'owner', 'finance'].includes(ctx.role || '');
-      const isMasterAdmin = ctx.isAdminMaster || 
-        ['admin_master', 'admin_master_global', 'superadmin'].includes(ctx.role || '');
-      canManage = isCompanyFinancialManager || isMasterAdmin;
     }
 
     if (!canManage) {
