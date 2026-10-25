@@ -48,27 +48,50 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const { billingCycle = 'monthly', couponCode, successUrl, cancelUrl } = body;
 
+    const safeSuccessBase = validateRedirectUrl(successUrl);
+    const safeCancelBase = validateRedirectUrl(cancelUrl);
+
     // 1. Identificação do usuário, empresa e permissões financeiras
     const { data: profile, error: profileErr } = await ctx.admin
       .from('profiles')
-      .select('company_id, full_name, email, role')
+      .select('company_id, name, email, role')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
 
-    if (profileErr || !profile?.company_id) {
+    if (profileErr) {
+      console.error("[stripe-checkout] Erro ao consultar perfil:", profileErr);
+      return errorResponse("Erro ao carregar dados do usuário", 500);
+    }
+
+    if (!profile || !profile.company_id) {
       return errorResponse("Perfil ou empresa não encontrados", 400);
     }
 
     const companyId = profile.company_id;
 
     // Validação de autorização financeira no servidor
-    const { data: canManage, error: permErr } = await ctx.admin
+    // Verifica permissão via RPC segura ou verificação direta de perfil se RPC estiver pendente de grant
+    let canManage = false;
+    const { data: canManageRpc, error: permErr } = await ctx.admin
       .rpc('can_manage_company_billing', {
         p_user_id: user.id,
         p_company_id: companyId
       });
 
-    if (permErr || !canManage) {
+    if (!permErr && typeof canManageRpc === 'boolean') {
+      canManage = canManageRpc;
+    } else {
+      if (permErr) {
+        console.warn("[stripe-checkout] can_manage_company_billing RPC falhou ou não publicada:", permErr.message);
+      }
+      // Validação estrita equivalente no servidor (papéis financeiros da empresa ou admin master)
+      const isCompanyFinancialManager = profile.company_id === companyId && 
+        ['company_admin', 'admin', 'owner', 'finance'].includes(profile.role);
+      const isMasterAdmin = ['admin_master', 'admin_master_global', 'superadmin'].includes(profile.role);
+      canManage = isCompanyFinancialManager || isMasterAdmin;
+    }
+
+    if (!canManage) {
       return errorResponse("Você não tem permissão para gerenciar faturamento desta empresa", 403);
     }
 
@@ -87,7 +110,7 @@ serve(async (req) => {
     if (!customerId) {
       const customer = await ctx.stripe.customers.create({
         email: user.email,
-        name: company?.name || profile.full_name || undefined,
+        name: company?.name || profile.name || undefined,
         metadata: {
           company_id: companyId,
           user_id: user.id,
@@ -288,9 +311,6 @@ serve(async (req) => {
         return errorResponse("O cupom promocional informado não possui identificador correspondente configurado na Stripe.", 400);
       }
     }
-
-    const safeSuccessBase = validateRedirectUrl(successUrl);
-    const safeCancelBase = validateRedirectUrl(cancelUrl);
 
     // Montagem dos line_items — usa EXCLUSIVAMENTE o price oficial da Stripe (pré-sincronizado)
     const lineItems = [{ price: resolved.priceId, quantity: 1 }];

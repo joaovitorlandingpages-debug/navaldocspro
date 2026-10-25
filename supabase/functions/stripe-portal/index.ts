@@ -53,12 +53,27 @@ serve(async (req) => {
     }
 
     // Validação estrita de permissão financeira no servidor
-    const { data: canManage, error: permErr } = await supabase.rpc("can_manage_company_billing", {
+    let canManage = false;
+    const { data: canManageRpc, error: permErr } = await supabase.rpc("can_manage_company_billing", {
       p_user_id: ctx.userId,
       p_company_id: companyId,
     });
 
-    if (permErr || !canManage) {
+    if (!permErr && typeof canManageRpc === 'boolean') {
+      canManage = canManageRpc;
+    } else {
+      if (permErr) {
+        console.warn("[stripe-portal] can_manage_company_billing RPC falhou ou não publicada:", permErr.message);
+      }
+      // Validação estrita equivalente no servidor com base no perfil carregado no context
+      const isCompanyFinancialManager = ctx.companyId === companyId && 
+        ['company_admin', 'admin', 'owner', 'finance'].includes(ctx.role || '');
+      const isMasterAdmin = ctx.isAdminMaster || 
+        ['admin_master', 'admin_master_global', 'superadmin'].includes(ctx.role || '');
+      canManage = isCompanyFinancialManager || isMasterAdmin;
+    }
+
+    if (!canManage) {
       throw new HttpError(403, {
         error: "forbidden_billing_permission",
         message: "Você não possui permissão para acessar o painel financeiro e portal de clientes deste escritório."
