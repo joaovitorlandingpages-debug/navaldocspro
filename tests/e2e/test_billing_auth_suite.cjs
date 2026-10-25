@@ -1,32 +1,48 @@
 /**
- * Teste unitário e de integração lógica: can_manage_company_billing e Fallback do Checkout/Portal
+ * Suíte de Testes Unitários de Lógica (Simulação Local em JavaScript)
  * 
- * Valida os 5 requisitos estritos de autorização solicitados:
- * 1. Gestor autorizado acessa a própria empresa
- * 2. Usuário comum é rejeitado
- * 3. Gestor NÃO acessa outra empresa
- * 4. Authenticated NÃO consulta como outro usuário (impersonation reject)
- * 5. Resultado false ou erros inesperados NUNCA liberam acesso
+ * NOTA METODOLÓGICA:
+ * Estes testes validam matematicamente a álgebra e lógica de ramos da RPC
+ * can_manage_company_billing e do fallback das Edge Functions stripe-checkout / stripe-portal.
+ * Trata-se de simulação local em memória (JavaScript / Node.js) para validação de contratos,
+ * NÃO constituindo comprovação de execução no PostgreSQL real gerenciado do Supabase / Lovable Cloud.
+ * A comprovação no banco PostgreSQL ocorrerá exclusivamente após o deploy da migration na nuvem.
+ * 
+ * Requisitos estritos validados:
+ * 1. Somente 'authenticated' e 'service_role' são aceitos;
+ * 2. NULL, 'anon', 'postgres' e 'supabase_admin' são categoricamente REJEITADOS;
+ * 3. Para 'authenticated', auth.uid() DEVE ser igual a p_user_id (anti-impersonation);
+ * 4. Gestor de faturamento só tem acesso à própria empresa vinculada (isolamento de tenant);
+ * 5. Resultado estritamente true (canManageRpc === true) é exigido; false e erros abortam a operação.
  */
 
 function simulateCanManageRpcLogic({
-  callerRole,      // 'authenticated' | 'service_role' | 'anon'
+  callerRole,      // string extraída de auth.role()
   authUid,         // auth.uid() da sessão
   paramUserId,     // p_user_id passado na chamada
   paramCompanyId,  // p_company_id passado na chamada
   profilesDb       // registros de profiles simulados
 }) {
+  // Validação de nulidade básica
   if (!paramUserId || !paramCompanyId) return false;
-  if (!['authenticated', 'service_role', 'postgres', 'supabase_admin'].includes(callerRole)) {
-    return false; // anon ou outros são rejeitados
+
+  // 1. Identificação estrita via auth.role(): aceita SOMENTE 'authenticated' ou 'service_role'
+  if (callerRole !== 'authenticated' && callerRole !== 'service_role') {
+    return false; // Rejeita NULL, 'anon', 'postgres', 'supabase_admin' e qualquer outro
   }
 
-  let effectiveUserId = paramUserId;
+  let effectiveUserId;
   if (callerRole === 'authenticated') {
+    // Para 'authenticated': exige auth.uid() IS NOT NULL E auth.uid() = paramUserId
     if (!authUid || authUid !== paramUserId) {
-      return false; // bloqueio estrito de impersonation
+      return false; // Tentativa de consulta como outro usuário é sumariamente rejeitada
     }
     effectiveUserId = authUid;
+  } else if (callerRole === 'service_role') {
+    // Para 'service_role': chamada interna da Edge Function com JWT validado no backend
+    effectiveUserId = paramUserId;
+  } else {
+    return false;
   }
 
   const profile = profilesDb.find(p => p.id === effectiveUserId);
@@ -48,8 +64,10 @@ function simulateEdgeFunctionAuthCheck({
   let canManage = false;
 
   if (!permErr) {
+    // Exigência estrita: canManageRpc === true
     canManage = canManageRpcResult === true;
   } else {
+    // Fallback estrito APENAS para os códigos de função inexistente no banco
     const isRpcUnavailable = permErr.code === 'PGRST202' || permErr.code === '42883';
     if (isRpcUnavailable) {
       const isCompanyFinancialManager = profile.company_id === companyId && 
@@ -57,6 +75,7 @@ function simulateEdgeFunctionAuthCheck({
       const isMasterAdmin = ['admin_master', 'admin_master_global', 'superadmin'].includes(profile.role);
       canManage = isCompanyFinancialManager || isMasterAdmin;
     } else {
+      // Qualquer outro erro inesperado interrompe imediatamente com HTTP 500
       return { status: 500, error: "Erro ao validar permissões de faturamento" };
     }
   }
@@ -67,7 +86,7 @@ function simulateEdgeFunctionAuthCheck({
   return { status: 200, ok: true };
 }
 
-// Execução dos testes
+// Base simulada de perfis para testes locais
 const mockProfiles = [
   { id: 'user-manager-1', company_id: 'comp-A', role: 'company_admin' },
   { id: 'user-common-1', company_id: 'comp-A', role: 'dispatcher' },
@@ -90,7 +109,10 @@ function assert(condition, message) {
   }
 }
 
-console.log('--- TESTES DA LÓGICA DA RPC can_manage_company_billing ---');
+console.log('================================================================');
+console.log('SIMULAÇÃO LOCAL: LÓGICA DA RPC can_manage_company_billing');
+console.log('(Testes unitários em JS / Node.js — não executados no PostgreSQL)');
+console.log('================================================================');
 
 // 1. Gestor autorizado acessa a própria empresa
 assert(
@@ -101,10 +123,55 @@ assert(
     paramCompanyId: 'comp-A',
     profilesDb: mockProfiles
   }) === true,
-  '1. Gestor autorizado acessa a própria empresa (RPC retorna true)'
+  '1. Gestor autorizado com sessão idêntica acessa a própria empresa (retorna true)'
 );
 
-// 2. Usuário comum é rejeitado
+// 2. Rejeição estrita de papéis não autorizados: NULL, anon, postgres, supabase_admin
+assert(
+  simulateCanManageRpcLogic({
+    callerRole: null,
+    authUid: 'user-manager-1',
+    paramUserId: 'user-manager-1',
+    paramCompanyId: 'comp-A',
+    profilesDb: mockProfiles
+  }) === false,
+  '2.a. Papel NULL é categoricamente rejeitado (retorna false)'
+);
+
+assert(
+  simulateCanManageRpcLogic({
+    callerRole: 'anon',
+    authUid: null,
+    paramUserId: 'user-manager-1',
+    paramCompanyId: 'comp-A',
+    profilesDb: mockProfiles
+  }) === false,
+  '2.b. Papel anon é categoricamente rejeitado (retorna false)'
+);
+
+assert(
+  simulateCanManageRpcLogic({
+    callerRole: 'postgres',
+    authUid: null,
+    paramUserId: 'user-manager-1',
+    paramCompanyId: 'comp-A',
+    profilesDb: mockProfiles
+  }) === false,
+  '2.c. Papel postgres é categoricamente rejeitado (retorna false)'
+);
+
+assert(
+  simulateCanManageRpcLogic({
+    callerRole: 'supabase_admin',
+    authUid: null,
+    paramUserId: 'user-manager-1',
+    paramCompanyId: 'comp-A',
+    profilesDb: mockProfiles
+  }) === false,
+  '2.d. Papel supabase_admin é categoricamente rejeitado (retorna false)'
+);
+
+// 3. Usuários sem perfil financeiro são rejeitados
 assert(
   simulateCanManageRpcLogic({
     callerRole: 'authenticated',
@@ -113,7 +180,7 @@ assert(
     paramCompanyId: 'comp-A',
     profilesDb: mockProfiles
   }) === false,
-  '2. Usuário comum (dispatcher) na mesma empresa é rejeitado (RPC retorna false)'
+  '3.a. Usuário comum (dispatcher) da própria empresa é rejeitado (retorna false)'
 );
 
 assert(
@@ -124,46 +191,34 @@ assert(
     paramCompanyId: 'comp-A',
     profilesDb: mockProfiles
   }) === false,
-  '2.b. Usuário comum (viewer) na mesma empresa é rejeitado (RPC retorna false)'
+  '3.b. Usuário comum (viewer) da própria empresa é rejeitado (retorna false)'
 );
 
-// 3. Gestor não acessa outra empresa
+// 4. Isolamento estrito de tenant (gestor não acessa outra empresa)
 assert(
   simulateCanManageRpcLogic({
     callerRole: 'authenticated',
     authUid: 'user-manager-1',
     paramUserId: 'user-manager-1',
-    paramCompanyId: 'comp-B', // Empresa de outro cliente
+    paramCompanyId: 'comp-B', // Empresa alheia
     profilesDb: mockProfiles
   }) === false,
-  '3. Gestor da empresa A é terminantemente rejeitado ao consultar empresa B'
+  '4. Gestor da Empresa A é terminantemente rejeitado ao tentar gerenciar Empresa B'
 );
 
-// 4. Authenticated não consulta como outro usuário (impersonation reject)
+// 5. Bloqueio de impersonation (authenticated não consulta como outro usuário)
 assert(
   simulateCanManageRpcLogic({
     callerRole: 'authenticated',
-    authUid: 'user-common-1',     // Atacante comum logado
-    paramUserId: 'user-manager-1', // Tenta forjar ID do gestor no parâmetro
+    authUid: 'user-common-1',     // Sessão de usuário comum
+    paramUserId: 'user-manager-1', // Tenta forjar p_user_id do gestor
     paramCompanyId: 'comp-A',
     profilesDb: mockProfiles
   }) === false,
-  '4. Usuário autenticado tentando passar ID de gestor é bloqueado por auth.uid() <> p_user_id'
+  '5. Impersonation: auth.uid() <> p_user_id bloqueia a chamada sumariamente'
 );
 
-// 4.b Anon é bloqueado
-assert(
-  simulateCanManageRpcLogic({
-    callerRole: 'anon',
-    authUid: null,
-    paramUserId: 'user-manager-1',
-    paramCompanyId: 'comp-A',
-    profilesDb: mockProfiles
-  }) === false,
-  '4.b. Usuário anônimo (anon) é sumariamente bloqueado'
-);
-
-// 4.c Service role de Edge Function
+// 6. Chamada válida de Edge Function via service_role
 assert(
   simulateCanManageRpcLogic({
     callerRole: 'service_role',
@@ -172,56 +227,72 @@ assert(
     paramCompanyId: 'comp-A',
     profilesDb: mockProfiles
   }) === true,
-  '4.c. Edge Function confiável via service_role valida gestor com p_user_id verificado'
+  '6. Edge Function interna via service_role valida gestor autenticado'
 );
 
-console.log('\n--- TESTES DA INTEGRAÇÃO DO CHECKOUT / PORTAL ---');
+console.log('\n================================================================');
+console.log('SIMULAÇÃO LOCAL: INTEGRAÇÃO CHECKOUT / PORTAL (EDGE FUNCTIONS)');
+console.log('(Testes unitários em JS / Node.js — não executados no PostgreSQL)');
+console.log('================================================================');
 
-// 5. Resultado false da RPC NUNCA é substituído por autorização alternativa
+// 7. Resultado false da RPC NUNCA é substituído por autorização alternativa
 const falseResult = simulateEdgeFunctionAuthCheck({
   canManageRpcResult: false, // RPC respondeu false
   permErr: null,
-  profile: mockProfiles[0], // Mesmo se o perfil do usuário for gestor
+  profile: mockProfiles[0],
   companyId: 'comp-B'
 });
 assert(
   falseResult.status === 403,
-  '5.a. Se a RPC retornar false, a Edge Function NUNCA autoriza (HTTP 403 garantido)'
+  '7. Se a RPC retornar false, a Edge Function NUNCA autoriza (HTTP 403 estrito)'
 );
 
-// 5.b Erros inesperados da RPC interrompem imediatamente com HTTP 500
-const unexpectedErrorResult = simulateEdgeFunctionAuthCheck({
+// 8. Erros inesperados da RPC abortam imediatamente com HTTP 500 sem fallback
+const unexpectedErr = simulateEdgeFunctionAuthCheck({
   canManageRpcResult: null,
-  permErr: { code: '57014', message: 'query_canceled timeout' },
+  permErr: { code: '57014', message: 'statement timeout' },
   profile: mockProfiles[0],
   companyId: 'comp-A'
 });
 assert(
-  unexpectedErrorResult.status === 500,
-  '5.b. Erros inesperados da RPC (ex: timeout 57014) abortam a operação com HTTP 500 sem fallback'
+  unexpectedErr.status === 500,
+  '8. Erros inesperados (ex: timeout 57014) abortam com HTTP 500 sem recorrer ao fallback'
 );
 
-// 5.c Fallback restrito funciona APENAS para PGRST202 (função ausente no schema cache)
-const missingRpcResult = simulateEdgeFunctionAuthCheck({
+// 9. Fallback estrito restrito EXCLUSIVAMENTE aos códigos PGRST202 ou 42883
+const fallbackPgrst202 = simulateEdgeFunctionAuthCheck({
   canManageRpcResult: null,
   permErr: { code: 'PGRST202', message: 'function not found' },
   profile: mockProfiles[0],
   companyId: 'comp-A'
 });
 assert(
-  missingRpcResult.status === 200,
-  '5.c. Fallback estrito concede acesso exclusivamente para gestor verificado no servidor quando PGRST202'
+  fallbackPgrst202.status === 200,
+  '9.a. Fallback estrito autoriza gestor verificado no servidor quando PGRST202'
 );
 
-const missingRpcUnauthorizedUser = simulateEdgeFunctionAuthCheck({
+const fallback42883 = simulateEdgeFunctionAuthCheck({
+  canManageRpcResult: null,
+  permErr: { code: '42883', message: 'undefined_function' },
+  profile: mockProfiles[0],
+  companyId: 'comp-A'
+});
+assert(
+  fallback42883.status === 200,
+  '9.b. Fallback estrito autoriza gestor verificado no servidor quando 42883'
+);
+
+const fallbackRejectNonManager = simulateEdgeFunctionAuthCheck({
   canManageRpcResult: null,
   permErr: { code: 'PGRST202', message: 'function not found' },
   profile: mockProfiles[1], // dispatcher
   companyId: 'comp-A'
 });
 assert(
-  missingRpcUnauthorizedUser.status === 403,
-  '5.d. Fallback estrito barra usuário comum (dispatcher) com HTTP 403 mesmo quando PGRST202'
+  fallbackRejectNonManager.status === 403,
+  '9.c. Fallback estrito bloqueia usuário sem perfil de gestão (HTTP 403) mesmo sob PGRST202'
 );
 
-console.log(`\nTOTAL DE TESTES: ${total} | APROVADOS: ${passes} | FALHAS: ${total - passes}`);
+console.log('\n----------------------------------------------------------------');
+console.log(`TOTAL DE TESTES SIMULADOS: ${total} | APROVADOS: ${passes} | FALHAS: ${total - passes}`);
+console.log('----------------------------------------------------------------\n');
