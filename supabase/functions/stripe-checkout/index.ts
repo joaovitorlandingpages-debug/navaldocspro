@@ -80,12 +80,12 @@ serve(async (req) => {
 
     if (!permErr) {
       // Se a RPC respondeu (true ou false), seu resultado é soberano e NUNCA é substituído
-      canManage = Boolean(canManageRpc);
+      canManage = canManageRpc === true;
     } else {
       // O fallback SÓ é executado se a RPC estiver ausente/indisponível no PostgREST (PGRST202 ou 42883)
-      const isRpcUnavailable = permErr.code === 'PGRST202' || permErr.code === '42883' || permErr.message?.includes('schema cache');
+      const isRpcUnavailable = permErr.code === 'PGRST202' || permErr.code === '42883';
       if (isRpcUnavailable) {
-        console.warn("[stripe-checkout] can_manage_company_billing indisponível no schema cache, aplicando fallback estrito:", permErr.message);
+        console.warn("[stripe-checkout] can_manage_company_billing indisponível no banco (código " + permErr.code + "), aplicando verificação direta temporária.");
         const isCompanyFinancialManager = profile.company_id === companyId && 
           ['company_admin', 'admin', 'owner', 'finance'].includes(profile.role);
         const isMasterAdmin = ['admin_master', 'admin_master_global', 'superadmin'].includes(profile.role);
