@@ -1,0 +1,159 @@
+[
+  {
+    "fileName": "identificacao_legivel.pdf",
+    "status": 200,
+    "type": "CNH",
+    "fields": {
+      "name": "CARLOS EDUARDO DA SILVA TESTE",
+      "cpf": "123.456.789-00",
+      "cnpj": null,
+      "rg": "28.456.789-0",
+      "birth_date": "15/08/1985",
+      "address": null,
+      "city": null,
+      "state": "SP",
+      "zip_code": null,
+      "phone": null,
+      "email": null,
+      "vessel_name": null,
+      "registration_number": null,
+      "vessel_type": null,
+      "length": null,
+      "beam": null,
+      "depth": null,
+      "gross_tonnage": null,
+      "engine_power": null,
+      "engine_model": null,
+      "engine_serial": null,
+      "issue_date": null,
+      "expiry_date": "20/10/2030",
+      "issuer": "SSP SP"
+    },
+    "expected": {
+      "name": "CARLOS EDUARDO DA SILVA TESTE",
+      "cpf": "123.456.789-00",
+      "rg": "28.456.789-0",
+      "birth_date": "15/08/1985"
+    }
+  },
+  {
+    "fileName": "comprovante_endereco_legivel.pdf",
+    "status": 200,
+    "type": "COMPROVANTE_RESIDENCIA",
+    "fields": {
+      "name": "CARLOS EDUARDO DA SILVA TESTE",
+      "cpf": null,
+      "cnpj": null,
+      "rg": null,
+      "birth_date": null,
+      "address": "AV ATLANTICA, 1500 - APTO 42, GONZAGA",
+      "city": "SANTOS",
+      "state": "SP",
+      "zip_code": "11065-001",
+      "phone": null,
+      "email": null,
+      "vessel_name": null,
+      "registration_number": null,
+      "vessel_type": null,
+      "length": null,
+      "beam": null,
+      "depth": null,
+      "gross_tonnage": null,
+      "engine_power": null,
+      "engine_model": null,
+      "engine_serial": null,
+      "issue_date": null,
+      "expiry_date": null,
+      "issuer": "COMPANHIA DE ENERGIA E ELETRICIDADE"
+    },
+    "expected": {
+      "address": "AV ATLANTICA, 1500 - APTO 42",
+      "city": "SANTOS",
+      "state": "SP",
+      "zip_code": "11065-001"
+    }
+  },
+  {
+    "fileName": "documento_embarcacao_legivel.pdf",
+    "status": 200,
+    "type": "VESSEL_TIE",
+    "fields": {
+      "name": "MARCELO HENRIQUE BORGES",
+      "cpf": "987.654.321-99",
+      "cnpj": null,
+      "rg": null,
+      "birth_date": null,
+      "address": null,
+      "city": null,
+      "state": null,
+      "zip_code": null,
+      "phone": null,
+      "email": null,
+      "vessel_name": "ESTRELA DO MAR II",
+      "registration_number": "038-0012345-6",
+      "vessel_type": "LANCHA",
+      "length": "8.50 M",
+      "beam": "2.60 M",
+      "depth": "1.20 M",
+      "gross_tonnage": null,
+      "engine_power": "250 HP",
+      "engine_model": null,
+      "engine_serial": null,
+      "issue_date": null,
+      "expiry_date": null,
+      "issuer": "MARINHA DO BRASIL - DIRETORIA DE PORTOS E COSTAS"
+    },
+    "expected": {
+      "vessel_name": "ESTRELA DO MAR II",
+      "registration_number": "038-0012345-6",
+      "vessel_type": "LANCHA",
+      "length": "8.50",
+      "beam": "2.60",
+      "depth": "1.20",
+      "construction_year": "2021",
+      "hull_material": "FIBRA DE VIDRO",
+      "engine_power": "250 HP"
+    }
+  },
+  {
+    "fileName": "imagem_ilegivel.png",
+    "status": 500,
+    "expected": {
+      "shouldBeEmpty": true
+    }
+  },
+  {
+    "fileName": "documento_incompativel.pdf",
+    "status": 200,
+    "type": "OTHER",
+    "fields": {
+      "name": null,
+      "cpf": null,
+      "cnpj": null,
+      "rg": null,
+      "birth_date": null,
+      "address": null,
+      "city": null,
+      "state": null,
+      "zip_code": null,
+      "phone": null,
+      "email": null,
+      "vessel_name": null,
+      "registration_number": null,
+      "vessel_type": null,
+      "length": null,
+      "beam": null,
+      "depth": null,
+      "gross_tonnage": null,
+      "engine_power": null,
+      "engine_model": null,
+      "engine_serial": null,
+      "issue_date": null,
+      "expiry_date": null,
+      "issuer": null
+    },
+    "expected": {
+      "shouldBeOther": true
+    }
+  }
+]
