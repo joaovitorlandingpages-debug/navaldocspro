@@ -143,7 +143,7 @@ function DocumentoRevisarPage() {
 
     Object.entries(review.fields).forEach(([key, detail]) => {
       if (isVessel) {
-        if (["name", "registration_number", "vessel_type", "category", "construction_year", "hull_material"].includes(key)) {
+        if (["name", "registration_number", "vessel_type", "category", "construction_year", "hull_material", "hull_identifier"].includes(key)) {
           groups["1. Dados de Identificação da Embarcação"].push({ key, detail });
         } else if (["length", "boca", "pontal", "gross_tonnage", "capacity", "navigation_area"].includes(key)) {
           groups["2. Dimensões e Capacidade"].push({ key, detail });
@@ -226,6 +226,7 @@ function DocumentoRevisarPage() {
           JSON.stringify({
             confirmed: true,
             targetEntity: sessionData.targetEntity,
+            documentType: review.documentType,
             fields: fieldValues,
             file: {
               id: review.fileId || id,

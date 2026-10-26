@@ -103,7 +103,7 @@ serve(async (req) => {
 
     const { data: company, error: compErr } = await ctx.admin
       .from('companies')
-      .select('id, name, cnpj, email, stripe_customer_id, trial_ends_at')
+      .select('id, name, cnpj, email')
       .eq('id', companyId)
       .single();
 
@@ -111,7 +111,35 @@ serve(async (req) => {
       return errorResponse("Dados da empresa não encontrados", 404);
     }
 
-    let customerId = company?.stripe_customer_id;
+    // Busca customerId existente: primeiro em companies (se a coluna existir), depois em subscriptions
+    let customerId: string | undefined = undefined;
+    try {
+      const { data: compExtra } = await ctx.admin
+        .from('companies')
+        .select('stripe_customer_id')
+        .eq('id', companyId)
+        .maybeSingle();
+      if (compExtra?.stripe_customer_id) {
+        customerId = compExtra.stripe_customer_id;
+      }
+    } catch {
+      // Coluna não existe no momento
+    }
+
+    if (!customerId) {
+      try {
+        const { data: sub } = await ctx.admin
+          .from('subscriptions')
+          .select('metadata')
+          .eq('company_id', companyId)
+          .maybeSingle();
+        if (sub?.metadata?.stripe_customer_id) {
+          customerId = sub.metadata.stripe_customer_id;
+        }
+      } catch {
+        // Ignora
+      }
+    }
 
     if (!customerId) {
       const customer = await ctx.stripe.customers.create({
@@ -125,10 +153,45 @@ serve(async (req) => {
       });
       customerId = customer.id;
 
-      await ctx.admin
-        .from('companies')
-        .update({ stripe_customer_id: customerId })
-        .eq('id', companyId);
+      // Tenta salvar em companies; se a coluna não existir, salva em subscriptions.metadata
+      let compSaved = false;
+      try {
+        const { error: updErr } = await ctx.admin
+          .from('companies')
+          .update({ stripe_customer_id: customerId })
+          .eq('id', companyId);
+        if (!updErr) compSaved = true;
+      } catch {
+        // Coluna ainda não criada
+      }
+
+      if (!compSaved) {
+        try {
+          const { data: exSub } = await ctx.admin
+            .from('subscriptions')
+            .select('id, metadata')
+            .eq('company_id', companyId)
+            .maybeSingle();
+
+          const newMeta = { ...(exSub?.metadata || {}), stripe_customer_id: customerId };
+          if (exSub?.id) {
+            await ctx.admin
+              .from('subscriptions')
+              .update({ metadata: newMeta })
+              .eq('id', exSub.id);
+          } else {
+            await ctx.admin
+              .from('subscriptions')
+              .insert({
+                company_id: companyId,
+                status: 'trialing',
+                metadata: newMeta
+              });
+          }
+        } catch (subErr) {
+          console.warn("[CHECKOUT_SUB_META_WARNING]", subErr);
+        }
+      }
     }
 
     // 2. SUPORTE A COMPRA DE CAPACIDADE ADICIONAL (ADDON / PAGAMENTO AVULSO)
@@ -256,8 +319,8 @@ serve(async (req) => {
     let trialExtendedTechnically = false;
 
     const trialDates: number[] = [];
-    if (company?.trial_ends_at) {
-      const dt = new Date(company.trial_ends_at).getTime();
+    if ((company as any)?.trial_ends_at) {
+      const dt = new Date((company as any).trial_ends_at).getTime();
       if (!isNaN(dt)) trialDates.push(dt);
     }
     if (existingSub?.trial_ends_at) {

@@ -49,6 +49,7 @@ export const VESSEL_EXPECTED_FIELDS = [
   { key: "engine_brand", label: "Marca do Motor", section: "propulsao" as const, required: false },
   { key: "engine_power", label: "Potência do Motor (HP/KW)", section: "propulsao" as const, required: false },
   { key: "engine_serial_number", label: "Nº de Série do Motor", section: "propulsao" as const, required: false },
+  { key: "hull_identifier", label: "Número do Casco / Chassi", section: "nautico" as const, required: false },
   { key: "identified_owner_name", label: "Proprietário Indicado no Documento", section: "identificacao" as const, required: false },
   { key: "identified_owner_doc", label: "CPF/CNPJ do Proprietário Indicado", section: "identificacao" as const, required: false },
 ];
@@ -385,8 +386,15 @@ export function buildVesselReview(
   VESSEL_EXPECTED_FIELDS.forEach((cfg) => {
     let rawVal: any = safeFields[cfg.key];
 
+    // Para embarcação, o nome da embarcação nunca deve ser sobreposto pelo nome do proprietário ou cliente
+    if (cfg.key === "name") {
+      rawVal = safeFields.vessel_name || safeFields.nome_embarcacao || safeFields.embarcacao;
+      if (!rawVal && safeFields.name && safeFields.name !== safeFields.owner_name && safeFields.name !== safeFields.proprietario) {
+        rawVal = safeFields.name;
+      }
+    }
+
     if (!rawVal) {
-      if (cfg.key === "name") rawVal = safeFields.vessel_name || safeFields.nome_embarcacao || safeFields.embarcacao || safeFields.nome;
       if (cfg.key === "registration_number") rawVal = safeFields.inscricao || safeFields.numero_inscricao || safeFields.tie_number || safeFields.registro || safeFields.num_inscricao;
       if (cfg.key === "vessel_type") rawVal = safeFields.tipo || safeFields.tipo_embarcacao || safeFields.categoria || safeFields.type;
       if (cfg.key === "hull_material") rawVal = safeFields.material || safeFields.material_casco || safeFields.casco;
@@ -400,8 +408,9 @@ export function buildVesselReview(
       if (cfg.key === "engine_brand") rawVal = safeFields.engine_brand || safeFields.motor || safeFields.marca_motor || safeFields.marca;
       if (cfg.key === "engine_power") rawVal = safeFields.engine_power || safeFields.potencia || safeFields.potencia_motor;
       if (cfg.key === "engine_serial_number") rawVal = safeFields.engine_serial || safeFields.numero_motor || safeFields.serie_motor || safeFields.numero_serie || safeFields.num_serie;
-      if (cfg.key === "identified_owner_name") rawVal = safeFields.owner_name || safeFields.proprietario || safeFields.proprietaria || safeFields.nome_proprietario;
-      if (cfg.key === "identified_owner_doc") rawVal = safeFields.owner_document || safeFields.cpf_proprietario || safeFields.cnpj_proprietario || safeFields.doc_proprietario;
+      if (cfg.key === "hull_identifier") rawVal = safeFields.hull_identifier || safeFields.chassi || safeFields.numero_casco || safeFields.num_casco || safeFields.casco_numero || safeFields.identificador_casco || safeFields.hin;
+      if (cfg.key === "identified_owner_name") rawVal = safeFields.owner_name || safeFields.proprietario || safeFields.proprietaria || safeFields.nome_proprietario || (safeFields.name && safeFields.name !== safeFields.vessel_name ? safeFields.name : undefined);
+      if (cfg.key === "identified_owner_doc") rawVal = safeFields.owner_document || safeFields.cpf_proprietario || safeFields.cnpj_proprietario || safeFields.doc_proprietario || safeFields.cpf || safeFields.cnpj;
     }
 
     let valStr = (rawVal !== null && rawVal !== undefined) ? String(rawVal).trim() : "";

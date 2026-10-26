@@ -674,6 +674,7 @@ function NovaEmbarcacaoPage() {
                       <button
                         key={cust.id}
                         type="button"
+                        role="option"
                         id={`customer-option-${cust.id}`}
                         data-customer-id={cust.id}
                         onClick={() => {

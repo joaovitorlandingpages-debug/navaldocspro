@@ -396,13 +396,35 @@ async function runAutonomousOcrSuite() {
     const vesselFormBody = await page.textContent('body');
     const hasDivergenceAlert = vesselFormBody.includes('difere do cliente selecionado') || vesselFormBody.includes('transferência de propriedade') || vesselFormBody.includes('MARCELO HENRIQUE');
     const clientPreservedInVessel = vesselFormBody.includes('CORRIGIDO');
+    const isVesselNameCorrect = extractedVesselName.includes('ESTRELA DO MAR') && !extractedVesselName.includes('MARCELO');
 
-    recordScenario('C', 'Documento de embarcação legível com zeros à esquerda', clientPreservedInVessel ? 'aprovado' : 'falha', {
+    // Clica em salvar embarcação
+    const btnSubmitVessel = await page.$('button[type="submit"]:has-text("Salvar"), button[type="submit"]:has-text("Cadastrar")');
+    if (btnSubmitVessel) {
+      await btnSubmitVessel.click();
+      await page.waitForTimeout(4000);
+    }
+
+    // Navega para a lista de embarcações e valida persistência + F5
+    await page.goto(`${BASE_URL}/vessels`, { waitUntil: 'networkidle', timeout: 30000 });
+    await page.waitForTimeout(2000);
+    const vesselsListBody = await page.textContent('body');
+    const vesselPersistedBeforeF5 = vesselsListBody.includes('ESTRELA DO MAR') || vesselsListBody.includes('038-0012345-6');
+
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForTimeout(2000);
+    const vesselsListAfterF5 = await page.textContent('body');
+    const vesselPersistedAfterF5 = vesselsListAfterF5.includes('ESTRELA DO MAR') || vesselsListAfterF5.includes('038-0012345-6');
+
+    const scenarioCApproved = isVesselNameCorrect && clientPreservedInVessel && vesselPersistedAfterF5;
+
+    recordScenario('C', 'Documento de embarcação legível com zeros à esquerda', scenarioCApproved ? 'aprovado' : 'falha', {
       extractedVesselName,
       extractedVesselReg,
       extractedHull,
       hasDivergenceAlert,
       clientPreservedInVessel,
+      vesselPersistedAfterF5,
       evidence: 'cenario_C_conferencia_embarcacao.png',
     });
 

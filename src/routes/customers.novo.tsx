@@ -298,10 +298,19 @@ function NovoClientePage() {
   };
 
   // Aplicação dos Dados Extraídos dos Documentos
-  const handleDataExtracted = (extracted: ExtractedCustomerData, files: UploadedCustomerFile[]) => {
+  const handleDataExtracted = (
+    extracted: ExtractedCustomerData & { documentType?: string },
+    files: UploadedCustomerFile[],
+    docType?: string
+  ) => {
     if (files.length > 0) {
       setUploadedFiles((prev) => [...prev, ...files]);
     }
+
+    const isAddressProof =
+      docType === "COMPROVANTE_RESIDENCIA" ||
+      extracted.documentType === "COMPROVANTE_RESIDENCIA" ||
+      (!extracted.cpf_cnpj && !extracted.rg && Boolean(extracted.logradouro || extracted.cep));
 
     const targetType =
       extracted.type === "pj" ||
@@ -309,37 +318,48 @@ function NovoClientePage() {
         ? "pj"
         : clientType;
 
-    if (targetType !== clientType) {
+    if (!isAddressProof && targetType !== clientType) {
       setClientType(targetType);
     }
 
-    setFormData((prev) => ({
-      ...prev,
-      nome: extracted.name?.trim() && targetType === "pf" ? extracted.name.trim() : prev.nome,
-      razaoSocial:
-        extracted.name?.trim() && targetType === "pj" ? extracted.name.trim() : prev.razaoSocial,
-      cpf:
-        extracted.cpf_cnpj?.trim() && targetType === "pf"
-          ? maskCPF(extracted.cpf_cnpj.trim())
-          : prev.cpf,
-      cnpj:
-        extracted.cpf_cnpj?.trim() && targetType === "pj"
-          ? maskCNPJ(extracted.cpf_cnpj.trim())
-          : prev.cnpj,
-      rg: extracted.rg?.trim() || prev.rg,
-      dataNascimento: extracted.birth_date?.trim()
-        ? maskDate(extracted.birth_date.trim())
-        : prev.dataNascimento,
-      email: extracted.email?.trim() || prev.email,
-      telefone: extracted.phone?.trim() ? maskPhone(extracted.phone.trim()) : prev.telefone,
-      logradouro: extracted.logradouro?.trim() || prev.logradouro,
-      numero: extracted.numero?.trim() || prev.numero,
-      bairro: extracted.bairro?.trim() || prev.bairro,
-      cidade: extracted.cidade?.trim() || prev.cidade,
-      uf: extracted.uf?.trim() || prev.uf,
-      cep: extracted.cep?.trim() ? maskCEP(extracted.cep.trim()) : prev.cep,
-      complemento: extracted.complemento?.trim() || prev.complemento,
-    }));
+    setFormData((prev) => {
+      // Se for comprovante de residência e já houver nome preenchido, preserva o nome cadastral!
+      const shouldKeepName = isAddressProof && (prev.nome.trim().length > 0 || prev.razaoSocial.trim().length > 0);
+      const newNome = shouldKeepName
+        ? prev.nome
+        : (extracted.name?.trim() && targetType === "pf" ? extracted.name.trim() : prev.nome);
+      const newRazaoSocial = shouldKeepName
+        ? prev.razaoSocial
+        : (extracted.name?.trim() && targetType === "pj" ? extracted.name.trim() : prev.razaoSocial);
+
+      return {
+        ...prev,
+        nome: newNome,
+        razaoSocial: newRazaoSocial,
+        cpf:
+          !isAddressProof && extracted.cpf_cnpj?.trim() && targetType === "pf"
+            ? maskCPF(extracted.cpf_cnpj.trim())
+            : prev.cpf,
+        cnpj:
+          !isAddressProof && extracted.cpf_cnpj?.trim() && targetType === "pj"
+            ? maskCNPJ(extracted.cpf_cnpj.trim())
+            : prev.cnpj,
+        rg: (!isAddressProof && extracted.rg?.trim()) || prev.rg,
+        dataNascimento:
+          !isAddressProof && extracted.birth_date?.trim()
+            ? maskDate(extracted.birth_date.trim())
+            : prev.dataNascimento,
+        email: extracted.email?.trim() || prev.email,
+        telefone: extracted.phone?.trim() ? maskPhone(extracted.phone.trim()) : prev.telefone,
+        logradouro: extracted.logradouro?.trim() || prev.logradouro,
+        numero: extracted.numero?.trim() || prev.numero,
+        bairro: extracted.bairro?.trim() || prev.bairro,
+        cidade: extracted.cidade?.trim() || prev.cidade,
+        uf: extracted.uf?.trim() || prev.uf,
+        cep: extracted.cep?.trim() ? maskCEP(extracted.cep.trim()) : prev.cep,
+        complemento: extracted.complemento?.trim() || prev.complemento,
+      };
+    });
 
     setExtractedBadge(true);
   };
@@ -385,7 +405,7 @@ function NovoClientePage() {
               setUploadedFiles((prev) => [...prev, ...filesToAdd]);
             }
           } else if (result.confirmed && result.fields) {
-            handleDataExtracted(result.fields, filesToAdd);
+            handleDataExtracted(result.fields, filesToAdd, result.documentType);
           }
         }
       } catch (e) {
