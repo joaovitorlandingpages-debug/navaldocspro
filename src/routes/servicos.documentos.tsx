@@ -446,7 +446,7 @@ function DocumentosDoServicoPage() {
             <span className="text-xs font-semibold text-slate-500 shrink-0 mr-1">
               Serviço ativo:
             </span>
-            {rawServices.map((srvKey) => {
+            {rawServices.map((srvKey: any) => {
               const srvInfo = getServiceDefinition(srvKey);
               const isCurrent = srvKey === activeServiceKey;
               return (

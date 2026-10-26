@@ -1095,7 +1095,7 @@ function GerarDocumentoPage() {
     try {
       const ext = file.name.split(".").pop() || "png";
       const path = `companies/${companyId}/logo_${Date.now()}.${ext}`;
-      await uploadToBucket("company-assets", path, file, {
+      await uploadToBucket("company-logos", path, file, {
         contentType: file.type || "image/png",
         upsert: true,
       });
