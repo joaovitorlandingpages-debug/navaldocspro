@@ -44,7 +44,15 @@ export const stripeCheckoutService = {
       });
 
       if (response.error) {
-        const errorData = response.data || {};
+        let errorData = response.data || {};
+        if (typeof errorData === "string") {
+          try {
+            errorData = JSON.parse(errorData);
+          } catch {
+            // fallback se texto puro
+          }
+        }
+
         if (errorData.error === "stripe_not_configured" || response.error.message?.includes("503")) {
           return {
             success: false,
