@@ -7090,6 +7090,10 @@ export type Database = {
         Args: { p_company_id: string }
         Returns: number
       }
+      can_manage_company_billing: {
+        Args: { p_company_id: string; p_user_id: string }
+        Returns: boolean
+      }
       cas_update_checklist_item: {
         Args: { p_expected_version: number; p_id: string; p_patch: Json }
         Returns: Json
