@@ -220,7 +220,7 @@ function RevisarProcessoPage() {
 
   // Lista dos serviços com status
   const parsedServices = useMemo(() => {
-    return rawServices.map((key) => {
+    return rawServices.map((key: any) => {
       const def = getServiceDefinition(key);
       const isVal = def.status === "validated";
       const svcCategoryLabel =
@@ -252,7 +252,7 @@ function RevisarProcessoPage() {
   }, [rawServices, isJetSki, category]);
 
   const allServicesValidated = useMemo(() => {
-    return parsedServices.length > 0 && parsedServices.every((s) => s.isValidated);
+    return parsedServices.length > 0 && parsedServices.every((s: any) => s.isValidated);
   }, [parsedServices]);
 
   // Ação 1: Salvar Processo como Rascunho (apenas salva o processo sem gerar documentos)
@@ -556,7 +556,7 @@ function RevisarProcessoPage() {
               </div>
 
               <div className="divide-y divide-slate-100">
-                {parsedServices.map((srv, idx) => (
+                {parsedServices.map((srv: any, idx: number) => (
                   <div
                     key={srv.key + idx}
                     className="py-3.5 first:pt-1 last:pb-1 flex items-center justify-between gap-3"
