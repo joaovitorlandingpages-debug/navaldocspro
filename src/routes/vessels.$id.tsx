@@ -157,6 +157,7 @@ function VesselDetailsPage() {
     if (extracted.capacity && extracted.capacity !== vessel.capacity) updates.capacity = extracted.capacity;
     if (extracted.engine_power && extracted.engine_power !== vessel.engine_power) updates.engine_power = extracted.engine_power;
     if (extracted.engine_serial_number && extracted.engine_serial_number !== vessel.engine_serial_number) updates.engine_serial_number = extracted.engine_serial_number;
+    if (extracted.hull_identifier && extracted.hull_identifier !== vessel.hull_number) updates.hull_number = extracted.hull_identifier;
 
     try {
       if (Object.keys(updates).length > 0) {

@@ -413,6 +413,17 @@ export function buildVesselReview(
       if (cfg.key === "identified_owner_doc") rawVal = safeFields.owner_document || safeFields.cpf_proprietario || safeFields.cnpj_proprietario || safeFields.doc_proprietario || safeFields.cpf || safeFields.cnpj;
     }
 
+    // Fallback de leitura textual direta no rawText se não veio mapeado
+    if (!rawVal && rawText) {
+      if (cfg.key === "hull_identifier") {
+        const m = rawText.match(/(?:N[ÚU]MERO\s+DO\s+CASCO|CASCO\s*\/\s*CHASSI|CHASSI|IDENTIFICADOR\s+DO\s+CASCO|CASCO)[:\s\n]+([A-Z0-9\-]+)/i);
+        if (m && m[1]) rawVal = m[1].trim();
+      } else if (cfg.key === "registration_number") {
+        const m = rawText.match(/(?:N[ÚU]MERO\s+DE\s+INSCRI[ÇC][ÃA]O|INSCRI[ÇC][ÃA]O)[:\s\n]+([0-9A-Z\-\.\/]+)/i);
+        if (m && m[1]) rawVal = m[1].trim();
+      }
+    }
+
     let valStr = (rawVal !== null && rawVal !== undefined) ? String(rawVal).trim() : "";
     let confidence = valStr ? 0.92 : 0;
     let status: ExtractedFieldDetail["status"] = valStr ? "high_confidence" : "not_found";

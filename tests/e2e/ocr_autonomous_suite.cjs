@@ -399,7 +399,7 @@ async function runAutonomousOcrSuite() {
     const isVesselNameCorrect = extractedVesselName.includes('ESTRELA DO MAR') && !extractedVesselName.includes('MARCELO');
 
     // Clica em salvar embarcação
-    const btnSubmitVessel = await page.$('button[type="submit"]:has-text("Salvar"), button[type="submit"]:has-text("Cadastrar")');
+    const btnSubmitVessel = await page.$('#btn-save-vessel, button[type="submit"]:has-text("Salvar"), button[type="submit"]:has-text("Cadastrar")');
     if (btnSubmitVessel) {
       await btnSubmitVessel.click();
       await page.waitForTimeout(4000);
