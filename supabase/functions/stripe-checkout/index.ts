@@ -111,8 +111,12 @@ serve(async (req) => {
       return errorResponse("Dados da empresa não encontrados", 404);
     }
 
-    // Busca customerId existente: primeiro em companies (se a coluna existir), depois em subscriptions
+    // Busca customerId existente:
+    // 1) Em companies (caso a coluna venha a existir)
+    // 2) Em subscriptions (metadata->>'stripe_customer_id' ou coluna dedicada)
     let customerId: string | undefined = undefined;
+    let existingSubRecord: { id: string; metadata: any; status: string } | null = null;
+
     try {
       const { data: compExtra } = await ctx.admin
         .from('companies')
@@ -123,73 +127,148 @@ serve(async (req) => {
         customerId = compExtra.stripe_customer_id;
       }
     } catch {
-      // Coluna não existe no momento
+      // Coluna não existe no schema atual
     }
 
     if (!customerId) {
       try {
         const { data: sub } = await ctx.admin
           .from('subscriptions')
-          .select('metadata')
+          .select('id, metadata, status')
           .eq('company_id', companyId)
           .maybeSingle();
-        if (sub?.metadata?.stripe_customer_id) {
-          customerId = sub.metadata.stripe_customer_id;
+        if (sub) {
+          existingSubRecord = sub;
+          if (sub.metadata?.stripe_customer_id) {
+            customerId = sub.metadata.stripe_customer_id;
+          }
         }
-      } catch {
-        // Ignora
+      } catch (errSubFetch) {
+        console.error("[stripe-checkout] Erro ao consultar subscriptions:", errSubFetch);
+        return errorResponse("Falha ao verificar registro de faturamento da empresa", 500);
       }
     }
 
+    // Se ainda não temos customerId localmente, verifica no Stripe para prevenir duplicidade em concorrência
     if (!customerId) {
-      const customer = await ctx.stripe.customers.create({
-        email: user.email,
-        name: company?.name || profile.name || undefined,
-        metadata: {
-          company_id: companyId,
-          user_id: user.id,
-          cnpj: company?.cnpj || '',
-        },
-      });
-      customerId = customer.id;
+      try {
+        // Busca idempotente na Stripe por metadata company_id
+        const existingStripeCustomers = await ctx.stripe.customers.search({
+          query: `metadata['company_id']:'${companyId}'`,
+          limit: 1,
+        });
 
-      // Tenta salvar em companies; se a coluna não existir, salva em subscriptions.metadata
+        if (existingStripeCustomers.data && existingStripeCustomers.data.length > 0) {
+          customerId = existingStripeCustomers.data[0].id;
+        }
+      } catch (searchErr) {
+        console.warn("[stripe-checkout] Busca idempotente no Stripe falhou ou indisponível, usando fallback de criação:", searchErr);
+      }
+
+      // Se não encontrou no Stripe, cria com idempotency key baseada no companyId
+      if (!customerId) {
+        try {
+          const customer = await ctx.stripe.customers.create(
+            {
+              email: user.email,
+              name: company?.name || profile.name || undefined,
+              metadata: {
+                company_id: companyId,
+                user_id: user.id,
+                cnpj: company?.cnpj || '',
+                app: 'navaldocspro',
+              },
+            },
+            {
+              idempotencyKey: `create_customer_${companyId}`,
+            }
+          );
+          customerId = customer.id;
+        } catch (stripeCustErr: any) {
+          console.error("[stripe-checkout] Erro ao criar cliente na Stripe:", stripeCustErr);
+          return errorResponse(`Falha ao registrar cliente no gateway de pagamento: ${stripeCustErr.message}`, 500);
+        }
+      }
+
+      // VINCULAÇÃO DURÁVEL NO BANCO:
+      // Tenta salvar em companies se a coluna existir
       let compSaved = false;
       try {
-        const { error: updErr } = await ctx.admin
+        const { error: updCompErr } = await ctx.admin
           .from('companies')
           .update({ stripe_customer_id: customerId })
           .eq('id', companyId);
-        if (!updErr) compSaved = true;
+        if (!updCompErr) compSaved = true;
       } catch {
-        // Coluna ainda não criada
+        // Coluna não existe
       }
 
+      // Se não foi salvo em companies, persiste em subscriptions.metadata sem liberar acesso (status='pending')
       if (!compSaved) {
-        try {
-          const { data: exSub } = await ctx.admin
-            .from('subscriptions')
-            .select('id, metadata')
-            .eq('company_id', companyId)
-            .maybeSingle();
+        // Reconsulta imediatamente a assinatura para mesclar com quaisquer metadados gravados concorrentemente
+        const { data: latestSub, error: fetchLatestErr } = await ctx.admin
+          .from('subscriptions')
+          .select('id, metadata, status')
+          .eq('company_id', companyId)
+          .maybeSingle();
 
-          const newMeta = { ...(exSub?.metadata || {}), stripe_customer_id: customerId };
-          if (exSub?.id) {
-            await ctx.admin
-              .from('subscriptions')
-              .update({ metadata: newMeta })
-              .eq('id', exSub.id);
-          } else {
-            await ctx.admin
-              .from('subscriptions')
-              .insert({
-                company_id: companyId,
-                status: 'trialing',
-                metadata: newMeta
-              });
+        if (fetchLatestErr) {
+          console.error("[stripe-checkout] Erro ao obter estado recente de subscriptions:", fetchLatestErr);
+          return errorResponse("Falha ao sincronizar vínculo financeiro com a empresa", 500);
+        }
+
+        const currentMeta = latestSub?.metadata || existingSubRecord?.metadata || {};
+        const mergedMeta = { ...currentMeta, stripe_customer_id: customerId };
+
+        if (latestSub?.id) {
+          const { error: updateSubErr } = await ctx.admin
+            .from('subscriptions')
+            .update({ metadata: mergedMeta, updated_at: new Date().toISOString() })
+            .eq('id', latestSub.id);
+
+          if (updateSubErr) {
+            console.error("[stripe-checkout] Erro crítico ao salvar stripe_customer_id em subscriptions:", updateSubErr);
+            return errorResponse("Não foi possível salvar o vínculo com o cliente no faturamento. Operação cancelada.", 500);
           }
-        } catch (subErr) {
-          console.warn("[CHECKOUT_SUB_META_WARNING]", subErr);
+        } else {
+          // Inserção inicial: status estritamente 'pending' (NÃO trialing) para não liberar acesso prematuramente
+          const { error: insertSubErr } = await ctx.admin
+            .from('subscriptions')
+            .insert({
+              company_id: companyId,
+              status: 'pending',
+              metadata: mergedMeta,
+            });
+
+          if (insertSubErr) {
+            // Em caso de concorrência onde outra requisição inseriu milissegundos antes (erro de unique em company_id):
+            if (insertSubErr.code === '23505') {
+              const { data: reSub, error: reFetchErr } = await ctx.admin
+                .from('subscriptions')
+                .select('id, metadata')
+                .eq('company_id', companyId)
+                .maybeSingle();
+
+              if (!reFetchErr && reSub?.id) {
+                const retryMerged = { ...(reSub.metadata || {}), stripe_customer_id: customerId };
+                const { error: retryUpdErr } = await ctx.admin
+                  .from('subscriptions')
+                  .update({ metadata: retryMerged, updated_at: new Date().toISOString() })
+                  .eq('id', reSub.id);
+
+                if (retryUpdErr) {
+                  console.error("[stripe-checkout] Falha no retry de atualização concorrente de subscriptions:", retryUpdErr);
+                  return errorResponse("Falha ao registrar vínculo de faturamento concorrente", 500);
+                }
+              } else {
+                console.error("[stripe-checkout] Falha ao recuperar assinatura concorrente:", reFetchErr);
+                return errorResponse("Conflito concorrente ao vincular cliente de faturamento", 500);
+              }
+            } else {
+              console.error("[stripe-checkout] Erro crítico ao criar registro de faturamento em subscriptions:", insertSubErr);
+              return errorResponse("Não foi possível persistir o vínculo financeiro da empresa. Checkout cancelado.", 500);
+            }
+          }
         }
       }
     }
