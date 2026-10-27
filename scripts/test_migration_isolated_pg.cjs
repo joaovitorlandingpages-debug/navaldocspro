@@ -349,20 +349,26 @@ async function runTestOnIsolatedPostgres() {
       status: t5c.success ? "PASSOU" : "FALHOU"
     });
 
-    // 6. Histórico: leitura e download preservados
+    // 6. Histórico: leitura e download preservados (com documento real pré-existente)
+    const insHistDoc = await pool.query(`
+      INSERT INTO public.generated_documents (company_id, name, generated_file_url)
+      VALUES ('${compPendingId}', 'Documento Histórico Emitido', 'generated-documents/${compPendingId}/historico.pdf')
+      RETURNING id, name;
+    `);
+    const histDocId = insHistDoc.rows[0].id;
+
     const t6 = await testAsUser(
       userPendingId, 'authenticated',
-      `SELECT count(*) FROM public.generated_documents;`
+      `SELECT id, name, generated_file_url FROM public.generated_documents WHERE id = '${histDocId}';`
     );
     testCases.push({
-      teste: "6. Histórico: leitura SELECT",
-      esperado: "PERMITIDO",
-      resultado: t6.success ? `PERMITIDO (Total: ${t6.rows[0].count})` : `BLOQUEADO: ${t6.error}`,
-      status: t6.success ? "PASSOU" : "FALHOU"
+      teste: "6. Histórico: consulta e leitura de documento existente sob status pending",
+      esperado: "PERMITIDO (1 documento encontrado)",
+      resultado: t6.success && t6.rows.length === 1 ? `PERMITIDO (Encontrado: "${t6.rows[0].name}")` : `FALHA (${t6.rows.length} registros)`,
+      status: t6.success && t6.rows.length === 1 ? "PASSOU" : "FALHOU"
     });
 
     // 7. Substituição de PDF em pending bloqueada via TRIGGER BEFORE UPDATE
-    // Cria um doc de teste diretamente pelo superuser para a empresa pending
     const insDocSuper = await pool.query(`
       INSERT INTO public.generated_documents (company_id, name, generated_file_url)
       VALUES ('${compPendingId}', 'Doc Antigo', 'generated-documents/${compPendingId}/original.pdf')
@@ -380,6 +386,95 @@ async function runTestOnIsolatedPostgres() {
       esperado: "BLOQUEADO (Trigger 42501)",
       resultado: t7.success ? "PERMITIDO (FALHA)" : `BLOQUEADO: ${t7.error}`,
       status: !t7.success ? "PASSOU" : "FALHOU"
+    });
+
+    // 8. UPDATE / upsert no Storage no bucket generated-documents sob status pending
+    // 8a. Cria um objeto existente no storage para a empresa pending
+    await pool.query(`
+      INSERT INTO storage.objects (bucket_id, name)
+      VALUES ('generated-documents', '${compPendingId}/original_storage.pdf');
+    `);
+
+    // Tentativa de UPDATE no storage sob pending
+    const t8a = await testAsUser(
+      userPendingId, 'authenticated',
+      `UPDATE storage.objects SET updated_at = now() WHERE bucket_id = 'generated-documents' AND name = '${compPendingId}/original_storage.pdf';`
+    );
+    testCases.push({
+      teste: "8a. Storage: UPDATE/upsert de arquivo em pending",
+      esperado: "BLOQUEADO (RLS Storage)",
+      resultado: t8a.success && t8a.rows.length > 0 ? "PERMITIDO (FALHA)" : (t8a.success ? "BLOQUEADO (0 linhas atualizadas por RLS)" : `BLOQUEADO: ${t8a.error}`),
+      status: !t8a.success || t8a.rows.length === 0 ? "PASSOU" : "FALHOU"
+    });
+
+    // 9. UPDATE e DELETE entre empresas (inclusive por Administrador Global)
+    // Cria processo alvo na empresa Active
+    const insProcActive = await pool.query(`
+      INSERT INTO public.processes (company_id, title)
+      VALUES ('${compActiveId}', 'Processo Original Empresa Active')
+      RETURNING id;
+    `);
+    const procActiveId = insProcActive.rows[0].id;
+
+    // 9a. Usuário comum tentando UPDATE em processo de outra empresa
+    const t9a = await testAsUser(
+      userPendingId, 'authenticated',
+      `UPDATE public.processes SET title = 'Título Modificado Invasor' WHERE id = '${procActiveId}';`
+    );
+    // Confirma estado final no banco com query superuser
+    const check9a = await pool.query(`SELECT title FROM public.processes WHERE id = '${procActiveId}';`);
+    const blocked9a = check9a.rows[0].title === 'Processo Original Empresa Active';
+    testCases.push({
+      teste: "9a. Usuário: UPDATE em processo de outra empresa",
+      esperado: "BLOQUEADO (Estado inalterado)",
+      resultado: blocked9a ? "BLOQUEADO (Estado inalterado)" : "ALTERADO (FALHA)",
+      status: blocked9a ? "PASSOU" : "FALHOU"
+    });
+
+    // 9b. Administrador Global tentando UPDATE em processo de outra empresa
+    const t9b = await testAsUser(
+      userAdminId, 'authenticated',
+      `UPDATE public.processes SET title = 'Admin Modificando Alheio' WHERE id = '${procActiveId}';`
+    );
+    const check9b = await pool.query(`SELECT title FROM public.processes WHERE id = '${procActiveId}';`);
+    const blocked9b = check9b.rows[0].title === 'Processo Original Empresa Active';
+    testCases.push({
+      teste: "9b. Admin Global: UPDATE em processo de outra empresa",
+      esperado: "BLOQUEADO (Estado inalterado)",
+      resultado: blocked9b ? "BLOQUEADO (Estado inalterado)" : "ALTERADO (FALHA)",
+      status: blocked9b ? "PASSOU" : "FALHOU"
+    });
+
+    // 9c. Administrador Global tentando DELETE em processo de outra empresa
+    const t9c = await testAsUser(
+      userAdminId, 'authenticated',
+      `DELETE FROM public.processes WHERE id = '${procActiveId}';`
+    );
+    const check9c = await pool.query(`SELECT count(*) FROM public.processes WHERE id = '${procActiveId}';`);
+    const blocked9c = parseInt(check9c.rows[0].count, 10) === 1;
+    testCases.push({
+      teste: "9c. Admin Global: DELETE em processo de outra empresa",
+      esperado: "BLOQUEADO (Registro preservado)",
+      resultado: blocked9c ? "BLOQUEADO (Registro preservado)" : "EXCLUÍDO (FALHA)",
+      status: blocked9c ? "PASSOU" : "FALHOU"
+    });
+
+    // 9d. Administrador Global tentando DELETE de arquivo no Storage de outra empresa
+    await pool.query(`
+      INSERT INTO storage.objects (bucket_id, name)
+      VALUES ('generated-documents', '${compActiveId}/arquivo_active.pdf');
+    `);
+    const t9d = await testAsUser(
+      userAdminId, 'authenticated',
+      `DELETE FROM storage.objects WHERE bucket_id = 'generated-documents' AND name = '${compActiveId}/arquivo_active.pdf';`
+    );
+    const check9d = await pool.query(`SELECT count(*) FROM storage.objects WHERE bucket_id = 'generated-documents' AND name = '${compActiveId}/arquivo_active.pdf';`);
+    const blocked9d = parseInt(check9d.rows[0].count, 10) === 1;
+    testCases.push({
+      teste: "9d. Admin Global: DELETE no Storage de outra empresa",
+      esperado: "BLOQUEADO (Arquivo preservado)",
+      resultado: blocked9d ? "BLOQUEADO (Arquivo preservado)" : "EXCLUÍDO (FALHA)",
+      status: blocked9d ? "PASSOU" : "FALHOU"
     });
 
     console.table(testCases);
