@@ -28,17 +28,7 @@ function validateRedirectUrl(urlStr?: string): string {
   return DEFAULT_REDIRECT_BASE;
 }
 
-serve(async (req) => {
-  const cors = handleCors(req);
-  if (cors) return cors;
-
-  let ctx;
-  try {
-    ctx = initContext(req);
-  } catch (err: any) {
-    return errorResponse(err.message, 500);
-  }
-
+export async function handleStripeCheckoutRequest(req: Request, ctx: any) {
   try {
     const user = await ctx.getUser();
     if (!user) {
@@ -603,4 +593,22 @@ serve(async (req) => {
   } catch (err: any) {
     return errorResponse(err.message || "Erro interno no checkout", 500);
   }
-});
+}
+
+if (import.meta.main) {
+  serve(async (req) => {
+    const cors = handleCors(req);
+    if (cors) return cors;
+
+    let ctx;
+    try {
+      ctx = initContext(req);
+    } catch (err: any) {
+      return errorResponse(err.message, 500);
+    }
+
+    return handleStripeCheckoutRequest(req, ctx);
+  });
+}
+
+
