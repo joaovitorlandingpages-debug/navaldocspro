@@ -172,19 +172,17 @@ serve(async (req) => {
       }
 
       // Se não encontrou no Stripe, cria com idempotency key baseada no companyId
-      // IMPORTANTE: Parâmetros determinísticos no nível da empresa para garantir que tentativas concorrentes de
-      // usuários diferentes da mesma empresa enviem payloads idênticos e compatíveis com a idempotencyKey.
+      // IMPORTANTE: Parâmetros 100% estáveis e imutáveis baseados exclusivamente no ID e prefixo da empresa.
+      // Dados cadastrais (nome fantasia, e-mail de contato, CNPJ) podem ser alterados pelo usuário entre tentativas,
+      // o que causaria conflito HTTP 400 com a mesma idempotencyKey. O enriquecimento cadastral é delegado
+      // automaticamente ao Stripe Customer Update durante o Checkout.
       if (!customerId) {
         try {
-          const companyBillingEmail = company?.email || undefined;
-          const companyDisplayName = company?.name || `Empresa ${companyId}`;
           const customer = await ctx.stripe.customers.create(
             {
-              email: companyBillingEmail,
-              name: companyDisplayName,
+              description: `NavalDocs Pro Company ${companyId}`,
               metadata: {
                 company_id: companyId,
-                cnpj: company?.cnpj || '',
                 app: 'navaldocspro',
               },
             },
@@ -200,15 +198,16 @@ serve(async (req) => {
       }
 
       // VINCULAÇÃO DURÁVEL NO BANCO:
-      // Tenta salvar em companies se a coluna existir
+      // Tenta salvar em companies se a coluna existir, com validação rigorosa de erro, linhas afetadas e valor salvo
       let compSaved = false;
       try {
         const { data: updatedCompanies, error: updCompErr } = await ctx.admin
           .from('companies')
           .update({ stripe_customer_id: customerId })
           .eq('id', companyId)
-          .select('id');
-        if (!updCompErr && updatedCompanies && updatedCompanies.length > 0) {
+          .select('id, stripe_customer_id');
+
+        if (!updCompErr && updatedCompanies && updatedCompanies.length > 0 && updatedCompanies[0].stripe_customer_id === customerId) {
           compSaved = true;
         }
       } catch {

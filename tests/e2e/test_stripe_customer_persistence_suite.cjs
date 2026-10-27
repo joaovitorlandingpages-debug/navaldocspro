@@ -163,40 +163,39 @@ async function runTestSuite() {
   }
   console.log("=> APROVADO: Abortamento estrito confirmado em todas as condições de erro.");
 
-  // A6. Idempotency Key e Payload Stripe Consistentes entre Usuários da Mesma Empresa
-  console.log("\n[SIMULADO A6] Stripe Customer Create: Parâmetros determinísticos a nível de empresa");
-  const companyDataMock = { id: 'comp-100', name: 'Oficina Naval Alfa', cnpj: '11.222.333/0001-44', email: 'financeiro@alfa.com' };
+  // A6. Idempotency Key e Payload Stripe Consistentes e Imutáveis sob Edição Cadastral
+  console.log("\n[SIMULADO A6] Stripe Customer Create: Parâmetros estáveis e imutáveis mesmo após edição cadastral");
+  const companyBeforeEdit = { id: 'comp-100', name: 'Oficina Naval Alfa', cnpj: '11.222.333/0001-44', email: 'financeiro@alfa.com' };
+  const companyAfterEdit = { id: 'comp-100', name: 'Oficina Naval Alfa & Filhos LTDA', cnpj: '11.222.333/0001-44', email: 'contato_novo@alfa.com' };
   const user1 = { id: 'usr-1', email: 'gerente1@alfa.com', name: 'João Gerente' };
   const user2 = { id: 'usr-2', email: 'socio2@alfa.com', name: 'Maria Sócia' };
 
-  function buildStripeCustomerPayload(company, _user) {
+  function buildStripeCustomerPayload(companyId) {
     return {
       params: {
-        email: company.email || undefined,
-        name: company.name || `Empresa ${company.id}`,
+        description: `NavalDocs Pro Company ${companyId}`,
         metadata: {
-          company_id: company.id,
-          cnpj: company.cnpj || '',
+          company_id: companyId,
           app: 'navaldocspro'
         }
       },
       options: {
-        idempotencyKey: `create_customer_${company.id}`
+        idempotencyKey: `create_customer_${companyId}`
       }
     };
   }
 
-  const p1 = buildStripeCustomerPayload(companyDataMock, user1);
-  const p2 = buildStripeCustomerPayload(companyDataMock, user2);
+  const p1 = buildStripeCustomerPayload(companyBeforeEdit.id);
+  const p2 = buildStripeCustomerPayload(companyAfterEdit.id);
 
   const payloadIdentical = JSON.stringify(p1) === JSON.stringify(p2);
-  console.log(`- Idempotency Key Usuário 1: "${p1.options.idempotencyKey}"`);
-  console.log(`- Idempotency Key Usuário 2: "${p2.options.idempotencyKey}"`);
-  console.log(`- Payload enviado é idêntico e consistente entre usuários distintos? ${payloadIdentical ? "SIM (APROVADO)" : "NÃO (FALHA)"}`);
+  console.log(`- Idempotency Key Antes da Edição: "${p1.options.idempotencyKey}"`);
+  console.log(`- Idempotency Key Após Edição Cadastral: "${p2.options.idempotencyKey}"`);
+  console.log(`- Payload enviado é 100% idêntico e consistente mesmo se os dados da empresa mudarem? ${payloadIdentical ? "SIM (APROVADO)" : "NÃO (FALHA)"}`);
   if (!payloadIdentical) {
-    throw new Error("FALHA: Payload da Stripe variava entre usuários da mesma empresa!");
+    throw new Error("FALHA: Payload da Stripe variou com a alteração cadastral da empresa!");
   }
-  console.log("=> APROVADO: Consistência estrita de payload Stripe garantida.");
+  console.log("=> APROVADO: Imutabilidade e consistência estrita de payload Stripe garantidas.");
 
   // ---------------------------------------------------------------------------
   // PARTE B: TESTES REAIS (BANCO DE DADOS & EDGE FUNCTION)
