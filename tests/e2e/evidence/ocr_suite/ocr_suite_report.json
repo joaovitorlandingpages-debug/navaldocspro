@@ -1,0 +1,121 @@
+{
+  "timestamp": "2026-10-26T20:49:33.443Z",
+  "scenarios": {
+    "A": {
+      "title": "Documento de identificação legível",
+      "status": "aprovado",
+      "details": {
+        "extractedName": "CARLOS EDUARDO DA SILVA TESTE",
+        "extractedCpf": "123.456.789-00",
+        "hasMandatoryDisclaimer": true,
+        "evidence": "cenario_A_conferencia_aberta.png"
+      }
+    },
+    "G": {
+      "title": "Correção manual antes de salvar",
+      "status": "aprovado",
+      "details": {
+        "nameInForm": "CARLOS EDUARDO DA SILVA CORRIGIDO",
+        "evidence": "cenario_G_dado_corrigido.png"
+      }
+    },
+    "B": {
+      "title": "Comprovante de endereço legível combinado",
+      "status": "aprovado",
+      "details": {
+        "nameAfterMerge": "CARLOS EDUARDO DA SILVA CORRIGIDO",
+        "preservedPreviousData": true,
+        "evidence": "cenario_B_conferencia_endereco.png"
+      }
+    },
+    "C": {
+      "title": "Documento de embarcação legível com zeros à esquerda",
+      "status": "aprovado",
+      "details": {
+        "extractedVesselName": "ESTRELA DO MAR II",
+        "extractedVesselReg": "038-0012345-6",
+        "extractedHull": "00987654321",
+        "hasDivergenceAlert": false,
+        "clientPreservedInVessel": true,
+        "vesselPersistedAfterF5": true,
+        "evidence": "cenario_C_conferencia_embarcacao.png"
+      }
+    },
+    "D": {
+      "title": "Imagem ilegível tratada com preservação e fallback manual",
+      "status": "aprovado",
+      "details": {
+        "handledIllegibleGracefully": true,
+        "evidence": "cenario_D_imagem_ilegivel.png"
+      }
+    },
+    "E": {
+      "title": "Documento incompatível sem alucinação de dados",
+      "status": "aprovado",
+      "details": {
+        "handledIncompatible": true,
+        "evidence": "cenario_E_documento_incompativel.png"
+      }
+    },
+    "F": {
+      "title": "Preservação de anexo ao optar por preenchimento manual",
+      "status": "aprovado",
+      "details": {
+        "anexoPreservado": true,
+        "evidence": "cenario_F_preenchimento_manual_com_anexo.png"
+      }
+    }
+  },
+  "comparisons": [
+    {
+      "scenario": "A - Identificação Legível",
+      "expected": {
+        "name": "CARLOS EDUARDO DA SILVA TESTE",
+        "doc": "28.456.789-0",
+        "cpf": "123.456.789-00",
+        "birth_date": "15/08/1985"
+      },
+      "extracted": {
+        "name": "CARLOS EDUARDO DA SILVA TESTE",
+        "doc": "28.456.789-0 SSP SP",
+        "cpf": "123.456.789-00",
+        "birth_date": "15/08/1985"
+      }
+    },
+    {
+      "scenario": "B - Comprovante de Endereço",
+      "expected": {
+        "destinatario": "CARLOS EDUARDO DA SILVA TESTE",
+        "logradouro": "AV ATLANTICA, 1500 - APTO 42",
+        "bairro": "GONZAGA",
+        "cidade": "SANTOS",
+        "uf": "SP",
+        "cep": "11065-001"
+      },
+      "extracted": {
+        "cep": "11065-001",
+        "cidade": "SANTOS",
+        "logradouro": "AV ATLANTICA"
+      }
+    },
+    {
+      "scenario": "C - Embarcação Legível",
+      "expected": {
+        "name": "ESTRELA DO MAR II",
+        "registration_number": "038-0012345-6",
+        "hull_identifier": "00987654321",
+        "owner": "MARCELO HENRIQUE BORGES"
+      },
+      "extracted": {
+        "name": "ESTRELA DO MAR II",
+        "registration_number": "038-0012345-6",
+        "hull_identifier": "00987654321",
+        "owner": "MARCELO HENRIQUE BORGES"
+      }
+    }
+  ],
+  "persistenceVerified": true,
+  "manualRegistrationPreserved": false,
+  "mobileAccessible": true,
+  "tenantIsolationVerified": true
+}
