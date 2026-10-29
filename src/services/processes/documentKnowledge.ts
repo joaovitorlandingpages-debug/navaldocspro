@@ -162,7 +162,7 @@ const CATALOG: Record<string, DocumentKnowledge> = {
     relatedDocs: ["Cópia do RG/CPF"],
     legalBase: {
       norm: "NORMAM-211/DPC c/c Lei 7.115/1983",
-      annex: "Anexo 2-G",
+      annex: "Anexo 2-I",
       template: "Declaração de Residência DPC",
       version: "2026",
     },
@@ -179,7 +179,7 @@ const CATALOG: Record<string, DocumentKnowledge> = {
     howItWorks:
       "Conta de água, luz, gás, telefone fixo/celular ou contrato de locação vigente em que figure como locatário (NORMAM-211/DPC item 0212).",
     whenMandatory: "Sempre que exigida qualificação e domicílio do proprietário perante a Capitania.",
-    whenWaived: "Substituível pela Declaração de Residência (NORMAM-211 Anexo 2-G) quando não houver comprovante em nome próprio.",
+    whenWaived: "Substituível pela Declaração de Residência (NORMAM-211 Anexo 2-I) quando não houver comprovante em nome próprio.",
     commonErrors: ["Documento em nome de terceiro sem comprovação de parentesco", "Comprovante vencido há mais de 120 dias"],
     relatedDocs: ["Declaração de residência"],
     legalBase: { norm: "NORMAM-211/DPC, Cap. 2" },

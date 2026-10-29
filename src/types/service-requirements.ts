@@ -31,7 +31,7 @@ export const SERVICES: ServiceDef[] = [
     needsVessel: true,
     personalDocs: [
       "Documento oficial com foto e CPF (RG/CNH)",
-      "Comprovante de residência atualizado (expedido há no máximo 120 dias ou a vencer) ou Declaração Anexo 2-G",
+      "Comprovante de residência atualizado (expedido há no máximo 120 dias ou a vencer) ou Declaração Anexo 2-I",
     ],
     vesselDocs: [
       "TIE/TIEM original com validade vencida ou a vencer em até 30 dias (ou cópia simples se TIE digital)",
@@ -54,11 +54,11 @@ export const SERVICES: ServiceDef[] = [
     needsVessel: true,
     personalDocs: [
       "Documento oficial com foto e CPF do adquirente e alienante (RG/CNH)",
-      "Comprovante de residência do adquirente (expedido há no máximo 120 dias ou a vencer) ou Declaração Anexo 2-G",
+      "Comprovante de residência do adquirente (expedido há no máximo 120 dias ou a vencer) ou Declaração Anexo 2-I",
     ],
     vesselDocs: [
       "Título de Inscrição da Embarcação (TIE/TIEM) original (se físico antigo) ou cópia com QR Code (se TIE digital)",
-      "Autorização para Transferência de Propriedade (ATP / DUT Náutico - NORMAM-211 Anexo 2-K) com reconhecimento de firma por autenticidade em cartório de ambas as partes (prazo: 60 dias da data de reconhecimento)",
+      "Autorização para Transferência de Propriedade (ATP / DUT Náutico - NORMAM-211 Anexo 2-M) com reconhecimento de firma por autenticidade em cartório de ambas as partes (prazo: 60 dias da data de reconhecimento)",
       "Boletim Simplificado de Atualização de Dados (BSADE - NORMAM-211 Anexo 2-B) preenchido em 2 vias",
       "Comprovante de pagamento da GRU DPC correspondente à transferência emitida no canal oficial da Marinha",
     ],
@@ -66,7 +66,7 @@ export const SERVICES: ServiceDef[] = [
       "Requerimento padrão à Capitania dos Portos (NORMAM-211/DPC Anexo 2-C)",
       "BSADE (NORMAM-211/DPC Anexo 2-B)",
       "Procuração Náutica específica",
-      "Declaração de Residência do comprador (NORMAM-211 Anexo 2-G c/c Lei 7.115/1983)",
+      "Declaração de Residência do comprador (NORMAM-211 Anexo 2-I c/c Lei 7.115/1983)",
     ],
   },
   {
@@ -79,7 +79,7 @@ export const SERVICES: ServiceDef[] = [
     needsVessel: true,
     personalDocs: [
       "Documento oficial de identificação com foto e CPF (RG/CNH)",
-      "Comprovante de residência atualizado do proprietário (expedido há no máximo 120 dias ou Declaração Anexo 2-G)",
+      "Comprovante de residência atualizado do proprietário (expedido há no máximo 120 dias ou Declaração Anexo 2-I)",
     ],
     vesselDocs: [
       "Nota fiscal do casco (ou documento de importação/escritura pública ou Declaração de Construção)",
@@ -155,7 +155,7 @@ export const SERVICES: ServiceDef[] = [
     needsVessel: true,
     personalDocs: [
       "Documento oficial com foto e CPF do proprietário (RG/CNH)",
-      "Comprovante de residência atualizado (expedido há no máximo 120 dias ou a vencer) ou Declaração Anexo 2-G",
+      "Comprovante de residência atualizado (expedido há no máximo 120 dias ou a vencer) ou Declaração Anexo 2-I",
     ],
     vesselDocs: [
       "Declaração de Perda / Extravio assinada (NORMAM-211/DPC Anexo 2-H, dispensado BO)",
@@ -180,7 +180,7 @@ export const SERVICES: ServiceDef[] = [
     needsVessel: true,
     personalDocs: [
       "Documento oficial com foto e CPF (RG/CNH)",
-      "Comprovante de residência atualizado do requerente (máximo 120 dias ou Declaração Anexo 2-G)",
+      "Comprovante de residência atualizado do requerente (máximo 120 dias ou Declaração Anexo 2-I)",
     ],
     vesselDocs: [
       "Documentos comprobatórios da posse/propriedade da embarcação",
@@ -192,7 +192,7 @@ export const SERVICES: ServiceDef[] = [
       "Requerimento padrão à Capitania dos Portos (NORMAM-211/DPC Anexo 2-C)",
       "BSADE (NORMAM-211 Anexo 2-B)",
       "Termo de Responsabilidade e Guarda da Embarcação",
-      "Declaração de Residência (NORMAM-211 Anexo 2-G c/c Lei 7.115/1983)",
+      "Declaração de Residência (NORMAM-211 Anexo 2-I c/c Lei 7.115/1983)",
       "Procuração Náutica específica",
     ],
   },

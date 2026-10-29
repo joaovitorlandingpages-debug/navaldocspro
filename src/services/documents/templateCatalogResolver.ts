@@ -44,12 +44,12 @@ export const CATALOG_TEMPLATES: CatalogTemplateItem[] = [
     name: "Requerimento Padrão do Interessado",
     code: "REQ-001",
     description:
-      "Requerimento padronizado elaborado com base na NORMAM-211/DPC, Anexo 2-C para solicitação de serviços de registro, transferência, 2ª via e emissão de TIE/TIEM perante a Capitania dos Portos / Del / Agência.",
+      "Requerimento oficial padronizado elaborado com base na NORMAM-211/DPC, Anexo 2-C para solicitação de serviços de registro, transferência, 2ª via e emissão de TIE/TIEM perante a Capitania dos Portos / Del / Agência.",
     category: "esporte_recreio",
     categoryLabel: "Esporte e recreio",
-    updatedAt: "22/10/2026",
+    updatedAt: "29/10/2026",
     status: "aprovado",
-    nature: "platform_generated",
+    nature: "official_form",
     requiredFields: [
       "Nome do Cliente",
       "CPF/CNPJ do Cliente",
@@ -58,7 +58,7 @@ export const CATALOG_TEMPLATES: CatalogTemplateItem[] = [
     isMandatory: true,
     isConditional: false,
     officialSource: "NORMAM-211/DPC (Portaria DPC/MB nº 115/2023 consolidada 2026), Anexo 2-C • DPC / CPES",
-    validationDate: "22/10/2026",
+    validationDate: "29/10/2026",
     aliases: {
       codes: ["req-padrao-cpes", "REQ-001", "REQ_INSCR", "REQ_PADRAO"],
       names: [
@@ -74,17 +74,17 @@ export const CATALOG_TEMPLATES: CatalogTemplateItem[] = [
     name: "Procuração Específica para Capitania dos Portos",
     code: "PROC-NAV",
     description:
-      "Instrumento particular de mandato elaborado pela plataforma outorgando poderes de representação ao despachante náutico para protocolo e acompanhamento administrativo perante a Marinha do Brasil.",
+      "Instrumento particular de mandato outorgando poderes de representação ao despachante náutico para protocolo e acompanhamento administrativo perante a Marinha do Brasil.",
     category: "geral",
     categoryLabel: "Geral",
-    updatedAt: "22/10/2026",
+    updatedAt: "29/10/2026",
     status: "aprovado",
     nature: "platform_generated",
     requiredFields: ["Nome do Cliente", "CPF/CNPJ do Cliente", "Responsável", "Outorgado"],
     isMandatory: true,
     isConditional: false,
-    officialSource: "Código Civil Brasileiro (Lei 10.406/02, art. 653) c/c NORMAM-211/DPC",
-    validationDate: "22/10/2026",
+    officialSource: "Código Civil Brasileiro (Lei 10.406/02, art. 653) c/c NORMAM-211/DPC e NORMAM-201/DPC",
+    validationDate: "29/10/2026",
     aliases: {
       codes: [
         "proc-representacao-naval",
@@ -106,19 +106,19 @@ export const CATALOG_TEMPLATES: CatalogTemplateItem[] = [
     name: "Declaração de Residência do Proprietário",
     code: "DEC-RES",
     description:
-      "Declaração formal de domicílio elaborada sob as penas da Lei Federal nº 7.115/1983 para instrução de processos marítimos (NORMAM-211/DPC, Anexo 2-G).",
+      "Declaração formal de domicílio sob as penas da Lei Federal nº 7.115/1983 e art. 299 do Código Penal para instrução de processos marítimos (NORMAM-211/DPC, Anexo 2-I).",
     category: "geral",
     categoryLabel: "Geral",
-    updatedAt: "22/10/2026",
+    updatedAt: "29/10/2026",
     status: "aprovado",
-    nature: "platform_generated",
+    nature: "official_form",
     requiredFields: ["Nome do Cliente", "CPF/CNPJ do Cliente", "Endereço Completo"],
     isMandatory: false,
     isConditional: true,
     conditionText:
       "Dispensável caso o interessado apresente comprovante de residência próprio em seu nome emitido há menos de 120 dias.",
-    officialSource: "NORMAM-211/DPC, Anexo 2-G c/c Lei Federal nº 7.115/1983",
-    validationDate: "22/10/2026",
+    officialSource: "NORMAM-211/DPC, Anexo 2-I c/c Lei Federal nº 7.115/1983",
+    validationDate: "29/10/2026",
     aliases: {
       codes: ["decl-residencia-naval", "DEC-RES", "DECL_RES_NAVAL"],
       names: [
@@ -133,12 +133,12 @@ export const CATALOG_TEMPLATES: CatalogTemplateItem[] = [
     name: "Requerimento Específico para Moto Aquática (Jet Ski)",
     code: "REQ-JET",
     description:
-      "Formulário oficial para inscrição, transferência ou renovação de motoaquática com parâmetros técnicos dedicados a motonáutica.",
+      "Formulário oficial para inscrição, transferência ou renovação de moto aquática com parâmetros técnicos dedicados a motonáutica (NORMAM-212/DPC, Anexo 2-A).",
     category: "moto_aquatica",
     categoryLabel: "Moto aquática",
-    updatedAt: "22/10/2026",
+    updatedAt: "29/10/2026",
     status: "aprovado",
-    nature: "platform_generated",
+    nature: "official_form",
     requiredFields: [
       "Nome do Cliente",
       "CPF/CNPJ do Cliente",
@@ -147,8 +147,8 @@ export const CATALOG_TEMPLATES: CatalogTemplateItem[] = [
     ],
     isMandatory: true,
     isConditional: false,
-    officialSource: "NORMAM-212/DPC, Anexo 3-B • Capitania dos Portos (CPES node/405)",
-    validationDate: "22/10/2026",
+    officialSource: "NORMAM-212/DPC, Anexo 2-A • Diretoria de Portos e Costas",
+    validationDate: "29/10/2026",
     aliases: {
       codes: ["req-moto-aquatica", "REQ-JET", "REQ_MOTO_AQUATICA"],
       names: [
@@ -164,19 +164,19 @@ export const CATALOG_TEMPLATES: CatalogTemplateItem[] = [
     name: "Declaração de Perda / Extravio de Documento Náutico",
     code: "DEC-PERD",
     description:
-      "Declaração formal sob as penas da lei (NORMAM-211/DPC Anexo 2-H) para perda acidental, extravio, furto ou roubo de TIE/TIEM físico antigo.",
+      "Declaração formal sob as penas da lei (NORMAM-211/DPC, Anexo 2-H) para perda acidental, extravio, furto ou roubo de TIE/TIEM físico antigo.",
     category: "geral",
     categoryLabel: "Geral",
-    updatedAt: "22/10/2026",
+    updatedAt: "29/10/2026",
     status: "aprovado",
-    nature: "platform_generated",
+    nature: "official_form",
     requiredFields: ["Nome do Cliente", "CPF/CNPJ do Cliente", "Nome da Embarcação"],
     isMandatory: false,
     isConditional: true,
     conditionText:
       "Exigido exclusivamente em casos de perda ou extravio do TIE físico verde antigo. Se for TIE Digital com QR Code, a reimpressão no sistema gov.br/Marinha é autônoma e gratuita.",
     officialSource: "NORMAM-211/DPC, Anexo 2-H • Capitania dos Portos",
-    validationDate: "22/10/2026",
+    validationDate: "29/10/2026",
     aliases: {
       codes: ["decl-perda-extravio", "DEC-PERD"],
       names: [
@@ -191,12 +191,12 @@ export const CATALOG_TEMPLATES: CatalogTemplateItem[] = [
     name: "Requerimento de Embarcação Profissional / Comercial",
     code: "REQ-PROF",
     description:
-      "Requerimento elaborado pela plataforma com base na NORMAM-201/DPC, Anexo 2-A para inscrição, regularização ou transferência de embarcações comerciais e profissionais perante a Capitania dos Portos.",
+      "Requerimento oficial padronizado com base na NORMAM-201/DPC, Anexo 2-E para inscrição, regularização ou transferência de embarcações comerciais e profissionais não sujeitas a registro no Tribunal Marítimo.",
     category: "profissional",
     categoryLabel: "Embarcações profissionais",
-    updatedAt: "16/10/2026",
+    updatedAt: "29/10/2026",
     status: "aprovado",
-    nature: "platform_generated",
+    nature: "official_form",
     requiredFields: [
       "Nome do Cliente",
       "CPF/CNPJ do Cliente",
@@ -205,8 +205,8 @@ export const CATALOG_TEMPLATES: CatalogTemplateItem[] = [
     ],
     isMandatory: true,
     isConditional: false,
-    officialSource: "NORMAM-201/DPC, Anexo 2-A • Capitania dos Portos (CPES node/388)",
-    validationDate: "16/10/2026",
+    officialSource: "NORMAM-201/DPC, Anexo 2-E • Diretoria de Portos e Costas",
+    validationDate: "29/10/2026",
     aliases: {
       codes: ["req-comercial-prof", "REQ-PROF", "REQ_INSCR"],
       names: [
