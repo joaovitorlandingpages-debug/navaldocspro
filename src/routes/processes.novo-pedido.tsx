@@ -27,11 +27,12 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/processes/novo-pedido")({
-  validateSearch: (search: Record<string, unknown>): { customerId?: string; vesselId?: string; preview?: string; step?: string } => ({
+  validateSearch: (search: Record<string, unknown>): { customerId?: string; vesselId?: string; preview?: string; step?: string; services?: string } => ({
     customerId: (search.customerId as string) || undefined,
     vesselId: (search.vesselId as string) || undefined,
     preview: (search.preview as string) || undefined,
     step: (search.step as string) || undefined,
+    services: (search.services as string) || undefined,
   }),
   component: () => (
     <ProtectedRoute>
@@ -184,82 +185,251 @@ export interface OrderDocumentRequirement {
   extractedFields?: ExtractedFieldItem[];
 }
 
-const DEFAULT_ORDER_REQUIREMENTS: OrderDocumentRequirement[] = [
-  {
-    id: "doc-embarcacao",
-    name: "Documento da embarcação",
-    fileName: "documento-mar-azul.pdf",
-    fileSize: "2.4 MB",
-    usedInLabel: "Usado em 3 serviços",
-    status: "recebido",
-    targetServiceIds: ["transferencia", "renovacao", "alteracao_motor"],
-    personOrVessel: "Embarcação Mar Azul",
-    whyNeeded: "Comprova a inscrição atual, características técnicas e regularidade perante a Capitania dos Portos.",
-    outputDocuments: [
-      "Requerimento de Transferência de Propriedade",
-      "Requerimento de Renovação de TIE",
-      "Requerimento de Alteração de Dados Cadastrais (Motor)"
-    ],
-    extractedFields: [
-      { id: "tie", label: "Nº de Inscrição (TIE)", value: "381-000123", confidence: 99, page: 1, isCritical: true },
-      { id: "nome_emb", label: "Nome da Embarcação", value: "Mar Azul", confidence: 98, page: 1 },
-      { id: "prop_atual", label: "Proprietário Atual", value: "Marina Costa", confidence: 97, page: 1 },
-      { id: "motor_atual", label: "Motor Registrado", value: "Mercury Verado 250 HP", confidence: 94, page: 2 },
-    ]
-  },
-  {
-    id: "doc-comprador",
-    name: "Documento do comprador",
-    fileName: "documento-comprador.pdf",
-    fileSize: "1.1 MB",
-    usedInLabel: "Transferência",
-    status: "conferir",
-    targetServiceIds: ["transferencia"],
-    personOrVessel: "Carlos Eduardo Ramos (Comprador)",
-    whyNeeded: "Identificação civil obrigatória para emissão do novo título de propriedade.",
-    outputDocuments: ["Requerimento de Transferência de Propriedade"],
-    extractedFields: [
-      { id: "nome_comp", label: "Nome Completo", value: "Carlos Eduardo Ramos", confidence: 98, page: 1, isCritical: true },
-      { id: "cpf_comp", label: "CPF", value: "192.834.721-09", confidence: 99, page: 1, isCritical: true },
-      { id: "rg_comp", label: "RG", value: "24.512.980-X SSP/SP", confidence: 95, page: 1 },
-      { id: "papel", label: "Papel no Pedido", value: "Comprador / Novo Adquirente", confidence: 99, page: 1, isCritical: true },
-    ]
-  },
-  {
-    id: "doc-motor",
-    name: "Comprovante do novo motor",
-    fileName: null,
-    usedInLabel: "Alteração de motor",
-    status: "falta_enviar",
-    targetServiceIds: ["alteracao_motor"],
-    personOrVessel: "Motor Novo (Mercury 300 HP)",
-    whyNeeded: "Nota fiscal de aquisição ou declaração com número de série para averbação do novo motor.",
-    outputDocuments: ["Requerimento de Alteração de Dados Cadastrais (Motor)", "Termo de Responsabilidade Técnica"],
-  },
-  {
-    id: "doc-vendedor",
-    name: "Documento do vendedor",
-    fileName: "documento-vendedor.pdf",
-    fileSize: "980 KB",
-    usedInLabel: "Transferência",
-    status: "recebido",
-    targetServiceIds: ["transferencia"],
-    personOrVessel: "Marina Costa (Vendedora)",
-    whyNeeded: "Identificação civil do vendedor transmitente cadastrado perante a Capitania dos Portos.",
-    outputDocuments: ["Requerimento de Transferência de Propriedade"],
-    extractedFields: [
-      { id: "nome_vend", label: "Nome Completo", value: "Marina Costa", confidence: 99, page: 1 },
-      { id: "cpf_vend", label: "CPF", value: "042.819.330-12", confidence: 99, page: 1 },
-      { id: "papel_vend", label: "Papel no Pedido", value: "Vendedora / Atual Proprietária", confidence: 99, page: 1 },
-    ]
-  },
-];
+export function getDynamicOrderRequirements(
+  serviceIds: string[],
+  customer?: { id: string; name: string; document_number?: string } | null,
+  vessel?: { id: string; name: string; registration_number?: string } | null,
+  options?: { isCleanPreview?: boolean; existingReqs?: OrderDocumentRequirement[] }
+): OrderDocumentRequirement[] {
+  const reqs: OrderDocumentRequirement[] = [];
+  const clientName = customer?.name || "Cliente Solicitante";
+  const vesselName = vessel?.name || "Embarcação";
+
+  const findExisting = (id: string) => options?.existingReqs?.find(r => r.id === id);
+
+  // 1. INSCRIÇÃO INICIAL
+  if (serviceIds.includes("inscricao")) {
+    const exCasco = findExisting("doc-nf-casco");
+    reqs.push({
+      id: "doc-nf-casco",
+      name: "Nota Fiscal do Casco / Declaração de Construção",
+      fileName: exCasco?.fileName || (options?.isCleanPreview ? null : "NF-Casco-Aquisicao.pdf"),
+      fileSize: exCasco?.fileSize || (options?.isCleanPreview ? undefined : "1.8 MB"),
+      usedInLabel: "Inscrição",
+      status: exCasco?.status || (options?.isCleanPreview ? "falta_enviar" : "recebido"),
+      targetServiceIds: ["inscricao"],
+      personOrVessel: vesselName,
+      whyNeeded: "Comprova a procedência e propriedade do casco perante a Capitania dos Portos (NORMAM-211/DPC itens 0202 a 0205).",
+      outputDocuments: [
+        "Requerimento de Inscrição Inicial de Embarcação (NORMAM-211 Anexo 2-C)",
+        "Boletim Simplificado de Atualização de Embarcação - BSADE (NORMAM-211 Anexo 2-B)"
+      ],
+      extractedFields: exCasco?.extractedFields || [
+        { id: "nf_casco_num", label: "Nº da Nota Fiscal / Documento", value: "NF-e 004.821", confidence: 99, page: 1, isCritical: true },
+        { id: "nf_casco_construtor", label: "Estaleiro / Construtor", value: "Estaleiro Naval Brasil", confidence: 97, page: 1 },
+      ]
+    });
+
+    const exMotor = findExisting("doc-nf-motor-inscricao");
+    reqs.push({
+      id: "doc-nf-motor-inscricao",
+      name: "Nota Fiscal / Comprovante do Motor",
+      fileName: exMotor?.fileName || (options?.isCleanPreview ? null : "NF-Motor-Mercury.pdf"),
+      fileSize: exMotor?.fileSize || (options?.isCleanPreview ? undefined : "920 KB"),
+      usedInLabel: "Inscrição",
+      status: exMotor?.status || (options?.isCleanPreview ? "falta_enviar" : "recebido"),
+      targetServiceIds: ["inscricao"],
+      personOrVessel: `${vesselName} (Motor)`,
+      whyNeeded: "Documento de entrada obrigatório comprovando aquisição e potência/número de série do motor de propulsão.",
+      outputDocuments: [
+        "Boletim Simplificado de Atualização de Embarcação - BSADE (NORMAM-211 Anexo 2-B)",
+        "Requerimento de Inscrição Inicial de Embarcação (NORMAM-211 Anexo 2-C)"
+      ],
+      extractedFields: exMotor?.extractedFields || [
+        { id: "nf_motor_pot", label: "Potência do Motor", value: "115 HP", confidence: 98, page: 1, isCritical: true },
+        { id: "nf_motor_serie", label: "Nº de Série do Motor", value: "SN-982173", confidence: 96, page: 1 },
+      ]
+    });
+
+    const exIdProp = findExisting("doc-id-proprietario");
+    reqs.push({
+      id: "doc-id-proprietario",
+      name: "Documento de Identificação Oficial (RG/CNH)",
+      fileName: exIdProp?.fileName || (options?.isCleanPreview ? null : `Doc-Identificacao-${clientName.split(" ")[0]}.pdf`),
+      fileSize: exIdProp?.fileSize || (options?.isCleanPreview ? undefined : "1.2 MB"),
+      usedInLabel: "Inscrição",
+      status: exIdProp?.status || (options?.isCleanPreview ? "falta_enviar" : "recebido"),
+      targetServiceIds: ["inscricao"],
+      personOrVessel: clientName,
+      whyNeeded: "Qualificação civil do proprietário requerente perante a Autoridade Marítima.",
+      outputDocuments: [
+        "Requerimento de Inscrição Inicial de Embarcação (NORMAM-211 Anexo 2-C)",
+        "Procuração Náutica Específica"
+      ],
+      extractedFields: exIdProp?.extractedFields || [
+        { id: "nome_prop", label: "Nome Completo", value: clientName, confidence: 99, page: 1, isCritical: true },
+        { id: "cpf_prop", label: "CPF", value: customer?.document_number || "000.000.000-00", confidence: 99, page: 1, isCritical: true },
+      ]
+    });
+
+    const exRes = findExisting("doc-comp-residencia");
+    reqs.push({
+      id: "doc-comp-residencia",
+      name: "Comprovante de Residência ou Declaração Anexo 2-I",
+      fileName: exRes?.fileName || (options?.isCleanPreview ? null : "Comprovante-Residencia.pdf"),
+      fileSize: exRes?.fileSize || (options?.isCleanPreview ? undefined : "650 KB"),
+      usedInLabel: "Inscrição",
+      status: exRes?.status || (options?.isCleanPreview ? "falta_enviar" : "recebido"),
+      targetServiceIds: ["inscricao"],
+      personOrVessel: clientName,
+      whyNeeded: "Comprovação de domicílio do proprietário da embarcação emitida há menos de 120 dias ou declaração firmada.",
+      outputDocuments: [
+        "Requerimento de Inscrição Inicial de Embarcação (NORMAM-211 Anexo 2-C)"
+      ],
+    });
+
+    const exFotos = findExisting("doc-fotos-embarcacao");
+    reqs.push({
+      id: "doc-fotos-embarcacao",
+      name: "Fotografias da Embarcação",
+      fileName: exFotos?.fileName || (options?.isCleanPreview ? null : "Fotos-Embarcacao.pdf"),
+      fileSize: exFotos?.fileSize || (options?.isCleanPreview ? undefined : "3.1 MB"),
+      usedInLabel: "Inscrição",
+      status: exFotos?.status || (options?.isCleanPreview ? "falta_enviar" : "recebido"),
+      targetServiceIds: ["inscricao"],
+      personOrVessel: vesselName,
+      whyNeeded: "Fotos nítidas do costado e da popa com nome e porto de inscrição visíveis (NORMAM-211 item 0205).",
+      outputDocuments: [
+        "Dossiê Fotográfico para Inscrição na Capitania"
+      ]
+    });
+  }
+
+  // 2. TRANSFERÊNCIA
+  if (serviceIds.includes("transferencia")) {
+    const exEmb = findExisting("doc-embarcacao-transf");
+    reqs.push({
+      id: "doc-embarcacao-transf",
+      name: "Documento da Embarcação (TIE/TIEM)",
+      fileName: exEmb?.fileName || (options?.isCleanPreview ? null : `TIE-${vesselName.replace(/\s+/g, "-")}.pdf`),
+      fileSize: exEmb?.fileSize || (options?.isCleanPreview ? undefined : "2.4 MB"),
+      usedInLabel: "Transferência",
+      status: exEmb?.status || (options?.isCleanPreview ? "falta_enviar" : "recebido"),
+      targetServiceIds: ["transferencia"],
+      personOrVessel: vesselName,
+      whyNeeded: "Comprova o registro atual e dados técnicos da embarcação.",
+      outputDocuments: ["Requerimento de Transferência de Propriedade"],
+      extractedFields: exEmb?.extractedFields || [
+        { id: "tie", label: "Nº de Inscrição (TIE)", value: vessel?.registration_number || "381-000123", confidence: 99, page: 1, isCritical: true },
+        { id: "nome_emb", label: "Nome da Embarcação", value: vesselName, confidence: 98, page: 1 },
+      ]
+    });
+
+    const exComprador = findExisting("doc-comprador");
+    reqs.push({
+      id: "doc-comprador",
+      name: "Documento do Comprador",
+      fileName: exComprador?.fileName || (options?.isCleanPreview ? null : "documento-comprador.pdf"),
+      fileSize: exComprador?.fileSize || (options?.isCleanPreview ? undefined : "1.1 MB"),
+      usedInLabel: "Transferência",
+      status: exComprador?.status || (options?.isCleanPreview ? "falta_enviar" : "conferir"),
+      targetServiceIds: ["transferencia"],
+      personOrVessel: "Comprador / Adquirente",
+      whyNeeded: "Identificação civil obrigatória para emissão do novo título de propriedade.",
+      outputDocuments: ["Requerimento de Transferência de Propriedade"],
+      extractedFields: exComprador?.extractedFields || [
+        { id: "nome_comp", label: "Nome Completo", value: "Novo Proprietário", confidence: 98, page: 1, isCritical: true },
+        { id: "cpf_comp", label: "CPF", value: "192.834.721-09", confidence: 99, page: 1, isCritical: true },
+      ]
+    });
+
+    const exVendedor = findExisting("doc-vendedor");
+    reqs.push({
+      id: "doc-vendedor",
+      name: "Documento do Vendedor",
+      fileName: exVendedor?.fileName || (options?.isCleanPreview ? null : "documento-vendedor.pdf"),
+      fileSize: exVendedor?.fileSize || (options?.isCleanPreview ? undefined : "980 KB"),
+      usedInLabel: "Transferência",
+      status: exVendedor?.status || (options?.isCleanPreview ? "falta_enviar" : "recebido"),
+      targetServiceIds: ["transferencia"],
+      personOrVessel: `${clientName} (Vendedor)`,
+      whyNeeded: "Identificação civil do vendedor transmitente cadastrado perante a Capitania dos Portos.",
+      outputDocuments: ["Requerimento de Transferência de Propriedade"],
+      extractedFields: exVendedor?.extractedFields || [
+        { id: "nome_vend", label: "Nome Completo", value: clientName, confidence: 99, page: 1 },
+        { id: "cpf_vend", label: "CPF", value: customer?.document_number || "042.819.330-12", confidence: 99, page: 1 },
+      ]
+    });
+  }
+
+  // 3. RENOVAÇÃO
+  if (serviceIds.includes("renovacao")) {
+    const exRenov = findExisting("doc-embarcacao-renov");
+    if (!reqs.some(r => r.id === "doc-embarcacao-transf")) {
+      reqs.push({
+        id: "doc-embarcacao-renov",
+        name: "Documento da Embarcação (TIE/TIEM)",
+        fileName: exRenov?.fileName || (options?.isCleanPreview ? null : `TIE-${vesselName.replace(/\s+/g, "-")}.pdf`),
+        fileSize: exRenov?.fileSize || (options?.isCleanPreview ? undefined : "2.1 MB"),
+        usedInLabel: "Renovação",
+        status: exRenov?.status || (options?.isCleanPreview ? "falta_enviar" : "recebido"),
+        targetServiceIds: ["renovacao"],
+        personOrVessel: vesselName,
+        whyNeeded: "Documento com validade a expirar ou já expirada para procedimento de renovação.",
+        outputDocuments: ["Requerimento de Renovação de TIE/TIEM"],
+      });
+    }
+
+    const exIdRenov = findExisting("doc-id-renov");
+    if (!reqs.some(r => r.id === "doc-id-proprietario")) {
+      reqs.push({
+        id: "doc-id-renov",
+        name: "Identificação do Proprietário",
+        fileName: exIdRenov?.fileName || (options?.isCleanPreview ? null : `ID-${clientName.split(" ")[0]}.pdf`),
+        fileSize: exIdRenov?.fileSize || (options?.isCleanPreview ? undefined : "1.0 MB"),
+        usedInLabel: "Renovação",
+        status: exIdRenov?.status || (options?.isCleanPreview ? "falta_enviar" : "recebido"),
+        targetServiceIds: ["renovacao"],
+        personOrVessel: clientName,
+        whyNeeded: "Comprovante de identificação civil do titular do documento.",
+        outputDocuments: ["Requerimento de Renovação de TIE/TIEM"],
+      });
+    }
+  }
+
+  // 4. ALTERAÇÃO DE MOTOR
+  if (serviceIds.includes("alteracao_motor")) {
+    const exMotorAlt = findExisting("doc-motor-alt");
+    reqs.push({
+      id: "doc-motor-alt",
+      name: "Nota Fiscal / Comprovante do Novo Motor",
+      fileName: exMotorAlt?.fileName || null,
+      fileSize: exMotorAlt?.fileSize,
+      usedInLabel: "Alteração de motor",
+      status: exMotorAlt?.status || "falta_enviar",
+      targetServiceIds: ["alteracao_motor"],
+      personOrVessel: `${vesselName} (Novo Motor)`,
+      whyNeeded: "Nota fiscal de aquisição ou declaração com número de série para averbação do novo motor.",
+      outputDocuments: ["Requerimento de Alteração de Dados Cadastrais (Motor)", "Termo de Responsabilidade Técnica"],
+    });
+  }
+
+  // Se nenhum serviço dos acima, mas há serviços selecionados
+  if (reqs.length === 0 && serviceIds.length > 0) {
+    const firstServ = SERVICES_CATALOG.find(s => s.id === serviceIds[0]);
+    reqs.push({
+      id: `doc-${serviceIds[0]}`,
+      name: `Documentação para ${firstServ?.shortName || "Serviço"}`,
+      fileName: null,
+      usedInLabel: firstServ?.shortName || "Serviço",
+      status: "falta_enviar",
+      targetServiceIds: serviceIds,
+      personOrVessel: vesselName || clientName,
+      whyNeeded: "Documentação comprobatória requerida pela Autoridade Marítima para análise do processo.",
+      outputDocuments: ["Requerimento Geral Padronizado"],
+    });
+  }
+
+  return reqs;
+}
+
+const DEFAULT_ORDER_REQUIREMENTS: OrderDocumentRequirement[] = [];
 
 const WORKSPACE_PREVIEW_DOCS = [
-  { id: "ws-1", name: "RG e CPF - Marina Costa.pdf", size: "1.2 MB", origin: "Cadastro do Cliente (Marina Costa)", date: "14/09/2026" },
-  { id: "ws-2", name: "TIE Mar Azul 381-000123.pdf", size: "2.4 MB", origin: "Cadastro da Embarcação (Mar Azul)", date: "10/09/2026" },
-  { id: "ws-3", name: "Nota Fiscal Motor Mercury 300 HP.pdf", size: "850 KB", origin: "Cofre de Documentos da Marina", date: "16/09/2026", targetReqId: "doc-motor" },
-  { id: "ws-4", name: "Comprovante de Residência - Marina Costa.pdf", size: "640 KB", origin: "Cadastro do Cliente", date: "12/09/2026" },
+  { id: "ws-1", name: "RG e CPF.pdf", size: "1.2 MB", origin: "Cadastro do Cliente", date: "14/09/2026" },
+  { id: "ws-2", name: "TIE Embarcacao.pdf", size: "2.4 MB", origin: "Cadastro da Embarcação", date: "10/09/2026" },
+  { id: "ws-3", name: "Nota Fiscal Motor.pdf", size: "850 KB", origin: "Cofre de Documentos", date: "16/09/2026", targetReqId: "doc-nf-motor-inscricao" },
+  { id: "ws-4", name: "Comprovante de Residência.pdf", size: "640 KB", origin: "Cadastro do Cliente", date: "12/09/2026" },
 ];
 
 function PdfBadgeIcon({ className }: { className?: string }) {
@@ -292,10 +462,10 @@ function NovoPedidoPage() {
 
   // Seleção múltipla de serviços (armazena os IDs selecionados)
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>(() => {
-    if (isPreview) {
-      return ["transferencia", "renovacao", "alteracao_motor"];
+    if (search.services) {
+      return search.services.split(",").map(s => s.trim()).filter(Boolean);
     }
-    // Tenta recuperar do localStorage se existir rascunho anterior
+    // Tenta recuperar do localStorage apenas se houver rascunho anterior
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("navaldocs_pedido_draft_services");
       if (saved) {
@@ -323,7 +493,6 @@ function NovoPedidoPage() {
   // Dados do pedido (Etapa 2)
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>(() => {
     if (search.customerId) return search.customerId;
-    if (isPreview) return "prev-c1";
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("navaldocs_pedido_draft_customer");
       if (saved) return saved;
@@ -333,7 +502,6 @@ function NovoPedidoPage() {
 
   const [selectedVesselId, setSelectedVesselId] = useState<string>(() => {
     if (search.vesselId) return search.vesselId;
-    if (isPreview) return "prev-v1";
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("navaldocs_pedido_draft_vessel");
       if (saved) return saved;
@@ -345,28 +513,28 @@ function NovoPedidoPage() {
 
   // Dados específicos de cada serviço
   const [transferData, setTransferData] = useState({
-    vendedorId: isPreview ? "prev-c1" : "",
+    vendedorId: "",
     compradorId: "",
     compradorNome: "",
   });
 
   const [renovacaoData, setRenovacaoData] = useState({
     tipoDocumento: "TIE (Título de Inscrição de Embarcação)",
-    numeroDocumento: isPreview ? "381-000123" : "",
-    validadeAtual: isPreview ? "2025-11-20" : "",
+    numeroDocumento: "",
+    validadeAtual: "",
   });
 
   const [motorData, setMotorData] = useState({
     motorAtualPotencia: "250 HP",
     motorAtualMarca: "Mercury Verado",
-    motorAtualSerie: isPreview ? "MV-892182" : "",
+    motorAtualSerie: "",
     novoMotorPotencia: "",
     novoMotorMarca: "",
     novoMotorSerie: "",
     novoMotorCombustivel: "Gasolina",
   });
 
-  // Controle de expansão das seções específicas (Transferência aberta por padrão, como na imagem)
+  // Controle de expansão das seções específicas
   const [expandedAccordions, setExpandedAccordions] = useState<Record<string, boolean>>({
     transferencia: true,
     renovacao: false,
@@ -386,7 +554,14 @@ function NovoPedidoPage() {
   const [isNewBuyerModalOpen, setIsNewBuyerModalOpen] = useState(false);
 
   // Estados da Etapa 3: Documentos
-  const [requirements, setRequirements] = useState<OrderDocumentRequirement[]>(DEFAULT_ORDER_REQUIREMENTS);
+  const [requirements, setRequirements] = useState<OrderDocumentRequirement[]>(() => {
+    return getDynamicOrderRequirements(
+      selectedServiceIds,
+      null,
+      null,
+      { isCleanPreview: !isPreview }
+    );
+  });
   const [documentFilter, setDocumentFilter] = useState<"todos" | "recebidos" | "falta_enviar" | "conferir">("todos");
   const [showOutputFiles, setShowOutputFiles] = useState(false);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
@@ -548,17 +723,29 @@ function NovoPedidoPage() {
     if (!currentVessel) return "";
     if (currentVessel.customer_name) return currentVessel.customer_name;
     const owner = allCustomers.find(c => c.id === currentVessel.customer_id);
-    return owner?.name || "Marina Costa";
+    return owner?.name || "";
   }, [currentVessel, allCustomers]);
 
   // Nome do cliente e embarcação ativos para exibição no cabeçalho
   const currentCustomerName = useMemo(() => {
-    return allCustomers.find(c => c.id === selectedCustomerId)?.name || "Marina Costa";
+    return allCustomers.find(c => c.id === selectedCustomerId)?.name || "Cliente do Pedido";
   }, [allCustomers, selectedCustomerId]);
 
   const currentVesselName = useMemo(() => {
-    return allVessels.find(v => v.id === selectedVesselId)?.name || "Mar Azul";
+    return allVessels.find(v => v.id === selectedVesselId)?.name || "Embarcação";
   }, [allVessels, selectedVesselId]);
+
+  // Sincroniza dinamicamente os requisitos documentais conforme os serviços, cliente e embarcação mudam
+  useEffect(() => {
+    const cust = allCustomers.find(c => c.id === selectedCustomerId) || null;
+    const vess = allVessels.find(v => v.id === selectedVesselId) || null;
+    setRequirements(prev =>
+      getDynamicOrderRequirements(selectedServiceIds, cust, vess, {
+        isCleanPreview: !isPreview,
+        existingReqs: prev,
+      })
+    );
+  }, [selectedServiceIds, selectedCustomerId, selectedVesselId, allCustomers, allVessels, isPreview]);
 
   // Contadores de documentos da Etapa 3
   const receivedCount = useMemo(() => requirements.filter(r => r.status === "recebido").length, [requirements]);
@@ -577,7 +764,7 @@ function NovoPedidoPage() {
     if (currentVessel && !transferData.vendedorId) {
       setTransferData(prev => ({
         ...prev,
-        vendedorId: currentVessel.customer_id || selectedCustomerId || "prev-c1",
+        vendedorId: currentVessel.customer_id || selectedCustomerId || "",
       }));
     }
   }, [currentVessel, selectedCustomerId, transferData.vendedorId]);
@@ -591,12 +778,13 @@ function NovoPedidoPage() {
   const totalOutputFilesCount = useMemo(() => {
     let count = 0;
     selectedServices.forEach(s => {
-      if (s.id === "transferencia") count += 2;
+      if (s.id === "inscricao") count += 3; // Requerimento Inscrição (2-C), BSADE (2-B), Procuração
+      else if (s.id === "transferencia") count += 2;
       else if (s.id === "renovacao") count += 1;
       else if (s.id === "alteracao_motor") count += 2;
       else count += 1;
     });
-    return count || 5;
+    return count;
   }, [selectedServices]);
 
   // Verifica se algum serviço selecionado exige embarcação
@@ -710,6 +898,7 @@ function NovoPedidoPage() {
           preview: isPreview ? "true" : undefined,
           customerId: selectedCustomerId || undefined,
           vesselId: selectedVesselId || undefined,
+          services: selectedServiceIds.join(",") || undefined,
         },
       });
     } catch (err) {
@@ -1666,6 +1855,13 @@ function NovoPedidoPage() {
                           <span>{service.shortName}</span>
                         </h5>
                         <ul className="text-[11px] text-slate-600 space-y-1 pl-1">
+                          {service.id === "inscricao" && (
+                            <>
+                              <li>• Requerimento de Inscrição (NORMAM-211 Anexo 2-C)</li>
+                              <li>• BSADE Preenchido (NORMAM-211 Anexo 2-B)</li>
+                              <li>• Procuração Específica para Capitania</li>
+                            </>
+                          )}
                           {service.id === "transferencia" && (
                             <>
                               <li>• Requerimento de Transferência</li>
@@ -1683,7 +1879,7 @@ function NovoPedidoPage() {
                               <li>• Termo de Responsabilidade Técnica</li>
                             </>
                           )}
-                          {!["transferencia", "renovacao", "alteracao_motor"].includes(service.id) && (
+                          {!["inscricao", "transferencia", "renovacao", "alteracao_motor"].includes(service.id) && (
                             <li>• Requerimento Padronizado Capitania</li>
                           )}
                         </ul>
@@ -2072,25 +2268,37 @@ function NovoPedidoPage() {
 
           {/* Resumo dos Serviços do Pedido */}
           <div className="space-y-3">
-            {selectedServices.map((serv) => (
-              <div key={serv.id} className="p-4 rounded-xl border border-slate-200/80 bg-slate-50/40 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-lg bg-blue-50 text-[#1868db] flex items-center justify-center shrink-0">
-                    <serv.icon className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-xs sm:text-sm text-[#0f1d36]">{serv.name}</h4>
-                    <span className="text-[11px] text-slate-500">
-                      {serv.requiresVessel ? "Vinculado à embarcação" : "Serviço pessoal"}
-                    </span>
-                  </div>
-                </div>
+            {selectedServices.map((serv) => {
+              const servReqs = requirements.filter(r => r.targetServiceIds.includes(serv.id));
+              const missingReq = servReqs.find(r => r.status === "falta_enviar" || r.status === "conferir");
+              const isReady = servReqs.length > 0 && !missingReq;
 
-                <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold">
-                  Pronto para gerar
-                </Badge>
-              </div>
-            ))}
+              return (
+                <div key={serv.id} className="p-4 rounded-xl border border-slate-200/80 bg-slate-50/40 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-lg bg-blue-50 text-[#1868db] flex items-center justify-center shrink-0">
+                      <serv.icon className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-xs sm:text-sm text-[#0f1d36]">{serv.name}</h4>
+                      <span className="text-[11px] text-slate-500">
+                        {serv.requiresVessel ? "Vinculado à embarcação" : "Serviço pessoal"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {isReady ? (
+                    <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold">
+                      Pronto para gerar
+                    </Badge>
+                  ) : (
+                    <Badge className="bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-semibold">
+                      {missingReq ? `Pendente: ${missingReq.name}` : "Pendente de documento"}
+                    </Badge>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-1">
@@ -2125,6 +2333,7 @@ function NovoPedidoPage() {
                       preview: "true",
                       customerId: selectedCustomerId || undefined,
                       vesselId: selectedVesselId || undefined,
+                      services: selectedServiceIds.join(",") || undefined,
                     },
                   })
                 }
@@ -2144,6 +2353,7 @@ function NovoPedidoPage() {
                       preview: "true",
                       customerId: selectedCustomerId || undefined,
                       vesselId: selectedVesselId || undefined,
+                      services: selectedServiceIds.join(",") || undefined,
                     },
                   })
                 }

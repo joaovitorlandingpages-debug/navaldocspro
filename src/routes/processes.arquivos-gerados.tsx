@@ -23,12 +23,20 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/processes/arquivos-gerados")({
-  validateSearch: (search: Record<string, unknown>): { orderId?: string; customerId?: string; vesselId?: string; preview?: string; allReady?: string } => ({
+  validateSearch: (search: Record<string, unknown>): {
+    orderId?: string;
+    customerId?: string;
+    vesselId?: string;
+    preview?: string;
+    allReady?: string;
+    services?: string;
+  } => ({
     orderId: (search.orderId as string) || undefined,
     customerId: (search.customerId as string) || undefined,
     vesselId: (search.vesselId as string) || undefined,
     preview: (search.preview as string) || undefined,
     allReady: (search.allReady as string) || undefined,
+    services: (search.services as string) || undefined,
   }),
   component: () => (
     <ProtectedRoute>
@@ -77,127 +85,216 @@ interface ServiceGroup {
   pendingTitle?: string;
 }
 
-const INITIAL_SERVICE_GROUPS: ServiceGroup[] = [
-  {
-    id: "transferencia",
-    name: "Transferência de propriedade",
-    icon: Ship,
-    status: "pronto",
-    files: [
-      {
-        id: "transf-req",
-        name: "Requerimento.pdf",
-        version: 1,
-        generatedAt: "12/03/2025 às 14:32",
-        serviceId: "transferencia",
-        serviceName: "Transferência de propriedade",
-        folderName: "Processo_0247_Transferencia",
-        status: "gerado",
-        pagesCount: 2,
-        fileSize: "248 KB",
-        contentSample: "REQUERIMENTO DE TRANSFERÊNCIA DE PROPRIEDADE\n\nÀ CAPITANIA DOS PORTOS\n\nEmbarcação: MAR AZUL (Inscrição: 381-000123)\nVendedor: Marina Costa (CPF: 042.819.330-12)\nComprador: Carlos Eduardo Ramos (CPF: 192.834.721-09)\n\nRequer-se a transferência de propriedade nos termos da NORMAM-211/DPC.",
-      },
-      {
-        id: "transf-decl",
-        name: "Declaracao-transferencia.pdf",
-        version: 1,
-        generatedAt: "12/03/2025 às 14:32",
-        serviceId: "transferencia",
-        serviceName: "Transferência de propriedade",
-        folderName: "Processo_0247_Transferencia",
-        status: "gerado",
-        pagesCount: 1,
-        fileSize: "185 KB",
-        contentSample: "TERMO DE ENTREGA E DECLARAÇÃO DE RESPONSABILIDADE\n\nDeclaro para os devidos fins de direito que recebi a embarcação MAR AZUL em perfeitas condições de navegabilidade, assumindo plena responsabilidade civil e marítima.",
-      },
-    ],
-  },
-  {
-    id: "renovacao",
-    name: "Renovação de documento",
-    icon: FileText,
-    status: "pronto",
-    files: [
-      {
-        id: "renov-req",
-        name: "Requerimento.pdf",
-        version: 1,
-        generatedAt: "12/03/2025 às 14:32",
-        serviceId: "renovacao",
-        serviceName: "Renovação de documento",
-        folderName: "Processo_0258_Renovacao",
-        status: "gerado",
-        pagesCount: 2,
-        fileSize: "230 KB",
-        contentSample: "REQUERIMENTO DE RENOVAÇÃO DE TÍTULO DE INSCRIÇÃO DE EMBARCAÇÃO (TIE)\n\nÀ CAPITANIA DOS PORTOS\n\nEmbarcação: MAR AZUL\nProprietário: Marina Costa\nValidade expirada: 20/11/2025\n\nRequer a emissão da nova via do documento de inscrição.",
-      },
-      {
-        id: "renov-decl",
-        name: "Declaracao-interessado.pdf",
-        version: 1,
-        generatedAt: "12/03/2025 às 14:32",
-        serviceId: "renovacao",
-        serviceName: "Renovação de documento",
-        folderName: "Processo_0258_Renovacao",
-        status: "gerado",
-        pagesCount: 1,
-        fileSize: "160 KB",
-        contentSample: "DECLARAÇÃO DO INTERESSADO PARA RENOVAÇÃO\n\nDeclaro que a embarcação mantém as mesmas características técnicas originais e dotação regulamentar de salvatagem e combate a incêndio.",
-      },
-    ],
-  },
-  {
-    id: "alteracao_motor",
-    name: "Alteração de motor",
-    icon: Wrench,
-    status: "pendente",
-    pendingTitle: "Requerimento de alteração",
-    pendingNote: "Confira a identificação do novo motor.",
-    files: [],
-  },
-];
+function buildDynamicServiceGroups(
+  serviceIds: string[],
+  customerName: string,
+  vesselName: string,
+  allReady: boolean
+): ServiceGroup[] {
+  const groups: ServiceGroup[] = [];
+
+  for (const sId of serviceIds) {
+    if (sId === "inscricao") {
+      groups.push({
+        id: "inscricao",
+        name: "Inscrição inicial de embarcação",
+        icon: Ship,
+        status: "pronto",
+        files: [
+          {
+            id: "insc-req",
+            name: "Requerimento-inscricao-inicial.pdf",
+            version: 1,
+            generatedAt: new Date().toLocaleDateString("pt-BR") + " às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+            serviceId: "inscricao",
+            serviceName: "Inscrição inicial de embarcação",
+            folderName: `Processo_Inscricao_${vesselName.replace(/\s+/g, "_")}`,
+            status: "gerado",
+            pagesCount: 2,
+            fileSize: "245 KB",
+            contentSample: `MARINHA DO BRASIL - DIRETORIA DE PORTOS E COSTAS\nREQUERIMENTO DE INSCRIÇÃO INICIAL DE EMBARCAÇÃO\n(NORMAM-211/DPC - Anexo 2-C)\n\nÀ CAPITANIA DOS PORTOS / DELEGACIA / AGÊNCIA\n\nProprietário / Requerente: ${customerName}\nEmbarcação: ${vesselName}\nServiço Solicitado: Inscrição Inicial de Embarcação\n\nDocumentos anexos conferidos conforme NORMAM-211:\n- Nota Fiscal do Casco / Declaração de Construção\n- Nota Fiscal / Comprovante do Motor\n- Documento de Identificação Oficial\n- Comprovante de Residência\n- Fotos da Embarcação`,
+          },
+          {
+            id: "insc-bsade",
+            name: "BSADE-inscricao.pdf",
+            version: 1,
+            generatedAt: new Date().toLocaleDateString("pt-BR") + " às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+            serviceId: "inscricao",
+            serviceName: "Inscrição inicial de embarcação",
+            folderName: `Processo_Inscricao_${vesselName.replace(/\s+/g, "_")}`,
+            status: "gerado",
+            pagesCount: 2,
+            fileSize: "290 KB",
+            contentSample: `MARINHA DO BRASIL\nBOLETIM DE SIMPLIFICAÇÃO E ATUALIZAÇÃO DE DADOS DE EMBARCAÇÃO (BSADE)\n(NORMAM-211/DPC - Anexo 2-B)\n\nIdentificação da Embarcação: ${vesselName}\nProprietário: ${customerName}\nFinalidade: Inscrição Inicial e Registro de Dados Técnicos do Casco e Propulsão.`,
+          },
+          {
+            id: "insc-proc",
+            name: "Procuracao-nautica.pdf",
+            version: 1,
+            generatedAt: new Date().toLocaleDateString("pt-BR") + " às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+            serviceId: "inscricao",
+            serviceName: "Inscrição inicial de embarcação",
+            folderName: `Processo_Inscricao_${vesselName.replace(/\s+/g, "_")}`,
+            status: "gerado",
+            pagesCount: 1,
+            fileSize: "180 KB",
+            contentSample: `INSTRUMENTO PARTICULAR DE PROCURAÇÃO\n(NORMAM-211/DPC)\n\nOUTORGANTE: ${customerName}\nFINALIDADE: Representação perante a Capitania dos Portos para o processo de Inscrição Inicial da embarcação ${vesselName}.`,
+          },
+        ],
+      });
+    } else if (sId === "transferencia") {
+      groups.push({
+        id: "transferencia",
+        name: "Transferência de propriedade",
+        icon: Ship,
+        status: "pronto",
+        files: [
+          {
+            id: "transf-req",
+            name: "Requerimento-transferencia.pdf",
+            version: 1,
+            generatedAt: "12/03/2025 às 14:32",
+            serviceId: "transferencia",
+            serviceName: "Transferência de propriedade",
+            folderName: `Processo_Transferencia_${vesselName.replace(/\s+/g, "_")}`,
+            status: "gerado",
+            pagesCount: 2,
+            fileSize: "248 KB",
+            contentSample: `REQUERIMENTO DE TRANSFERÊNCIA DE PROPRIEDADE\n\nÀ CAPITANIA DOS PORTOS\n\nEmbarcação: ${vesselName}\nAdquirente: ${customerName}\n\nRequer-se a transferência de propriedade nos termos da NORMAM-211/DPC.`,
+          },
+          {
+            id: "transf-decl",
+            name: "Declaracao-transferencia.pdf",
+            version: 1,
+            generatedAt: "12/03/2025 às 14:32",
+            serviceId: "transferencia",
+            serviceName: "Transferência de propriedade",
+            folderName: `Processo_Transferencia_${vesselName.replace(/\s+/g, "_")}`,
+            status: "gerado",
+            pagesCount: 1,
+            fileSize: "185 KB",
+            contentSample: `TERMO DE ENTREGA E DECLARAÇÃO DE RESPONSABILIDADE\n\nDeclaro para os devidos fins de direito que recebi a embarcação ${vesselName} em perfeitas condições de navegabilidade, assumindo plena responsabilidade civil e marítima.\nAssina: ${customerName}`,
+          },
+        ],
+      });
+    } else if (sId === "renovacao") {
+      groups.push({
+        id: "renovacao",
+        name: "Renovação de documento",
+        icon: FileText,
+        status: "pronto",
+        files: [
+          {
+            id: "renov-req",
+            name: "Requerimento-renovacao.pdf",
+            version: 1,
+            generatedAt: "12/03/2025 às 14:32",
+            serviceId: "renovacao",
+            serviceName: "Renovação de documento",
+            folderName: `Processo_Renovacao_${vesselName.replace(/\s+/g, "_")}`,
+            status: "gerado",
+            pagesCount: 2,
+            fileSize: "230 KB",
+            contentSample: `REQUERIMENTO DE RENOVAÇÃO DE TÍTULO DE INSCRIÇÃO DE EMBARCAÇÃO (TIE)\n\nÀ CAPITANIA DOS PORTOS\n\nEmbarcação: ${vesselName}\nProprietário: ${customerName}\n\nRequer a emissão da nova via do documento de inscrição.`,
+          },
+          {
+            id: "renov-decl",
+            name: "Declaracao-interessado.pdf",
+            version: 1,
+            generatedAt: "12/03/2025 às 14:32",
+            serviceId: "renovacao",
+            serviceName: "Renovação de documento",
+            folderName: `Processo_Renovacao_${vesselName.replace(/\s+/g, "_")}`,
+            status: "gerado",
+            pagesCount: 1,
+            fileSize: "160 KB",
+            contentSample: `DECLARAÇÃO DO INTERESSADO PARA RENOVAÇÃO\n\nDeclaro que a embarcação ${vesselName} mantém as mesmas características técnicas originais e dotação regulamentar de salvatagem e combate a incêndio.\nDeclarante: ${customerName}`,
+          },
+        ],
+      });
+    } else if (sId === "alteracao_motor") {
+      if (allReady) {
+        groups.push({
+          id: "alteracao_motor",
+          name: "Alteração de motor",
+          icon: Wrench,
+          status: "pronto",
+          files: [
+            {
+              id: "motor-req",
+              name: "Requerimento-alteracao-motor.pdf",
+              version: 1,
+              generatedAt: "12/03/2025 às 14:40",
+              serviceId: "alteracao_motor",
+              serviceName: "Alteração de motor",
+              folderName: `Processo_Alteracao_Motor_${vesselName.replace(/\s+/g, "_")}`,
+              status: "gerado",
+              pagesCount: 2,
+              fileSize: "260 KB",
+              contentSample: `REQUERIMENTO DE ALTERAÇÃO DE DADOS CADASTRAIS (MOTOR)\n\nÀ CAPITANIA DOS PORTOS\n\nEmbarcação: ${vesselName}\nProprietário: ${customerName}\nNovo Motor averbado conforme nota fiscal.\n\nSolicita-se a averbação no TIE.`,
+            },
+          ],
+        });
+      } else {
+        groups.push({
+          id: "alteracao_motor",
+          name: "Alteração de motor",
+          icon: Wrench,
+          status: "pendente",
+          pendingTitle: "Requerimento de alteração",
+          pendingNote: "Confira a identificação do novo motor.",
+          files: [],
+        });
+      }
+    }
+  }
+
+  return groups;
+}
 
 function ArquivosGeradosPage() {
   const navigate = useNavigate();
   const search = useSearch({ from: "/processes/arquivos-gerados" });
   const { profile } = useAuth();
 
-  // Grupos de serviços com seus arquivos
-  const [serviceGroups, setServiceGroups] = useState<ServiceGroup[]>(() => {
-    if (search.allReady === "true") {
-      return INITIAL_SERVICE_GROUPS.map((g) => {
-        if (g.id === "alteracao_motor") {
-          return {
-            ...g,
-            status: "pronto" as const,
-            files: [
-              {
-                id: "motor-req",
-                name: "Requerimento-alteracao-motor.pdf",
-                version: 1,
-                generatedAt: "12/03/2025 às 14:40",
-                serviceId: "alteracao_motor",
-                serviceName: "Alteração de motor",
-                folderName: "Processo_0269_Alteracao_Motor",
-                status: "gerado" as const,
-                pagesCount: 2,
-                fileSize: "260 KB",
-                contentSample: "REQUERIMENTO DE ALTERAÇÃO DE DADOS CADASTRAIS (MOTOR)\n\nÀ CAPITANIA DOS PORTOS\n\nEmbarcação: MAR AZUL\nNovo Motor: Mercury Verado 300 HP - Série: MV-992812\n\nSolicita-se a averbação no TIE.",
-              },
-            ],
-          };
-        }
-        return g;
-      });
+  const activeServices = useMemo(() => {
+    if (search.services && typeof search.services === "string" && search.services.trim()) {
+      return search.services.split(",").map((s) => s.trim()).filter(Boolean);
     }
-    return INITIAL_SERVICE_GROUPS;
+    return ["transferencia", "renovacao", "alteracao_motor"];
+  }, [search.services]);
+
+  const customerName = useMemo(() => {
+    if (search.customerId === "cust_1" || search.customerId === "1") return "Marina Costa";
+    if (search.customerId === "cust_2" || search.customerId === "2") return "Carlos Eduardo Ramos";
+    if (search.customerId && search.customerId !== "cust_1") return `Cliente ${search.customerId}`;
+    return "Cliente Confirmado";
+  }, [search.customerId]);
+
+  const vesselName = useMemo(() => {
+    if (search.vesselId === "ves_1" || search.vesselId === "1") return "Mar Azul";
+    if (search.vesselId === "ves_2" || search.vesselId === "2") return "Vento Sul";
+    if (search.vesselId && search.vesselId !== "ves_1") return `Embarcação ${search.vesselId}`;
+    return "Embarcação Confirmada";
+  }, [search.vesselId]);
+
+  // Grupos de serviços com seus arquivos dinâmicos
+  const [serviceGroups, setServiceGroups] = useState<ServiceGroup[]>(() => {
+    return buildDynamicServiceGroups(activeServices, customerName, vesselName, search.allReady === "true");
   });
 
-  // Controle de sanfona por serviço (todos abertos por padrão, como na imagem)
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    transferencia: true,
-    renovacao: true,
-    alteracao_motor: true,
+  // Atualiza se parâmetros mudarem
+  useMemo(() => {
+    setServiceGroups(buildDynamicServiceGroups(activeServices, customerName, vesselName, search.allReady === "true"));
+  }, [activeServices, customerName, vesselName, search.allReady]);
+
+  // Controle de sanfona por serviço
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    activeServices.forEach((s) => {
+      initial[s] = true;
+    });
+    return initial;
   });
 
   const toggleSection = (id: string) => {
@@ -254,8 +351,9 @@ function ArquivosGeradosPage() {
     toast.loading(`Preparando ZIP com ${totalGeneratedFiles} arquivos organizados por processo...`, { id: "zip-download" });
 
     try {
+      const safeVesselName = vesselName.replace(/\s+/g, "_");
       const zip = new JSZip();
-      const rootFolder = zip.folder("Pedido_Mar_Azul");
+      const rootFolder = zip.folder(`Pedido_${safeVesselName}`);
 
       serviceGroups.forEach((group) => {
         if (group.files.length > 0) {
@@ -272,7 +370,7 @@ function ArquivosGeradosPage() {
       const url = URL.createObjectURL(zipBlob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Pedido_Mar_Azul_${totalGeneratedFiles}_arquivos.zip`;
+      a.download = `Pedido_${safeVesselName}_${totalGeneratedFiles}_arquivos.zip`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -306,11 +404,11 @@ function ArquivosGeradosPage() {
                   generatedAt: "12/03/2025 às 14:40",
                   serviceId: "alteracao_motor",
                   serviceName: "Alteração de motor",
-                  folderName: "Processo_0269_Alteracao_Motor",
+                  folderName: `Processo_Alteracao_Motor_${vesselName.replace(/\s+/g, "_")}`,
                   status: "gerado" as const,
                   pagesCount: 2,
                   fileSize: "260 KB",
-                  contentSample: "REQUERIMENTO DE ALTERAÇÃO DE DADOS CADASTRAIS (MOTOR)\n\nÀ CAPITANIA DOS PORTOS\n\nEmbarcação: MAR AZUL\nNovo Motor: Mercury Verado 300 HP - Série: MV-992812\n\nSolicita-se a averbação no TIE.",
+                  contentSample: `REQUERIMENTO DE ALTERAÇÃO DE DADOS CADASTRAIS (MOTOR)\n\nÀ CAPITANIA DOS PORTOS\n\nEmbarcação: ${vesselName}\nProprietário: ${customerName}\nNovo Motor averbado conforme nota fiscal.\n\nSolicita-se a averbação no TIE.`,
                 },
               ],
             };
@@ -332,7 +430,13 @@ function ArquivosGeradosPage() {
         <div>
           <Link
             to="/processes/novo-pedido"
-            search={{ preview: "true", step: "4" }}
+            search={{
+              preview: "true",
+              step: "4",
+              customerId: search.customerId,
+              vesselId: search.vesselId,
+              services: search.services,
+            }}
             className="inline-flex items-center gap-2 text-xs font-semibold text-[#1868db] hover:underline transition-all"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
@@ -407,14 +511,14 @@ function ArquivosGeradosPage() {
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs font-semibold text-slate-700 py-1 border-t border-slate-100 sm:border-0 pt-2 sm:pt-0">
           <div className="flex items-center gap-1.5 text-[#0f1d36]">
             <User className="h-3.5 w-3.5 text-[#1868db]" />
-            <span>Marina Costa · Mar Azul</span>
+            <span>{customerName} · {vesselName}</span>
           </div>
 
           <span className="text-slate-300 font-light">|</span>
 
           <div className="flex items-center gap-1.5 text-slate-600">
             <Calendar className="h-3.5 w-3.5 text-[#1868db]" />
-            <span>3 serviços</span>
+            <span>{activeServices.length} {activeServices.length === 1 ? "serviço" : "serviços"}</span>
           </div>
         </div>
 

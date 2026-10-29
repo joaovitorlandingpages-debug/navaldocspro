@@ -111,7 +111,7 @@ export const CATALOG_TEMPLATES: CatalogTemplateItem[] = [
     categoryLabel: "Geral",
     updatedAt: "29/10/2026",
     status: "aprovado",
-    nature: "official_form",
+    nature: "platform_generated",
     requiredFields: ["Nome do Cliente", "CPF/CNPJ do Cliente", "Endereço Completo"],
     isMandatory: false,
     isConditional: true,
@@ -170,11 +170,12 @@ export const CATALOG_TEMPLATES: CatalogTemplateItem[] = [
     updatedAt: "29/10/2026",
     status: "aprovado",
     nature: "official_form",
+    reviewReason: "Modelo em conferência pela equipe NavalDocs",
     requiredFields: ["Nome do Cliente", "CPF/CNPJ do Cliente", "Nome da Embarcação"],
     isMandatory: false,
     isConditional: true,
     conditionText:
-      "Exigido exclusivamente em casos de perda ou extravio do TIE físico verde antigo. Se for TIE Digital com QR Code, a reimpressão no sistema gov.br/Marinha é autônoma e gratuita.",
+      "Exigido exclusivamente em casos de perda, extravio, furto ou roubo do TIE físico verde antigo. Se for TIE Digital com QR Code, a reimpressão no sistema gov.br/Marinha é autônoma e gratuita.",
     officialSource: "NORMAM-211/DPC, Anexo 2-H • Capitania dos Portos",
     validationDate: "29/10/2026",
     aliases: {

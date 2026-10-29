@@ -43,12 +43,13 @@ import type { WatermarkCustomOptions } from "@/services/brandedPdfBuilder";
 import { type CompanyBranding } from "@/services/companyBranding";
 
 export const Route = createFileRoute("/processes/visualizar-e-editar")({
-  validateSearch: (search: Record<string, unknown>): { orderId?: string; customerId?: string; vesselId?: string; preview?: string; docIndex?: number } => ({
+  validateSearch: (search: Record<string, unknown>): { orderId?: string; customerId?: string; vesselId?: string; preview?: string; docIndex?: number; services?: string } => ({
     orderId: (search.orderId as string) || undefined,
     customerId: (search.customerId as string) || undefined,
     vesselId: (search.vesselId as string) || undefined,
     preview: (search.preview as string) || undefined,
     docIndex: search.docIndex ? Number(search.docIndex) : undefined,
+    services: (search.services as string) || undefined,
   }),
   component: VisualizarEditarPage,
 });
@@ -107,7 +108,9 @@ function MarinaSulLogo({ className = "h-14 w-auto", hideText = false }: { classN
 // ---------------------------------------------------------------------------
 // DOCUMENTOS DO PEDIDO (5 MODELOS REALISTAS)
 // ---------------------------------------------------------------------------
-type OrderDocument = {
+// DOCUMENTOS DO PEDIDO (GERAÇÃO DINÂMICA BASEADA NOS SERVIÇOS CONFIRMADOS)
+// ---------------------------------------------------------------------------
+export type OrderDocument = {
   id: string;
   title: string;
   fileName: string;
@@ -120,88 +123,174 @@ type OrderDocument = {
   compatibleWithWatermark: boolean;
 };
 
-const ORDER_DOCUMENTS: OrderDocument[] = [
-  {
-    id: "doc_1",
-    title: "Requerimento",
-    fileName: "Requerimento-transferencia.pdf",
-    service: "Transferência de propriedade",
-    customerName: "Marina Costa",
-    vesselName: "Mar Azul",
-    requestText:
-      "Solicito a análise do serviço identificado neste documento, conforme os dados e anexos do pedido.",
-    observations: [
-      "Documentos anexados para conferência.",
-      "Qualquer informação adicional poderá ser solicitada durante a análise.",
-    ],
-    totalPages: 2,
-    compatibleWithWatermark: true,
-  },
-  {
-    id: "doc_2",
-    title: "Declaração de transferência",
-    fileName: "Declaracao-transferencia.pdf",
-    service: "Transferência de propriedade",
-    customerName: "Marina Costa",
-    vesselName: "Mar Azul",
-    requestText:
-      "Declaro para os devidos fins de transferência de propriedade que a embarcação encontra-se livre e desembaraçada de quaisquer ônus perante a Capitania dos Portos.",
-    observations: [
-      "Reconhecimento de firma em cartório ou assinatura digital ICP-Brasil.",
-      "Via original retida no processo de registro da Capitania.",
-    ],
-    totalPages: 2,
-    compatibleWithWatermark: true,
-  },
-  {
-    id: "doc_3",
-    title: "Requerimento de renovação",
-    fileName: "Requerimento-renovacao.pdf",
-    service: "Renovação de documento",
-    customerName: "Marina Costa",
-    vesselName: "Mar Azul",
-    requestText:
-      "Requeiro a renovação do TIE/TIEM da referida embarcação, atestando a regularidade de seus equipamentos de salvatagem e segurança da navegação.",
-    observations: [
-      "Taxa GRU correspondente anexa ao dossiê.",
-      "Validade anterior expirada nos termos da NORMAM-211/DPC.",
-    ],
-    totalPages: 1,
-    compatibleWithWatermark: true,
-  },
-  {
-    id: "doc_4",
-    title: "Declaração do interessado",
-    fileName: "Declaracao-interessado.pdf",
-    service: "Renovação de documento",
-    customerName: "Marina Costa",
-    vesselName: "Mar Azul",
-    requestText:
-      "Declaro que mantenho a embarcação em perfeitas condições operacionais de acordo com as normas da Autoridade Marítima brasileira.",
-    observations: [
-      "Termo de vistoria assinado pelo responsável técnico.",
-      "Documento de porte obrigatório a bordo.",
-    ],
-    totalPages: 1,
-    compatibleWithWatermark: true,
-  },
-  {
-    id: "doc_5",
-    title: "Termo de responsabilidade",
-    fileName: "Termo-responsabilidade-motor.pdf",
-    service: "Alteração de motor",
-    customerName: "Marina Costa",
-    vesselName: "Mar Azul",
-    requestText:
-      "Responsabilizo-me pelas modificações executadas no sistema de propulsão e instalação do novo motor Mercury Verado 300 HP na embarcação acima descrita.",
-    observations: [
-      "Nota fiscal de aquisição do motor validada.",
-      "ART/RRT de engenharia naval registrada.",
-    ],
-    totalPages: 2,
-    compatibleWithWatermark: true,
-  },
-];
+export function buildOrderDocuments(
+  serviceIds: string[],
+  customerName: string,
+  vesselName: string
+): OrderDocument[] {
+  const docs: OrderDocument[] = [];
+
+  // Se nada for especificado, assume inscrição por padrão seguro ou lista vazia
+  const activeIds = serviceIds.length > 0 ? serviceIds : ["inscricao"];
+
+  // 1. INSCRIÇÃO INICIAL
+  if (activeIds.includes("inscricao")) {
+    docs.push({
+      id: "doc_req_inscricao",
+      title: "Requerimento de Inscrição Inicial",
+      fileName: "Requerimento-inscricao-inicial.pdf",
+      service: "Inscrição de embarcação",
+      customerName,
+      vesselName,
+      requestText: `Solicito a inscrição inicial da embarcação ${vesselName} perante a Capitania dos Portos / Delegacia / Agência, com base na NORMAM-211/DPC (Anexo 2-C), declarando que os dados cadastrais e as notas fiscais de casco e motor apresentados correspondem à verdade dos fatos.`,
+      observations: [
+        "NORMAM-211/DPC Anexo 2-C (Modelo Oficial de Requerimento).",
+        "Acompanha notas fiscais do casco e do motor, identificação e comprovante de residência.",
+      ],
+      totalPages: 2,
+      compatibleWithWatermark: true,
+    });
+
+    docs.push({
+      id: "doc_bsade",
+      title: "Boletim Simplificado (BSADE)",
+      fileName: "BSADE-inscricao.pdf",
+      service: "Inscrição de embarcação",
+      customerName,
+      vesselName,
+      requestText: `Boletim Simplificado de Atualização de Embarcação (BSADE - NORMAM-211/DPC Anexo 2-B) para cadastro cadastral e técnico da embarcação ${vesselName}, indicando o proprietário ${customerName}, sistema de propulsão e características estruturais.`,
+      observations: [
+        "NORMAM-211/DPC Anexo 2-B preenchido em 2 vias oficiais.",
+        "Embarcação sem registro prévio perante a Capitania dos Portos.",
+      ],
+      totalPages: 2,
+      compatibleWithWatermark: true,
+    });
+
+    docs.push({
+      id: "doc_procuracao",
+      title: "Procuração Náutica",
+      fileName: "Procuracao-nautica.pdf",
+      service: "Inscrição de embarcação",
+      customerName,
+      vesselName,
+      requestText: `Pelo presente instrumento particular de procuração, o Outorgante ${customerName} nomeia e constitui seus bastantes procuradores para representar perante a Capitania dos Portos e órgãos da Autoridade Marítima, praticando todos os atos necessários para a inscrição da embarcação ${vesselName}.`,
+      observations: [
+        "Poderes específicos para protocolo e acompanhamento de processo marítimo.",
+        "Via original com reconhecimento de firma ou assinatura digital qualificada.",
+      ],
+      totalPages: 1,
+      compatibleWithWatermark: true,
+    });
+  }
+
+  // 2. TRANSFERÊNCIA
+  if (activeIds.includes("transferencia")) {
+    docs.push({
+      id: "doc_req_transf",
+      title: "Requerimento de Transferência",
+      fileName: "Requerimento-transferencia.pdf",
+      service: "Transferência de propriedade",
+      customerName,
+      vesselName,
+      requestText: `Solicito a averbação e emissão do novo Título de Inscrição em decorrência da transferência de propriedade da embarcação ${vesselName}, conforme contrato / autorização de transferência anexa.`,
+      observations: [
+        "Documentos anexados para conferência.",
+        "Qualquer informação adicional poderá ser solicitada durante a análise.",
+      ],
+      totalPages: 2,
+      compatibleWithWatermark: true,
+    });
+
+    docs.push({
+      id: "doc_decl_transf",
+      title: "Declaração de Transferência",
+      fileName: "Declaracao-transferencia.pdf",
+      service: "Transferência de propriedade",
+      customerName,
+      vesselName,
+      requestText: `Declaro para os devidos fins de transferência de propriedade que a embarcação ${vesselName} encontra-se livre e desembaraçada de quaisquer ônus perante a Capitania dos Portos.`,
+      observations: [
+        "Reconhecimento de firma em cartório ou assinatura digital ICP-Brasil.",
+        "Via original retida no processo de registro da Capitania.",
+      ],
+      totalPages: 2,
+      compatibleWithWatermark: true,
+    });
+  }
+
+  // 3. RENOVAÇÃO
+  if (activeIds.includes("renovacao")) {
+    docs.push({
+      id: "doc_req_renov",
+      title: "Requerimento de Renovação",
+      fileName: "Requerimento-renovacao.pdf",
+      service: "Renovação de documento",
+      customerName,
+      vesselName,
+      requestText: `Requeiro a renovação do TIE/TIEM da embarcação ${vesselName}, atestando a regularidade de seus equipamentos de salvatagem e segurança da navegação.`,
+      observations: [
+        "Taxa GRU correspondente anexa ao dossiê.",
+        "Validade anterior expirada nos termos da NORMAM-211/DPC.",
+      ],
+      totalPages: 1,
+      compatibleWithWatermark: true,
+    });
+
+    docs.push({
+      id: "doc_decl_renov",
+      title: "Declaração do Interessado",
+      fileName: "Declaracao-interessado.pdf",
+      service: "Renovação de documento",
+      customerName,
+      vesselName,
+      requestText: `Declaro que mantenho a embarcação ${vesselName} em perfeitas condições operacionais de acordo com as normas da Autoridade Marítima brasileira.`,
+      observations: [
+        "Termo de vistoria assinado pelo responsável técnico quando exigido.",
+        "Documento de porte obrigatório a bordo.",
+      ],
+      totalPages: 1,
+      compatibleWithWatermark: true,
+    });
+  }
+
+  // 4. ALTERAÇÃO DE MOTOR
+  if (activeIds.includes("alteracao_motor")) {
+    docs.push({
+      id: "doc_termo_motor",
+      title: "Termo de Responsabilidade Técnica (Motor)",
+      fileName: "Termo-responsabilidade-motor.pdf",
+      service: "Alteração de motor",
+      customerName,
+      vesselName,
+      requestText: `Responsabilizo-me pelas modificações executadas no sistema de propulsão e instalação do novo motor na embarcação ${vesselName}.`,
+      observations: [
+        "Nota fiscal de aquisição do novo motor validada como documento de entrada.",
+        "Anotação de Responsabilidade Técnica (ART) anexada quando aplicável.",
+      ],
+      totalPages: 2,
+      compatibleWithWatermark: true,
+    });
+  }
+
+  // Fallback caso não caia em nenhum dos conhecidos
+  if (docs.length === 0) {
+    docs.push({
+      id: "doc_req_padrao",
+      title: "Requerimento Padronizado",
+      fileName: "Requerimento-padronizado.pdf",
+      service: "Serviço Náutico",
+      customerName,
+      vesselName,
+      requestText: `Requeiro a análise e processamento do serviço referente à embarcação ${vesselName} de propriedade de ${customerName}.`,
+      observations: ["Documento padronizado para Capitania dos Portos."],
+      totalPages: 1,
+      compatibleWithWatermark: true,
+    });
+  }
+
+  return docs;
+}
 
 // Identidades visuais selecionáveis
 const AVAILABLE_IDENTITIES = [
@@ -213,11 +302,45 @@ const AVAILABLE_IDENTITIES = [
 
 export function VisualizarEditarPage() {
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const { user } = useAuth();
 
-  // Documento selecionado no carrossel (0 a 4)
-  const [currentDocIndex, setCurrentDocIndex] = useState(0);
-  const currentDoc = ORDER_DOCUMENTS[currentDocIndex] || ORDER_DOCUMENTS[0];
+  // Cliente e embarcação ativos informados no search do pedido
+  const resolvedCustomerName = useMemo(() => {
+    if (search.customerId && search.customerId === "prev-c2") return "Carlos Eduardo Ramos";
+    if (search.customerId && search.customerId === "prev-c1") return "Marina Costa";
+    if (search.customerId && !search.customerId.startsWith("prev-")) return "Cliente Confirmado";
+    return search.preview === "true" ? "Marina Costa" : "Cliente do Pedido";
+  }, [search.customerId, search.preview]);
+
+  const resolvedVesselName = useMemo(() => {
+    if (search.vesselId && search.vesselId === "prev-v3") return "Estrela do Mar";
+    if (search.vesselId && search.vesselId === "prev-v1") return "Mar Azul";
+    if (search.vesselId && !search.vesselId.startsWith("prev-")) return "Embarcação Confirmada";
+    return search.preview === "true" ? "Mar Azul" : "Embarcação do Pedido";
+  }, [search.vesselId, search.preview]);
+
+  const parsedServices = useMemo(() => {
+    if (search.services) {
+      return search.services.split(",").map(s => s.trim()).filter(Boolean);
+    }
+    return search.preview === "true" ? ["transferencia", "renovacao", "alteracao_motor"] : ["inscricao"];
+  }, [search.services, search.preview]);
+
+  const orderDocs = useMemo(() => {
+    return buildOrderDocuments(parsedServices, resolvedCustomerName, resolvedVesselName);
+  }, [parsedServices, resolvedCustomerName, resolvedVesselName]);
+
+  // Documento selecionado no carrossel
+  const [currentDocIndex, setCurrentDocIndex] = useState(() => {
+    if (search.docIndex !== undefined && search.docIndex >= 0) {
+      return Math.min(search.docIndex, 10);
+    }
+    return 0;
+  });
+
+  const validIndex = Math.min(Math.max(currentDocIndex, 0), Math.max(orderDocs.length - 1, 0));
+  const currentDoc = orderDocs[validIndex] || orderDocs[0];
 
   // Paginação interna do documento exibido (ex: 1 de 2)
   const [currentPage, setCurrentPage] = useState(1);
@@ -468,7 +591,16 @@ Emitido em ${new Date().toLocaleDateString("pt-BR")} às ${new Date().toLocaleTi
           <div>
             <button
               type="button"
-              onClick={() => navigate({ to: "/processes/novo-pedido", search: { preview: "true", step: "4" } })}
+              onClick={() => navigate({
+                to: "/processes/novo-pedido",
+                search: {
+                  preview: search.preview,
+                  step: "4",
+                  customerId: search.customerId,
+                  vesselId: search.vesselId,
+                  services: search.services,
+                }
+              })}
               className="text-xs font-semibold text-[#1868db] hover:text-[#1456b8] inline-flex items-center gap-1.5 cursor-pointer mb-1 transition-colors"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
@@ -557,15 +689,15 @@ Emitido em ${new Date().toLocaleDateString("pt-BR")} às ${new Date().toLocaleTi
           </Button>
 
           <div className="text-xs sm:text-sm font-bold text-[#0f1d36] text-center truncate px-2">
-            Documento {currentDocIndex + 1} de {ORDER_DOCUMENTS.length} ·{" "}
+            Documento {validIndex + 1} de {orderDocs.length} ·{" "}
             <span className="text-[#1868db]">{currentDoc.title}</span>
           </div>
 
           <Button
             type="button"
             variant="outline"
-            disabled={currentDocIndex === ORDER_DOCUMENTS.length - 1}
-            onClick={() => setCurrentDocIndex((prev) => Math.min(prev + 1, ORDER_DOCUMENTS.length - 1))}
+            disabled={validIndex === orderDocs.length - 1}
+            onClick={() => setCurrentDocIndex((prev) => Math.min(prev + 1, orderDocs.length - 1))}
             className="h-8 px-3 rounded-lg border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold flex items-center gap-1 cursor-pointer disabled:opacity-40 shadow-2xs"
           >
             <span className="hidden sm:inline">Próximo</span>
@@ -828,7 +960,16 @@ Emitido em ${new Date().toLocaleDateString("pt-BR")} às ${new Date().toLocaleTi
             <div className="text-center">
               <button
                 type="button"
-                onClick={() => navigate({ to: "/processes/novo-pedido", search: { preview: "true", step: "4" } })}
+                onClick={() => navigate({
+                  to: "/processes/novo-pedido",
+                  search: {
+                    preview: search.preview,
+                    step: "4",
+                    customerId: search.customerId,
+                    vesselId: search.vesselId,
+                    services: search.services,
+                  }
+                })}
                 className="text-xs font-semibold text-slate-500 hover:text-[#1868db] inline-flex items-center gap-1 cursor-pointer"
               >
                 <ArrowLeft className="h-3 w-3" />
