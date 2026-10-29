@@ -43,13 +43,14 @@ import type { WatermarkCustomOptions } from "@/services/brandedPdfBuilder";
 import { type CompanyBranding } from "@/services/companyBranding";
 
 export const Route = createFileRoute("/processes/visualizar-e-editar")({
-  validateSearch: (search: Record<string, unknown>): { orderId?: string; customerId?: string; vesselId?: string; preview?: string; docIndex?: number; services?: string } => ({
+  validateSearch: (search: Record<string, unknown>): { orderId?: string; customerId?: string; vesselId?: string; preview?: string; docIndex?: number; services?: string; docs?: string } => ({
     orderId: (search.orderId as string) || undefined,
     customerId: (search.customerId as string) || undefined,
     vesselId: (search.vesselId as string) || undefined,
     preview: (search.preview as string) || undefined,
     docIndex: search.docIndex ? Number(search.docIndex) : undefined,
     services: (search.services as string) || undefined,
+    docs: (search.docs as string) || undefined,
   }),
   component: VisualizarEditarPage,
 });
@@ -126,7 +127,8 @@ export type OrderDocument = {
 export function buildOrderDocuments(
   serviceIds: string[],
   customerName: string,
-  vesselName: string
+  vesselName: string,
+  explicitDocIds?: string[]
 ): OrderDocument[] {
   const docs: OrderDocument[] = [];
 
@@ -273,6 +275,156 @@ export function buildOrderDocuments(
     });
   }
 
+  // 5. SEGUNDA VIA DE DOCUMENTO
+  if (activeIds.includes("segunda_via")) {
+    docs.push({
+      id: "doc_req_segunda_via",
+      title: "Requerimento de 2ª Via de TIE/TIEM",
+      fileName: "Requerimento-segunda-via.pdf",
+      service: "Segunda via de documento",
+      customerName,
+      vesselName,
+      requestText: `Requeiro a expedição de 2ª via do Título de Inscrição da Embarcação (TIE/TIEM) ${vesselName}, tendo em vista o extravio/dano do documento original sob minha responsabilidade.`,
+      observations: [
+        "NORMAM-211/DPC Anexo 2-C / item 0214.",
+        "Instruído com declaração de extravio (Anexo 2-H) ou Boletim de Ocorrência.",
+      ],
+      totalPages: 1,
+      compatibleWithWatermark: true,
+    });
+
+    docs.push({
+      id: "doc_decl_perda",
+      title: "Declaração de Perda / Extravio",
+      fileName: "Declaracao-perda-extravio.pdf",
+      service: "Segunda via de documento",
+      customerName,
+      vesselName,
+      requestText: `Declaro sob as penas da lei (art. 299 do Código Penal) o extravio do documento físico original da embarcação ${vesselName}.`,
+      observations: [
+        "NORMAM-211/DPC Anexo 2-H oficial.",
+        "Assinatura com reconhecimento de firma ou certificado digital ICP-Brasil.",
+      ],
+      totalPages: 1,
+      compatibleWithWatermark: true,
+    });
+  }
+
+  // 6. VISTORIA
+  if (activeIds.includes("vistoria")) {
+    docs.push({
+      id: "doc_req_vistoria",
+      title: "Requerimento de Vistoria / Perícia Naval",
+      fileName: "Requerimento-vistoria.pdf",
+      service: "Vistoria",
+      customerName,
+      vesselName,
+      requestText: `Solicito a realização de vistoria naval na embarcação ${vesselName} para atesto das condições de habitabilidade, salvatagem e integridade do casco.`,
+      observations: [
+        "NORMAM-211/DPC Capítulo 3 e NORMAM-201/DPC.",
+        "Informar o local e endereço onde a embarcação estará disponível para os peritos.",
+      ],
+      totalPages: 2,
+      compatibleWithWatermark: true,
+    });
+  }
+
+  // 7. HABILITAÇÃO NÁUTICA (CHA)
+  if (activeIds.includes("habilitacao_cha")) {
+    docs.push({
+      id: "doc_req_cha",
+      title: "Requerimento de Habilitação de Amador (CHA)",
+      fileName: "Requerimento-habilitacao-cha.pdf",
+      service: "Emissão / Renovação de CHA",
+      customerName,
+      vesselName: vesselName || "Não aplicável (Serviço Pessoal)",
+      requestText: `Solicito a emissão/renovação da Carteira de Habilitação de Amador (CHA) em favor de ${customerName}, cumpridos os requisitos da Autoridade Marítima.`,
+      observations: [
+        "NORMAM-211/DPC Capítulo 5.",
+        "Acompanha atestado médico comprobatório de aptidão psicofísica.",
+      ],
+      totalPages: 1,
+      compatibleWithWatermark: true,
+    });
+  }
+
+  // 8. ALTERAÇÃO CADASTRAL
+  if (activeIds.includes("alteracao_cadastral")) {
+    docs.push({
+      id: "doc_req_alteracao_cadastral",
+      title: "Requerimento de Alteração Cadastral",
+      fileName: "Requerimento-alteracao-cadastral.pdf",
+      service: "Alteração Cadastral",
+      customerName,
+      vesselName: vesselName || "Todas vinculadas",
+      requestText: `Solicito a atualização dos dados cadastrais e de endereço do proprietário ${customerName} perante a Capitania dos Portos.`,
+      observations: [
+        "NORMAM-211/DPC item 0213.",
+        "Acompanhado de comprovante de residência atualizado em nome do interessado.",
+      ],
+      totalPages: 1,
+      compatibleWithWatermark: true,
+    });
+  }
+
+  // 9. DESPACHO DE SAÍDA / ENTRADA
+  if (activeIds.includes("despacho_porto")) {
+    docs.push({
+      id: "doc_comunicacao_despacho",
+      title: "Comunicação de Saída / Despacho",
+      fileName: "Comunicacao-despacho-saida.pdf",
+      service: "Despacho de Saída / Entrada",
+      customerName,
+      vesselName,
+      requestText: `Comunico a saída da embarcação ${vesselName} sob comando responsável, informando porto de destino, data prevista de retorno e rol de navegantes a bordo.`,
+      observations: [
+        "NORMAM-211/DPC Capítulo 4.",
+        "Apresentação obrigatória do TIE e habilitação náutica do comandante.",
+      ],
+      totalPages: 1,
+      compatibleWithWatermark: true,
+    });
+  }
+
+  // Modelos específicos por tipo de embarcação na inscrição:
+  // Moto Aquática
+  if (activeIds.includes("inscricao") && explicitDocIds && explicitDocIds.includes("doc_req_moto_aquatica")) {
+    docs.push({
+      id: "doc_req_moto_aquatica",
+      title: "Requerimento Específico para Moto Aquática (Jet Ski)",
+      fileName: "Requerimento-moto-aquatica.pdf",
+      service: "Inscrição de embarcação",
+      customerName,
+      vesselName,
+      requestText: `Solicito a inscrição / cadastro da moto aquática ${vesselName} perante a Capitania dos Portos com base na NORMAM-212/DPC.`,
+      observations: [
+        "NORMAM-212/DPC Anexo 2-A / Anexo 3-B oficial.",
+        "Dados do número de casco (HIN) e propulsão a hidrojato.",
+      ],
+      totalPages: 2,
+      compatibleWithWatermark: true,
+    });
+  }
+
+  // Embarcação Comercial / Profissional
+  if (activeIds.includes("inscricao") && explicitDocIds && explicitDocIds.includes("doc_req_comercial")) {
+    docs.push({
+      id: "doc_req_comercial",
+      title: "Requerimento de Embarcação Comercial / Profissional",
+      fileName: "Requerimento-embarcacao-comercial.pdf",
+      service: "Inscrição de embarcação",
+      customerName,
+      vesselName,
+      requestText: `Solicito a inscrição e enquadramento comercial da embarcação profissional ${vesselName} perante a Capitania dos Portos com esteio na NORMAM-201/DPC.`,
+      observations: [
+        "NORMAM-201/DPC Anexo 2-A e Anexo 2-E.",
+        "Exige autorização de atividade comercial e registro do armador.",
+      ],
+      totalPages: 2,
+      compatibleWithWatermark: true,
+    });
+  }
+
   // Fallback caso não caia em nenhum dos conhecidos
   if (docs.length === 0) {
     docs.push({
@@ -287,6 +439,12 @@ export function buildOrderDocuments(
       totalPages: 1,
       compatibleWithWatermark: true,
     });
+  }
+
+  // Se houver seleção explícita de documentos, filtra rigorosamente
+  if (explicitDocIds && explicitDocIds.length > 0) {
+    const filtered = docs.filter(d => explicitDocIds.includes(d.id));
+    return filtered.length > 0 ? filtered : docs;
   }
 
   return docs;
@@ -327,9 +485,16 @@ export function VisualizarEditarPage() {
     return search.preview === "true" ? ["transferencia", "renovacao", "alteracao_motor"] : ["inscricao"];
   }, [search.services, search.preview]);
 
+  const parsedDocIds = useMemo(() => {
+    if (search.docs) {
+      return search.docs.split(",").map(d => d.trim()).filter(Boolean);
+    }
+    return undefined;
+  }, [search.docs]);
+
   const orderDocs = useMemo(() => {
-    return buildOrderDocuments(parsedServices, resolvedCustomerName, resolvedVesselName);
-  }, [parsedServices, resolvedCustomerName, resolvedVesselName]);
+    return buildOrderDocuments(parsedServices, resolvedCustomerName, resolvedVesselName, parsedDocIds);
+  }, [parsedServices, resolvedCustomerName, resolvedVesselName, parsedDocIds]);
 
   // Documento selecionado no carrossel
   const [currentDocIndex, setCurrentDocIndex] = useState(() => {

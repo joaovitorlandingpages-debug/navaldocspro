@@ -5,7 +5,7 @@ import {
   AlertCircle, Upload, Sparkles, User, Award, FileSpreadsheet,
   UserCheck, Anchor, Loader2, ArrowRight, Pencil, ChevronDown,
   ChevronUp, Plus, Building2, CheckSquare, Eye, Clock, AlertTriangle,
-  FolderOpen, ExternalLink, RefreshCw, Layers
+  FolderOpen, ExternalLink, RefreshCw, Layers, Shield, FileSignature, Paperclip
 } from "lucide-react";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -170,6 +170,401 @@ export interface ExtractedFieldItem {
   page: number;
   isCritical?: boolean;
 }
+
+export type OutputDocAction = "gerar" | "anexar" | "ignorar";
+
+export interface OutputDocRequirementItem {
+  id: string;
+  name: string;
+  isProtocolOnly: boolean; // Se false: necessário para preencher PDF; se true: exigido apenas para protocolo
+  why: string;
+  sharedWithDocIds?: string[];
+}
+
+export interface OutputDocumentConfig {
+  id: string;
+  name: string;
+  serviceId: string;
+  serviceName: string;
+  documentType: "official_form" | "platform_generated";
+  officialSource: string;
+  sourceUrl: string;
+  editionDate: string;
+  purpose: string;
+  signerRole: string;
+  personalDataFields: { name: string; found: boolean; value?: string }[];
+  vesselDataFields: { name: string; found: boolean; value?: string }[];
+  attachments: OutputDocRequirementItem[];
+}
+
+export const OUTPUT_DOCS_CATALOG: OutputDocumentConfig[] = [
+  {
+    id: "doc_req_inscricao",
+    name: "Requerimento de Inscrição Inicial de Embarcação",
+    serviceId: "inscricao",
+    serviceName: "Inscrição de embarcação",
+    documentType: "official_form",
+    officialSource: "NORMAM-211/DPC, Anexo 2-C (Portaria DPC/MB nº 115/2023 consolidada 2026)",
+    sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
+    editionDate: "Vigente (Atualizada 2026)",
+    purpose: "Formalizar o pedido oficial de inscrição da embarcação perante a Capitania, Delegacia ou Agência da Marinha.",
+    signerRole: "Proprietário Requerente (ou Procurador constituído)",
+    personalDataFields: [
+      { name: "Nome Completo do Proprietário", found: true },
+      { name: "CPF / CNPJ", found: true },
+      { name: "RG e Órgão Emissor", found: true },
+      { name: "Endereço Residencial Completo com CEP", found: true },
+      { name: "Telefone e E-mail", found: true },
+    ],
+    vesselDataFields: [
+      { name: "Nome Pretendido da Embarcação", found: true },
+      { name: "Tipo / Classificação / Atividade", found: true },
+      { name: "Área de Navegação (Interior/Mar Aberto)", found: true },
+      { name: "Comprimento e Arqueação", found: true },
+    ],
+    attachments: [
+      { id: "doc-nf-casco", name: "Nota Fiscal do Casco / Declaração de Construção", isProtocolOnly: false, why: "Preenche número da NF e estaleiro construtor no formulário", sharedWithDocIds: ["doc_bsade"] },
+      { id: "doc-nf-motor-inscricao", name: "Nota Fiscal do Motor", isProtocolOnly: false, why: "Preenche marca, potência e número de série da propulsão", sharedWithDocIds: ["doc_bsade"] },
+      { id: "doc-id-proprietario", name: "Documento de Identidade do Proprietário (RG/CNH)", isProtocolOnly: false, why: "Qualificação civil completa no cabeçalho do requerimento", sharedWithDocIds: ["doc_procuracao"] },
+      { id: "doc-comp-residencia", name: "Comprovante de Residência", isProtocolOnly: false, why: "Endereço e comarca da autoridade de registro" },
+      { id: "doc-fotos-embarcacao", name: "Fotografias da Embarcação (costado e popa)", isProtocolOnly: true, why: "Exigência de protocolo da Capitania para conferência visual do nome e porto gravados" },
+    ],
+  },
+  {
+    id: "doc_bsade",
+    name: "Boletim de Simplificação e Atualização de Dados (BSADE)",
+    serviceId: "inscricao",
+    serviceName: "Inscrição de embarcação",
+    documentType: "official_form",
+    officialSource: "NORMAM-211/DPC, Anexo 2-B (Portaria DPC/MB)",
+    sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
+    editionDate: "Vigente (Atualizada 2026)",
+    purpose: "Registrar as características técnicas estruturais, dimensões, arqueação, sistema de propulsão e lotação da embarcação em 2 vias.",
+    signerRole: "Proprietário ou Responsável Legal",
+    personalDataFields: [
+      { name: "Nome do Proprietário", found: true },
+      { name: "CPF / CNPJ", found: true },
+    ],
+    vesselDataFields: [
+      { name: "Comprimento total, Boca, Pontal e Calado", found: true },
+      { name: "Arqueação Bruta e Líquida", found: true },
+      { name: "Ano de Construção e Estaleiro", found: true },
+      { name: "Quantidade de Motores, Marca, Potência e Série", found: true },
+      { name: "Lotação autorizada (tripulantes + passageiros)", found: true },
+    ],
+    attachments: [
+      { id: "doc-nf-casco", name: "Nota Fiscal do Casco", isProtocolOnly: false, why: "Extração de dimensões e número de série do fabricante", sharedWithDocIds: ["doc_req_inscricao"] },
+      { id: "doc-nf-motor-inscricao", name: "Nota Fiscal do Motor", isProtocolOnly: false, why: "Extração de potência (HP) e série do propulsor", sharedWithDocIds: ["doc_req_inscricao"] },
+    ],
+  },
+  {
+    id: "doc_procuracao",
+    name: "Instrumento Particular de Procuração Náutica",
+    serviceId: "inscricao",
+    serviceName: "Inscrição de embarcação",
+    documentType: "platform_generated",
+    officialSource: "Código Civil (Lei nº 10.406/2002, art. 653) c/c NORMAM-211/DPC item 0205",
+    sourceUrl: "https://www.planalto.gov.br/ccivil_03/leis/2002/l10406compilada.htm",
+    editionDate: "Lei Federal consolidada",
+    purpose: "Conferir poderes expressos ao despachante/representante para atuar perante a Capitania dos Portos no processo de inscrição.",
+    signerRole: "Outorgante (Proprietário da Embarcação)",
+    personalDataFields: [
+      { name: "Nome do Outorgante", found: true },
+      { name: "CPF e RG do Outorgante", found: true },
+      { name: "Endereço Completo", found: true },
+      { name: "Qualificação do Outorgado (Despachante)", found: true },
+    ],
+    vesselDataFields: [
+      { name: "Identificação da Embarcação Objeto do Mandato", found: true },
+    ],
+    attachments: [
+      { id: "doc-id-proprietario", name: "Documento de Identidade do Outorgante", isProtocolOnly: false, why: "Qualificação do mandante no instrumento", sharedWithDocIds: ["doc_req_inscricao"] },
+    ],
+  },
+  {
+    id: "doc_req_transf",
+    name: "Requerimento de Transferência de Propriedade",
+    serviceId: "transferencia",
+    serviceName: "Transferência de propriedade",
+    documentType: "official_form",
+    officialSource: "NORMAM-211/DPC, Anexo 2-C / item 0208",
+    sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
+    editionDate: "Vigente (Atualizada 2026)",
+    purpose: "Solicitar averbação de novo adquirente e emissão do novo TIE/TIEM.",
+    signerRole: "Adquirente (Comprador) e/ou Vendedor",
+    personalDataFields: [
+      { name: "Qualificação do Adquirente", found: true },
+      { name: "Qualificação do Transmitente (Vendedor)", found: true },
+    ],
+    vesselDataFields: [
+      { name: "Nome e Número de Inscrição (TIE)", found: true },
+      { name: "Porto de Inscrição", found: true },
+    ],
+    attachments: [
+      { id: "doc-embarcacao-transf", name: "Documento da Embarcação (TIE anterior)", isProtocolOnly: false, why: "Conferência do número de inscrição e titularidade anterior", sharedWithDocIds: ["doc_decl_transf"] },
+      { id: "doc-comprador", name: "Documento de Identificação do Comprador", isProtocolOnly: false, why: "Qualificação civil do novo proprietário", sharedWithDocIds: ["doc_decl_transf"] },
+      { id: "doc-vendedor", name: "Documento de Identificação do Vendedor", isProtocolOnly: false, why: "Validação da firma transmitente", sharedWithDocIds: ["doc_decl_transf"] },
+    ],
+  },
+  {
+    id: "doc_decl_transf",
+    name: "Termo de Entrega e Declaração de Responsabilidade",
+    serviceId: "transferencia",
+    serviceName: "Transferência de propriedade",
+    documentType: "official_form",
+    officialSource: "NORMAM-211/DPC, Anexo 2-M",
+    sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
+    editionDate: "Vigente (Atualizada 2026)",
+    purpose: "Formalizar a entrega da embarcação, assunção de guarda, responsabilidade civil e marítima pelo adquirente.",
+    signerRole: "Transmitente e Adquirente",
+    personalDataFields: [
+      { name: "Identificação das Partes", found: true },
+    ],
+    vesselDataFields: [
+      { name: "Dados da Embarcação Transacionada", found: true },
+    ],
+    attachments: [
+      { id: "doc-embarcacao-transf", name: "TIE da Embarcação", isProtocolOnly: false, why: "Vinculação formal da embarcação", sharedWithDocIds: ["doc_req_transf"] },
+    ],
+  },
+  {
+    id: "doc_req_renov",
+    name: "Requerimento de Renovação de TIE/TIEM",
+    serviceId: "renovacao",
+    serviceName: "Renovação de documento",
+    documentType: "official_form",
+    officialSource: "NORMAM-211/DPC, Anexo 2-C / item 0212",
+    sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
+    editionDate: "Vigente (Atualizada 2026)",
+    purpose: "Solicitar nova via de documento de inscrição com prazo de validade prorrogado.",
+    signerRole: "Proprietário Requerente",
+    personalDataFields: [
+      { name: "Nome e Documento do Proprietário", found: true },
+    ],
+    vesselDataFields: [
+      { name: "Nome, Inscrição e Validade Anterior", found: true },
+    ],
+    attachments: [
+      { id: "doc-embarcacao-renov", name: "TIE/TIEM Vencido ou a Vencer", isProtocolOnly: false, why: "Registro dos dados anteriores para renovação", sharedWithDocIds: ["doc_decl_renov"] },
+    ],
+  },
+  {
+    id: "doc_decl_renov",
+    name: "Declaração de Manutenção e Condições Operacionais",
+    serviceId: "renovacao",
+    serviceName: "Renovação de documento",
+    documentType: "platform_generated",
+    officialSource: "NORMAM-211/DPC, item 0212 c/c Lei Federal nº 7.115/1983",
+    sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
+    editionDate: "Vigente (Atualizada 2026)",
+    purpose: "Declaração de que a embarcação mantém inalteradas as especificações de salvatagem e integridade estrutural.",
+    signerRole: "Proprietário ou Responsável Operacional",
+    personalDataFields: [
+      { name: "Nome e CPF do Declarante", found: true },
+    ],
+    vesselDataFields: [
+      { name: "Dados de Inscrição da Embarcação", found: true },
+    ],
+    attachments: [
+      { id: "doc-embarcacao-renov", name: "TIE/TIEM da Embarcação", isProtocolOnly: false, why: "Conferência cadastral", sharedWithDocIds: ["doc_req_renov"] },
+    ],
+  },
+  {
+    id: "doc_termo_motor",
+    name: "Requerimento de Alteração de Motor e Termo de Responsabilidade",
+    serviceId: "alteracao_motor",
+    serviceName: "Alteração de motor",
+    documentType: "official_form",
+    officialSource: "NORMAM-211/DPC, item 0210 e Anexo 2-C",
+    sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
+    editionDate: "Vigente (Atualizada 2026)",
+    purpose: "Averbar a substituição do motor de propulsão e registrar nova potência/série no TIE.",
+    signerRole: "Proprietário e Responsável Técnico",
+    personalDataFields: [
+      { name: "Qualificação do Requerente", found: true },
+    ],
+    vesselDataFields: [
+      { name: "Embarcação e Dados do Novo Motor", found: true },
+    ],
+    attachments: [
+      { id: "doc-motor-alt", name: "Nota Fiscal do Novo Motor", isProtocolOnly: false, why: "Comprovação de aquisição legítima e especificações técnicas" },
+    ],
+  },
+  {
+    id: "doc_req_segunda_via",
+    name: "Requerimento de Segunda Via de Documento Náutico",
+    serviceId: "segunda_via",
+    serviceName: "Segunda via de documento",
+    documentType: "official_form",
+    officialSource: "NORMAM-211/DPC, Anexo 2-C / item 0214",
+    sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
+    editionDate: "Vigente (Atualizada 2026)",
+    purpose: "Solicitar 2ª via de TIE/TIEM por perda, extravio, furto, roubo ou dano do documento original.",
+    signerRole: "Proprietário Requerente",
+    personalDataFields: [
+      { name: "Nome Completo do Proprietário", found: true },
+      { name: "CPF / CNPJ", found: true },
+    ],
+    vesselDataFields: [
+      { name: "Nome e Número de Inscrição da Embarcação", found: true },
+    ],
+    attachments: [
+      { id: "doc-bo-extravio", name: "Boletim de Ocorrência (BO) ou Declaração Anexo 2-H", isProtocolOnly: false, why: "Comprovação formal do motivo de extravio ou perda perante a autoridade" },
+      { id: "doc-id-proprietario", name: "Documento de Identidade do Proprietário", isProtocolOnly: false, why: "Qualificação civil do titular", sharedWithDocIds: ["doc_decl_perda"] },
+    ],
+  },
+  {
+    id: "doc_decl_perda",
+    name: "Declaração de Perda / Extravio de Documento Náutico",
+    serviceId: "segunda_via",
+    serviceName: "Segunda via de documento",
+    documentType: "official_form",
+    officialSource: "NORMAM-211/DPC, Anexo 2-H (Portaria DPC/MB nº 115/2023)",
+    sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
+    editionDate: "Vigente (Atualizada 2026)",
+    purpose: "Declarar formalmente sob as penas da lei a perda acidental ou extravio de documento náutico físico.",
+    signerRole: "Proprietário Declarante",
+    personalDataFields: [
+      { name: "Nome e CPF do Declarante", found: true },
+      { name: "Endereço Residencial Completo", found: true },
+    ],
+    vesselDataFields: [
+      { name: "Identificação da Embarcação e Documento Extraviado", found: true },
+    ],
+    attachments: [
+      { id: "doc-id-proprietario", name: "Documento de Identidade do Proprietário", isProtocolOnly: false, why: "Validação da firma declarante", sharedWithDocIds: ["doc_req_segunda_via"] },
+    ],
+  },
+  {
+    id: "doc_req_vistoria",
+    name: "Requerimento de Vistoria / Perícia Naval",
+    serviceId: "vistoria",
+    serviceName: "Vistoria",
+    documentType: "official_form",
+    officialSource: "NORMAM-211/DPC, Capítulo 3 / NORMAM-201/DPC item 0302",
+    sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
+    editionDate: "Vigente (Atualizada 2026)",
+    purpose: "Solicitar vistoria inicial, de renovação ou pericial da Capitania dos Portos.",
+    signerRole: "Requerente ou Responsável Técnico",
+    personalDataFields: [
+      { name: "Qualificação do Interessado", found: true },
+    ],
+    vesselDataFields: [
+      { name: "Dados Técnicos e Local para Inspeção", found: true },
+    ],
+    attachments: [
+      { id: "doc-tie-vistoria", name: "TIE/TIEM ou Documento de Aquisição", isProtocolOnly: false, why: "Identificação formal da embarcação a ser inspecionada" },
+      { id: "doc-laudo-art", name: "ART / Laudo Prévio de Engenharia Naval", isProtocolOnly: true, why: "Exigência de protocolo para embarcações que demandam ART do CREA" },
+    ],
+  },
+  {
+    id: "doc_req_moto_aquatica",
+    name: "Requerimento Específico para Moto Aquática (Jet Ski)",
+    serviceId: "inscricao",
+    serviceName: "Inscrição de embarcação",
+    documentType: "official_form",
+    officialSource: "NORMAM-212/DPC, Anexo 2-A / Anexo 3-B",
+    sourceUrl: "https://www.marinha.mil.br/dpc/normam-212",
+    editionDate: "Vigente (Atualizada 2026)",
+    purpose: "Formulário oficial para motonáutica contendo especificações técnicas de propulsão a jato de água.",
+    signerRole: "Proprietário Requerente",
+    personalDataFields: [
+      { name: "Qualificação do Requerente", found: true },
+    ],
+    vesselDataFields: [
+      { name: "Marca/Modelo, Nº do Casco (HIN) e Potência", found: true },
+    ],
+    attachments: [
+      { id: "doc-nf-casco", name: "Nota Fiscal da Moto Aquática", isProtocolOnly: false, why: "Extração do número HIN e potência do motor", sharedWithDocIds: ["doc_req_inscricao"] },
+    ],
+  },
+  {
+    id: "doc_req_comercial",
+    name: "Requerimento para Embarcação Profissional / Comercial",
+    serviceId: "inscricao",
+    serviceName: "Inscrição de embarcação",
+    documentType: "official_form",
+    officialSource: "NORMAM-201/DPC, Anexo 2-A / Anexo 2-E",
+    sourceUrl: "https://www.marinha.mil.br/dpc/normam-201",
+    editionDate: "Vigente (Atualizada 2026)",
+    purpose: "Inscrição e regularização de embarcação comercial (pesca, transporte, carga, turismo) na Capitania.",
+    signerRole: "Armador ou Representante Legal",
+    personalDataFields: [
+      { name: "Razão Social e CNPJ ou Nome do Armador", found: true },
+    ],
+    vesselDataFields: [
+      { name: "Atividade Comercial, Arqueação e Lotação Profissional", found: true },
+    ],
+    attachments: [
+      { id: "doc-contrato-social", name: "Contrato Social / Cartão CNPJ", isProtocolOnly: false, why: "Comprovação da pessoa jurídica armadora" },
+      { id: "doc-nf-casco", name: "Nota Fiscal da Embarcação Comercial", isProtocolOnly: false, why: "Comprovação de aquisição e estaleiro", sharedWithDocIds: ["doc_req_inscricao"] },
+    ],
+  },
+  {
+    id: "doc_req_cha",
+    name: "Requerimento para Habilitação Náutica de Amador (CHA)",
+    serviceId: "habilitacao_cha",
+    serviceName: "Emissão / Renovação de CHA",
+    documentType: "official_form",
+    officialSource: "NORMAM-211/DPC, Capítulo 5 (Amadores)",
+    sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
+    editionDate: "Vigente (Atualizada 2026)",
+    purpose: "Solicitar exame, emissão ou renovação da Carteira de Habilitação de Amador (Arrais/Mestre/Capitão).",
+    signerRole: "Candidato / Amador Requerente",
+    personalDataFields: [
+      { name: "Nome Completo do Candidato", found: true },
+      { name: "CPF e RG", found: true },
+      { name: "Categoria Amadora Solicitada", found: true },
+    ],
+    vesselDataFields: [],
+    attachments: [
+      { id: "doc-atestado-medico", name: "Atestado Médico / Exame de Aptidão Física", isProtocolOnly: true, why: "Exigência de protocolo comprovando aptidão visual e motora" },
+      { id: "doc-id-proprietario", name: "RG e CPF do Amador", isProtocolOnly: false, why: "Qualificação no requerimento de habilitação" },
+    ],
+  },
+  {
+    id: "doc_req_alteracao_cadastral",
+    name: "Requerimento de Alteração Cadastral do Proprietário",
+    serviceId: "alteracao_cadastral",
+    serviceName: "Alteração Cadastral",
+    documentType: "official_form",
+    officialSource: "NORMAM-211/DPC, Anexo 2-C / item 0213",
+    sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
+    editionDate: "Vigente (Atualizada 2026)",
+    purpose: "Averbar mudança de endereço residencial ou dados civis do proprietário nos registros da Marinha.",
+    signerRole: "Proprietário Requerente",
+    personalDataFields: [
+      { name: "Nome do Titular e Novo Endereço", found: true },
+    ],
+    vesselDataFields: [
+      { name: "Embarcações Vinculadas ao Titular", found: true },
+    ],
+    attachments: [
+      { id: "doc-comp-residencia", name: "Novo Comprovante de Residência", isProtocolOnly: false, why: "Comprovação do novo endereço a ser averbado" },
+    ],
+  },
+  {
+    id: "doc_comunicacao_despacho",
+    name: "Comunicação de Saída / Despacho na Capitania",
+    serviceId: "despacho_porto",
+    serviceName: "Despacho de Saída / Entrada",
+    documentType: "official_form",
+    officialSource: "NORMAM-211/DPC, Capítulo 4 / NORMAM-201/DPC",
+    sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
+    editionDate: "Vigente (Atualizada 2026)",
+    purpose: "Comunicação prévia de tráfego, trajeto e rol de pessoas a bordo perante a Capitania dos Portos.",
+    signerRole: "Comandante / Mestre da Embarcação",
+    personalDataFields: [
+      { name: "Nome do Comandante e Nº da Habilitação", found: true },
+    ],
+    vesselDataFields: [
+      { name: "Embarcação, Porto de Saída e Destino", found: true },
+    ],
+    attachments: [
+      { id: "doc-tie-orig", name: "TIE/TIEM da Embarcação", isProtocolOnly: false, why: "Comprovação de regularidade documental da embarcação navegando" },
+    ],
+  },
+];
 
 export interface OrderDocumentRequirement {
   id: string;
@@ -553,6 +948,22 @@ function NovoPedidoPage() {
   const [isNewVesselModalOpen, setIsNewVesselModalOpen] = useState(false);
   const [isNewBuyerModalOpen, setIsNewBuyerModalOpen] = useState(false);
 
+  // Controle de Ações de Documentos de Saída (Gerar / Anexar / Ignorar)
+  const [outputDocActions, setOutputDocActions] = useState<Record<string, OutputDocAction>>(() => {
+    const initial: Record<string, OutputDocAction> = {};
+    OUTPUT_DOCS_CATALOG.forEach(doc => {
+      initial[doc.id] = "gerar";
+    });
+    return initial;
+  });
+
+  const setDocAction = (docId: string, action: OutputDocAction) => {
+    setOutputDocActions(prev => ({
+      ...prev,
+      [docId]: action,
+    }));
+  };
+
   // Estados da Etapa 3: Documentos
   const [requirements, setRequirements] = useState<OrderDocumentRequirement[]>(() => {
     return getDynamicOrderRequirements(
@@ -563,7 +974,7 @@ function NovoPedidoPage() {
     );
   });
   const [documentFilter, setDocumentFilter] = useState<"todos" | "recebidos" | "falta_enviar" | "conferir">("todos");
-  const [showOutputFiles, setShowOutputFiles] = useState(false);
+  const [showOutputFiles, setShowOutputFiles] = useState(true);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedReviewReq, setSelectedReviewReq] = useState<OrderDocumentRequirement | null>(null);
   const [viewModalOpen, setViewModalOpen] = useState(false);
@@ -774,18 +1185,24 @@ function NovoPedidoPage() {
     return SERVICES_CATALOG.filter(s => selectedServiceIds.includes(s.id));
   }, [selectedServiceIds]);
 
-  // Total de arquivos previstos a serem gerados no pedido
+  // Modelos de saída aplicáveis aos serviços selecionados
+  const applicableOutputDocs = useMemo(() => {
+    return OUTPUT_DOCS_CATALOG.filter(doc => selectedServiceIds.includes(doc.serviceId));
+  }, [selectedServiceIds]);
+
+  // Documentos que estão marcados como 'gerar' pelo sistema
+  const activeGeneratingDocs = useMemo(() => {
+    return applicableOutputDocs.filter(doc => (outputDocActions[doc.id] || "gerar") === "gerar");
+  }, [applicableOutputDocs, outputDocActions]);
+
+  const activeGeneratingDocIds = useMemo(() => {
+    return activeGeneratingDocs.map(d => d.id);
+  }, [activeGeneratingDocs]);
+
+  // Total de arquivos previstos a serem gerados no pedido (exclusivamente os selecionados com "gerar")
   const totalOutputFilesCount = useMemo(() => {
-    let count = 0;
-    selectedServices.forEach(s => {
-      if (s.id === "inscricao") count += 3; // Requerimento Inscrição (2-C), BSADE (2-B), Procuração
-      else if (s.id === "transferencia") count += 2;
-      else if (s.id === "renovacao") count += 1;
-      else if (s.id === "alteracao_motor") count += 2;
-      else count += 1;
-    });
-    return count;
-  }, [selectedServices]);
+    return activeGeneratingDocs.length;
+  }, [activeGeneratingDocs]);
 
   // Verifica se algum serviço selecionado exige embarcação
   const requiresVessel = useMemo(() => {
@@ -899,6 +1316,7 @@ function NovoPedidoPage() {
           customerId: selectedCustomerId || undefined,
           vesselId: selectedVesselId || undefined,
           services: selectedServiceIds.join(",") || undefined,
+          docs: activeGeneratingDocIds.join(",") || undefined,
         },
       });
     } catch (err) {
@@ -1823,70 +2241,309 @@ function NovoPedidoPage() {
               onChange={handleFileUpload}
             />
 
-            {/* SEÇÃO EXPANSÍVEL: O QUE SERÁ GERADO */}
-            <div className="border border-slate-200/80 rounded-xl overflow-hidden bg-slate-50/40">
-              <button
-                type="button"
-                onClick={() => setShowOutputFiles(!showOutputFiles)}
-                className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-100/60 transition-colors cursor-pointer text-left select-none"
-              >
-                <div className="flex items-center gap-2.5">
-                  <FileSpreadsheet className="h-4 w-4 text-[#1868db]" />
-                  <span className="font-bold text-xs sm:text-sm text-[#0f1d36]">
-                    O que será gerado neste pedido ({totalOutputFilesCount} arquivos previstos)
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-[#1868db] font-semibold">
-                  <span>{showOutputFiles ? "Ocultar" : "Ver arquivos"}</span>
-                  {showOutputFiles ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </div>
-              </button>
-
-              {showOutputFiles && (
-                <div className="p-4 pt-2 border-t border-slate-200/80 space-y-3 bg-white text-xs animate-in fade-in-50 duration-150">
-                  <p className="text-[11px] text-slate-500">
-                    Com base nos serviços selecionados e dados confirmados, os seguintes documentos oficiais serão montados para protocolo:
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {selectedServices.map((service) => (
-                      <div key={service.id} className="p-3 rounded-xl border border-slate-200 bg-slate-50/50 space-y-1.5">
-                        <h5 className="font-bold text-xs text-[#0f1d36] flex items-center gap-1.5">
-                          <service.icon className="h-3.5 w-3.5 text-[#1868db]" />
-                          <span>{service.shortName}</span>
-                        </h5>
-                        <ul className="text-[11px] text-slate-600 space-y-1 pl-1">
-                          {service.id === "inscricao" && (
-                            <>
-                              <li>• Requerimento de Inscrição (NORMAM-211 Anexo 2-C)</li>
-                              <li>• BSADE Preenchido (NORMAM-211 Anexo 2-B)</li>
-                              <li>• Procuração Específica para Capitania</li>
-                            </>
-                          )}
-                          {service.id === "transferencia" && (
-                            <>
-                              <li>• Requerimento de Transferência</li>
-                              <li>• Termo de Entrega e Responsabilidade</li>
-                            </>
-                          )}
-                          {service.id === "renovacao" && (
-                            <>
-                              <li>• Requerimento de Renovação TIE/TIEM</li>
-                            </>
-                          )}
-                          {service.id === "alteracao_motor" && (
-                            <>
-                              <li>• Requerimento de Alteração de Dados</li>
-                              <li>• Termo de Responsabilidade Técnica</li>
-                            </>
-                          )}
-                          {!["inscricao", "transferencia", "renovacao", "alteracao_motor"].includes(service.id) && (
-                            <li>• Requerimento Padronizado Capitania</li>
-                          )}
-                        </ul>
-                      </div>
-                    ))}
+            {/* SEÇÃO DINÂMICA: SELEÇÃO E CONTROLE DOCUMENTO POR DOCUMENTO */}
+            <div className="border border-slate-200/90 rounded-2xl overflow-hidden bg-white shadow-2xs space-y-4 p-5 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <FileSignature className="h-5 w-5 text-[#1868db]" />
+                    <h3 className="font-bold text-sm sm:text-base text-[#0f1d36]">
+                      Documentos de Saída do Pedido ({totalOutputFilesCount} selecionados para geração)
+                    </h3>
                   </div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Defina o destino de cada documento individualmente. Apenas os marcados como <strong>Gerar pelo sistema</strong> serão gerados.
+                  </p>
                 </div>
+                <Badge className="self-start sm:self-auto bg-blue-50 text-[#1868db] border-blue-200 text-xs font-semibold px-2.5 py-1">
+                  {totalOutputFilesCount} de {applicableOutputDocs.length} a gerar
+                </Badge>
+              </div>
+
+              {/* LISTA DE MODELOS COM OS 3 CONTROLES */}
+              <div className="grid grid-cols-1 gap-3.5 pt-1">
+                {applicableOutputDocs.map((doc) => {
+                  const currentAction = outputDocActions[doc.id] || "gerar";
+                  return (
+                    <div
+                      key={doc.id}
+                      className={cn(
+                        "rounded-xl border p-4 transition-all",
+                        currentAction === "gerar"
+                          ? "border-[#1868db]/30 bg-blue-50/20 shadow-2xs"
+                          : currentAction === "anexar"
+                          ? "border-amber-200 bg-amber-50/20"
+                          : "border-slate-200/60 bg-slate-50/40 opacity-75"
+                      )}
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="space-y-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-bold text-xs sm:text-sm text-[#0f1d36]">
+                              {doc.name}
+                            </span>
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "text-[10px] font-semibold px-2 py-0.5",
+                                doc.documentType === "official_form"
+                                  ? "bg-slate-100 text-slate-700 border-slate-200"
+                                  : "bg-indigo-50 text-indigo-700 border-indigo-200"
+                              )}
+                            >
+                              {doc.documentType === "official_form" ? "Formulário Oficial da Marinha" : "Documento Próprio da Plataforma"}
+                            </Badge>
+                            <span className="text-[11px] text-slate-400">· {doc.serviceName}</span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 line-clamp-1">
+                            Fonte oficial: <span className="font-medium text-slate-600">{doc.officialSource}</span> · {doc.editionDate}
+                          </p>
+                        </div>
+
+                        {/* GRUPO DE 3 BOTÕES DE AÇÃO */}
+                        <div className="inline-flex rounded-xl border border-slate-200/90 p-0.5 bg-slate-100/80 shrink-0 self-start sm:self-center">
+                          <button
+                            type="button"
+                            onClick={() => setDocAction(doc.id, "gerar")}
+                            className={cn(
+                              "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer",
+                              currentAction === "gerar"
+                                ? "bg-white text-[#1868db] shadow-2xs font-bold"
+                                : "text-slate-600 hover:text-slate-900"
+                            )}
+                          >
+                            Gerar pelo sistema
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setDocAction(doc.id, "anexar")}
+                            className={cn(
+                              "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer",
+                              currentAction === "anexar"
+                                ? "bg-white text-amber-700 shadow-2xs font-bold"
+                                : "text-slate-600 hover:text-slate-900"
+                            )}
+                          >
+                            Anexar pronto
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setDocAction(doc.id, "ignorar")}
+                            className={cn(
+                              "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer",
+                              currentAction === "ignorar"
+                                ? "bg-white text-slate-700 shadow-2xs font-bold"
+                                : "text-slate-500 hover:text-slate-900"
+                            )}
+                          >
+                            Não usar agora
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* SEÇÕES DETALHADAS: "PARA GERAR: [NOME DO DOCUMENTO]" */}
+            <div className="space-y-4 pt-1">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-sm sm:text-base text-[#0f1d36] flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-[#1868db]" />
+                  <span>Requisitos Organizados por Documento Ativo</span>
+                </h3>
+                <span className="text-xs text-slate-400">
+                  {activeGeneratingDocs.length === 0
+                    ? "Nenhum documento selecionado para geração"
+                    : `${activeGeneratingDocs.length} seção(ões) de conferência`}
+                </span>
+              </div>
+
+              {activeGeneratingDocs.length === 0 ? (
+                <div className="p-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 text-center space-y-2">
+                  <Info className="h-6 w-6 text-slate-400 mx-auto" />
+                  <p className="text-xs font-semibold text-slate-600">
+                    Nenhum documento selecionado para geração pelo sistema.
+                  </p>
+                  <p className="text-[11px] text-slate-400 max-w-md mx-auto">
+                    Selecione "Gerar pelo sistema" nos controles acima caso deseje produzir os formulários oficiais deste pedido.
+                  </p>
+                </div>
+              ) : (
+                activeGeneratingDocs.map((doc) => {
+                  const client = allCustomers.find(c => c.id === selectedCustomerId);
+                  const vess = allVessels.find(v => v.id === selectedVesselId);
+
+                  return (
+                    <div
+                      key={`card-${doc.id}`}
+                      className="rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-2xs space-y-4 transition-all"
+                    >
+                      {/* TÍTULO E FONTE OFICIAL */}
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div className="space-y-0.5">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#1868db]">
+                            Para gerar:
+                          </span>
+                          <h4 className="text-sm sm:text-base font-bold text-[#0f1d36]">
+                            {doc.name}
+                          </h4>
+                          <p className="text-[11px] text-slate-500">
+                            Finalidade: {doc.purpose}
+                          </p>
+                        </div>
+                        <div className="flex flex-col sm:items-end gap-1">
+                          <Badge variant="outline" className="text-[10px] bg-slate-50 text-slate-700">
+                            Assinatura: {doc.signerRole}
+                          </Badge>
+                          <a
+                            href={doc.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] text-[#1868db] hover:underline inline-flex items-center gap-1"
+                          >
+                            <span>Consultar fonte oficial</span>
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </div>
+                      </div>
+
+                      {/* GRID DE REQUISITOS (PESSOAL / EMBARCAÇÃO / ANEXOS) */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* 1. DADOS PESSOAIS */}
+                        <div className="p-3.5 rounded-xl border border-slate-200/70 bg-slate-50/50 space-y-2.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-[#0f1d36] flex items-center gap-1.5">
+                              <User className="h-3.5 w-3.5 text-[#1868db]" />
+                              <span>Dados Pessoais</span>
+                            </span>
+                            <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px]">
+                              {client ? "No Cadastro" : "Pendente"}
+                            </Badge>
+                          </div>
+                          <ul className="text-[11px] text-slate-600 space-y-1.5">
+                            {doc.personalDataFields.map((f, i) => (
+                              <li key={i} className="flex items-start gap-1.5">
+                                <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                                <span>{f.name}</span>
+                              </li>
+                            ))}
+                          </ul>
+                          {client ? (
+                            <p className="text-[10px] text-slate-400 pt-1 border-t border-slate-200/60">
+                              Identificado: <strong className="text-slate-700">{client.name}</strong> ({client.document_number || "Doc"})
+                            </p>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setCurrentStep(2)}
+                              className="text-[10px] font-bold text-[#1868db] hover:underline cursor-pointer block pt-1"
+                            >
+                              + Preencher cliente na etapa anterior →
+                            </button>
+                          )}
+                        </div>
+
+                        {/* 2. DADOS DA EMBARCAÇÃO */}
+                        <div className="p-3.5 rounded-xl border border-slate-200/70 bg-slate-50/50 space-y-2.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-[#0f1d36] flex items-center gap-1.5">
+                              <Ship className="h-3.5 w-3.5 text-[#1868db]" />
+                              <span>Dados da Embarcação</span>
+                            </span>
+                            <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px]">
+                              {vess ? "No Cadastro" : "Pendente"}
+                            </Badge>
+                          </div>
+                          <ul className="text-[11px] text-slate-600 space-y-1.5">
+                            {doc.vesselDataFields.map((f, i) => (
+                              <li key={i} className="flex items-start gap-1.5">
+                                <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                                <span>{f.name}</span>
+                              </li>
+                            ))}
+                          </ul>
+                          {vess ? (
+                            <p className="text-[10px] text-slate-400 pt-1 border-t border-slate-200/60">
+                              Embarcação: <strong className="text-slate-700">{vess.name}</strong> {vess.registration_number ? `(${vess.registration_number})` : ""}
+                            </p>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setCurrentStep(2)}
+                              className="text-[10px] font-bold text-[#1868db] hover:underline cursor-pointer block pt-1"
+                            >
+                              + Preencher embarcação na etapa anterior →
+                            </button>
+                          )}
+                        </div>
+
+                        {/* 3. DOCUMENTOS E ANEXOS COMPARTILHADOS */}
+                        <div className="p-3.5 rounded-xl border border-slate-200/70 bg-slate-50/50 space-y-2.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-[#0f1d36] flex items-center gap-1.5">
+                              <Paperclip className="h-3.5 w-3.5 text-[#1868db]" />
+                              <span>Anexos Necessários</span>
+                            </span>
+                            <span className="text-[10px] text-slate-400">
+                              {doc.attachments.length} aplicáveis
+                            </span>
+                          </div>
+                          <div className="space-y-2">
+                            {doc.attachments.map((att) => {
+                              const existingReq = requirements.find(r => r.id === att.id);
+                              const isAttached = existingReq && existingReq.status === "recebido";
+
+                              return (
+                                <div
+                                  key={att.id}
+                                  className="p-2 rounded-lg bg-white border border-slate-200/80 space-y-1"
+                                >
+                                  <div className="flex items-start justify-between gap-1.5">
+                                    <span className="text-[11px] font-semibold text-slate-800 line-clamp-1">
+                                      {att.name}
+                                    </span>
+                                    {isAttached ? (
+                                      <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 shrink-0">
+                                        Anexado
+                                      </span>
+                                    ) : (
+                                      <span className="text-[9px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200 shrink-0">
+                                        {att.isProtocolOnly ? "Protocolo" : "Preenchimento"}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <p className="text-[10px] text-slate-500">
+                                    {att.isProtocolOnly ? (
+                                      <span className="text-amber-700 font-medium">
+                                        Exigido apenas para protocolo na Capitania (não bloqueia gerar PDF).
+                                      </span>
+                                    ) : (
+                                      <span>{att.why}</span>
+                                    )}
+                                  </p>
+
+                                  {att.sharedWithDocIds && att.sharedWithDocIds.length > 0 && (
+                                    <div className="pt-0.5">
+                                      <span className="inline-flex items-center gap-1 text-[9px] font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                                        <RefreshCw className="h-2.5 w-2.5 text-slate-400" />
+                                        <span>Reutilizado em outros formulários</span>
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
               )}
             </div>
 
@@ -2301,6 +2958,55 @@ function NovoPedidoPage() {
             })}
           </div>
 
+          {/* LISTA EXPLÍCITA DE DOCUMENTOS A SEREM GERADOS (AUDITORIA E CONTROLE) */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-xs sm:text-sm text-[#0f1d36] flex items-center gap-1.5">
+                <FileSignature className="h-4 w-4 text-[#1868db]" />
+                <span>
+                  Geração de {activeGeneratingDocs.length} documento(s) selecionado(s):
+                </span>
+              </h3>
+              <span className="text-[11px] text-slate-500 font-medium">
+                {applicableOutputDocs.length - activeGeneratingDocs.length} desmarcado(s)
+              </span>
+            </div>
+
+            {activeGeneratingDocs.length === 0 ? (
+              <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/50 text-amber-800 text-xs">
+                Nenhum documento está marcado como "Gerar pelo sistema". Volte à etapa de documentos se desejar selecionar algum formulário.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-2.5">
+                {activeGeneratingDocs.map((doc) => (
+                  <div
+                    key={`rev-${doc.id}`}
+                    className="p-3.5 rounded-xl border border-slate-200/80 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs"
+                  >
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <PdfBadgeIcon className="h-6 w-6" />
+                        <span className="font-bold text-xs sm:text-sm text-[#0f1d36]">
+                          {doc.name}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 pl-8">
+                        Fonte: {doc.officialSource} · {doc.documentType === "official_form" ? "Formulário Oficial" : "Documento Próprio"}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-start sm:self-auto pl-8 sm:pl-0">
+                      <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px]">
+                        Gerar pelo sistema
+                      </Badge>
+                      <span className="text-[10px] text-slate-400">Assina: {doc.signerRole}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-1">
             <p className="font-semibold text-[#0f1d36]">
               Cliente: {allCustomers.find(c => c.id === selectedCustomerId)?.name || "Não informado"}
@@ -2334,6 +3040,7 @@ function NovoPedidoPage() {
                       customerId: selectedCustomerId || undefined,
                       vesselId: selectedVesselId || undefined,
                       services: selectedServiceIds.join(",") || undefined,
+                      docs: activeGeneratingDocIds.join(",") || undefined,
                     },
                   })
                 }
@@ -2354,6 +3061,7 @@ function NovoPedidoPage() {
                       customerId: selectedCustomerId || undefined,
                       vesselId: selectedVesselId || undefined,
                       services: selectedServiceIds.join(",") || undefined,
+                      docs: activeGeneratingDocIds.join(",") || undefined,
                     },
                   })
                 }
@@ -2365,7 +3073,7 @@ function NovoPedidoPage() {
 
               <Button
                 type="button"
-                disabled={isSubmitting}
+                disabled={isSubmitting || activeGeneratingDocs.length === 0}
                 onClick={handleCreateOrderProcesses}
                 className="w-full sm:w-auto h-11 px-7 rounded-xl bg-[#1868db] hover:bg-[#1456b8] text-white font-semibold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 cursor-pointer"
               >

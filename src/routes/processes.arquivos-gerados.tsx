@@ -30,6 +30,7 @@ export const Route = createFileRoute("/processes/arquivos-gerados")({
     preview?: string;
     allReady?: string;
     services?: string;
+    docs?: string;
   } => ({
     orderId: (search.orderId as string) || undefined,
     customerId: (search.customerId as string) || undefined,
@@ -37,6 +38,7 @@ export const Route = createFileRoute("/processes/arquivos-gerados")({
     preview: (search.preview as string) || undefined,
     allReady: (search.allReady as string) || undefined,
     services: (search.services as string) || undefined,
+    docs: (search.docs as string) || undefined,
   }),
   component: () => (
     <ProtectedRoute>
@@ -85,11 +87,12 @@ interface ServiceGroup {
   pendingTitle?: string;
 }
 
-function buildDynamicServiceGroups(
+export function buildDynamicServiceGroups(
   serviceIds: string[],
   customerName: string,
   vesselName: string,
-  allReady: boolean
+  allReady: boolean,
+  explicitDocIds?: string[]
 ): ServiceGroup[] {
   const groups: ServiceGroup[] = [];
 
@@ -102,7 +105,7 @@ function buildDynamicServiceGroups(
         status: "pronto",
         files: [
           {
-            id: "insc-req",
+            id: "doc_req_inscricao",
             name: "Requerimento-inscricao-inicial.pdf",
             version: 1,
             generatedAt: new Date().toLocaleDateString("pt-BR") + " às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
@@ -115,7 +118,7 @@ function buildDynamicServiceGroups(
             contentSample: `MARINHA DO BRASIL - DIRETORIA DE PORTOS E COSTAS\nREQUERIMENTO DE INSCRIÇÃO INICIAL DE EMBARCAÇÃO\n(NORMAM-211/DPC - Anexo 2-C)\n\nÀ CAPITANIA DOS PORTOS / DELEGACIA / AGÊNCIA\n\nProprietário / Requerente: ${customerName}\nEmbarcação: ${vesselName}\nServiço Solicitado: Inscrição Inicial de Embarcação\n\nDocumentos anexos conferidos conforme NORMAM-211:\n- Nota Fiscal do Casco / Declaração de Construção\n- Nota Fiscal / Comprovante do Motor\n- Documento de Identificação Oficial\n- Comprovante de Residência\n- Fotos da Embarcação`,
           },
           {
-            id: "insc-bsade",
+            id: "doc_bsade",
             name: "BSADE-inscricao.pdf",
             version: 1,
             generatedAt: new Date().toLocaleDateString("pt-BR") + " às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
@@ -128,7 +131,7 @@ function buildDynamicServiceGroups(
             contentSample: `MARINHA DO BRASIL\nBOLETIM DE SIMPLIFICAÇÃO E ATUALIZAÇÃO DE DADOS DE EMBARCAÇÃO (BSADE)\n(NORMAM-211/DPC - Anexo 2-B)\n\nIdentificação da Embarcação: ${vesselName}\nProprietário: ${customerName}\nFinalidade: Inscrição Inicial e Registro de Dados Técnicos do Casco e Propulsão.`,
           },
           {
-            id: "insc-proc",
+            id: "doc_procuracao",
             name: "Procuracao-nautica.pdf",
             version: 1,
             generatedAt: new Date().toLocaleDateString("pt-BR") + " às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
@@ -150,7 +153,7 @@ function buildDynamicServiceGroups(
         status: "pronto",
         files: [
           {
-            id: "transf-req",
+            id: "doc_req_transf",
             name: "Requerimento-transferencia.pdf",
             version: 1,
             generatedAt: "12/03/2025 às 14:32",
@@ -163,7 +166,7 @@ function buildDynamicServiceGroups(
             contentSample: `REQUERIMENTO DE TRANSFERÊNCIA DE PROPRIEDADE\n\nÀ CAPITANIA DOS PORTOS\n\nEmbarcação: ${vesselName}\nAdquirente: ${customerName}\n\nRequer-se a transferência de propriedade nos termos da NORMAM-211/DPC.`,
           },
           {
-            id: "transf-decl",
+            id: "doc_decl_transf",
             name: "Declaracao-transferencia.pdf",
             version: 1,
             generatedAt: "12/03/2025 às 14:32",
@@ -185,7 +188,7 @@ function buildDynamicServiceGroups(
         status: "pronto",
         files: [
           {
-            id: "renov-req",
+            id: "doc_req_renov",
             name: "Requerimento-renovacao.pdf",
             version: 1,
             generatedAt: "12/03/2025 às 14:32",
@@ -198,7 +201,7 @@ function buildDynamicServiceGroups(
             contentSample: `REQUERIMENTO DE RENOVAÇÃO DE TÍTULO DE INSCRIÇÃO DE EMBARCAÇÃO (TIE)\n\nÀ CAPITANIA DOS PORTOS\n\nEmbarcação: ${vesselName}\nProprietário: ${customerName}\n\nRequer a emissão da nova via do documento de inscrição.`,
           },
           {
-            id: "renov-decl",
+            id: "doc_decl_renov",
             name: "Declaracao-interessado.pdf",
             version: 1,
             generatedAt: "12/03/2025 às 14:32",
@@ -221,7 +224,7 @@ function buildDynamicServiceGroups(
           status: "pronto",
           files: [
             {
-              id: "motor-req",
+              id: "doc_termo_motor",
               name: "Requerimento-alteracao-motor.pdf",
               version: 1,
               generatedAt: "12/03/2025 às 14:40",
@@ -246,7 +249,140 @@ function buildDynamicServiceGroups(
           files: [],
         });
       }
+    } else if (sId === "segunda_via") {
+      groups.push({
+        id: "segunda_via",
+        name: "Segunda via de documento",
+        icon: FileCheck,
+        status: "pronto",
+        files: [
+          {
+            id: "doc_req_segunda_via",
+            name: "Requerimento-segunda-via.pdf",
+            version: 1,
+            generatedAt: new Date().toLocaleDateString("pt-BR") + " às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+            serviceId: "segunda_via",
+            serviceName: "Segunda via de documento",
+            folderName: `Processo_Segunda_Via_${vesselName.replace(/\s+/g, "_")}`,
+            status: "gerado",
+            pagesCount: 1,
+            fileSize: "215 KB",
+            contentSample: `REQUERIMENTO DE 2ª VIA DE TIE/TIEM\n(NORMAM-211/DPC - Anexo 2-C)\n\nÀ CAPITANIA DOS PORTOS\n\nProprietário: ${customerName}\nEmbarcação: ${vesselName}\nMotivo: Perda/Extravio do documento anterior.`,
+          },
+          {
+            id: "doc_decl_perda",
+            name: "Declaracao-perda-extravio.pdf",
+            version: 1,
+            generatedAt: new Date().toLocaleDateString("pt-BR") + " às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+            serviceId: "segunda_via",
+            serviceName: "Segunda via de documento",
+            folderName: `Processo_Segunda_Via_${vesselName.replace(/\s+/g, "_")}`,
+            status: "gerado",
+            pagesCount: 1,
+            fileSize: "185 KB",
+            contentSample: `DECLARAÇÃO DE PERDA / EXTRAVIO DE DOCUMENTO NÁUTICO\n(NORMAM-211/DPC - Anexo 2-H)\n\nDeclaro sob as penas da lei a perda do documento náutico original da embarcação ${vesselName}.\nDeclarante: ${customerName}`,
+          },
+        ],
+      });
+    } else if (sId === "vistoria") {
+      groups.push({
+        id: "vistoria",
+        name: "Vistoria",
+        icon: Search,
+        status: "pronto",
+        files: [
+          {
+            id: "doc_req_vistoria",
+            name: "Requerimento-vistoria.pdf",
+            version: 1,
+            generatedAt: new Date().toLocaleDateString("pt-BR") + " às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+            serviceId: "vistoria",
+            serviceName: "Vistoria",
+            folderName: `Processo_Vistoria_${vesselName.replace(/\s+/g, "_")}`,
+            status: "gerado",
+            pagesCount: 2,
+            fileSize: "235 KB",
+            contentSample: `REQUERIMENTO DE VISTORIA / PERÍCIA NAVAL\n(NORMAM-211/DPC Capítulo 3)\n\nÀ CAPITANIA DOS PORTOS\n\nEmbarcação: ${vesselName}\nInteressado: ${customerName}\nFinalidade: Vistoria inicial / periódica para atestado de navegabilidade.`,
+          },
+        ],
+      });
+    } else if (sId === "habilitacao_cha") {
+      groups.push({
+        id: "habilitacao_cha",
+        name: "Emissão / Renovação de CHA",
+        icon: Award,
+        status: "pronto",
+        files: [
+          {
+            id: "doc_req_cha",
+            name: "Requerimento-habilitacao-cha.pdf",
+            version: 1,
+            generatedAt: new Date().toLocaleDateString("pt-BR") + " às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+            serviceId: "habilitacao_cha",
+            serviceName: "Emissão / Renovação de CHA",
+            folderName: `Processo_Habilitacao_${customerName.replace(/\s+/g, "_")}`,
+            status: "gerado",
+            pagesCount: 1,
+            fileSize: "195 KB",
+            contentSample: `REQUERIMENTO PARA HABILITAÇÃO NÁUTICA DE AMADOR (CHA)\n(NORMAM-211/DPC Capítulo 5)\n\nCandidato: ${customerName}\nCategoria requerida: Amador (Arrais/Mestre/Capitão).`,
+          },
+        ],
+      });
+    } else if (sId === "alteracao_cadastral") {
+      groups.push({
+        id: "alteracao_cadastral",
+        name: "Alteração Cadastral",
+        icon: UserCheck,
+        status: "pronto",
+        files: [
+          {
+            id: "doc_req_alteracao_cadastral",
+            name: "Requerimento-alteracao-cadastral.pdf",
+            version: 1,
+            generatedAt: new Date().toLocaleDateString("pt-BR") + " às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+            serviceId: "alteracao_cadastral",
+            serviceName: "Alteração Cadastral",
+            folderName: `Processo_Alteracao_Cadastral_${customerName.replace(/\s+/g, "_")}`,
+            status: "gerado",
+            pagesCount: 1,
+            fileSize: "205 KB",
+            contentSample: `REQUERIMENTO DE ALTERAÇÃO CADASTRAL DO PROPRIETÁRIO\n(NORMAM-211/DPC item 0213)\n\nTitular: ${customerName}\nAtualização de domicílio e dados cadastrais perante a Autoridade Marítima.`,
+          },
+        ],
+      });
+    } else if (sId === "despacho_porto") {
+      groups.push({
+        id: "despacho_porto",
+        name: "Despacho de Saída / Entrada",
+        icon: Anchor,
+        status: "pronto",
+        files: [
+          {
+            id: "doc_comunicacao_despacho",
+            name: "Comunicacao-despacho-saida.pdf",
+            version: 1,
+            generatedAt: new Date().toLocaleDateString("pt-BR") + " às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+            serviceId: "despacho_porto",
+            serviceName: "Despacho de Saída / Entrada",
+            folderName: `Processo_Despacho_${vesselName.replace(/\s+/g, "_")}`,
+            status: "gerado",
+            pagesCount: 1,
+            fileSize: "190 KB",
+            contentSample: `COMUNICAÇÃO DE SAÍDA / ENTRADA DE EMBARCAÇÃO\n(NORMAM-211/DPC Capítulo 4)\n\nEmbarcação: ${vesselName}\nComandante: ${customerName}\nComunicação formal de despacho e rol de passageiros.`,
+          },
+        ],
+      });
     }
+  }
+
+  // Se houver filtro de documentos explicitamente selecionados
+  if (explicitDocIds && explicitDocIds.length > 0) {
+    return groups
+      .map(group => ({
+        ...group,
+        files: group.files.filter(f => explicitDocIds.includes(f.id)),
+      }))
+      .filter(group => group.files.length > 0 || group.status === "pendente");
   }
 
   return groups;
@@ -278,15 +414,22 @@ function ArquivosGeradosPage() {
     return "Embarcação Confirmada";
   }, [search.vesselId]);
 
+  const parsedDocIds = useMemo(() => {
+    if (search.docs) {
+      return search.docs.split(",").map(d => d.trim()).filter(Boolean);
+    }
+    return undefined;
+  }, [search.docs]);
+
   // Grupos de serviços com seus arquivos dinâmicos
   const [serviceGroups, setServiceGroups] = useState<ServiceGroup[]>(() => {
-    return buildDynamicServiceGroups(activeServices, customerName, vesselName, search.allReady === "true");
+    return buildDynamicServiceGroups(activeServices, customerName, vesselName, search.allReady === "true", parsedDocIds);
   });
 
   // Atualiza se parâmetros mudarem
   useMemo(() => {
-    setServiceGroups(buildDynamicServiceGroups(activeServices, customerName, vesselName, search.allReady === "true"));
-  }, [activeServices, customerName, vesselName, search.allReady]);
+    setServiceGroups(buildDynamicServiceGroups(activeServices, customerName, vesselName, search.allReady === "true", parsedDocIds));
+  }, [activeServices, customerName, vesselName, search.allReady, parsedDocIds]);
 
   // Controle de sanfona por serviço
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(() => {
