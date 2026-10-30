@@ -167,16 +167,16 @@ export function buildDynamicServiceGroups(
           },
           {
             id: "doc_decl_transf",
-            name: "Declaracao-transferencia.pdf",
+            name: "Autorizacao-transferencia-anexo-2M.pdf",
             version: 1,
             generatedAt: "12/03/2025 às 14:32",
             serviceId: "transferencia",
             serviceName: "Transferência de propriedade",
             folderName: `Processo_Transferencia_${vesselName.replace(/\s+/g, "_")}`,
             status: "gerado",
-            pagesCount: 1,
+            pagesCount: 2,
             fileSize: "185 KB",
-            contentSample: `TERMO DE ENTREGA E DECLARAÇÃO DE RESPONSABILIDADE\n\nDeclaro para os devidos fins de direito que recebi a embarcação ${vesselName} em perfeitas condições de navegabilidade, assumindo plena responsabilidade civil e marítima.\nAssina: ${customerName}`,
+            contentSample: `AUTORIZAÇÃO DE TRANSFERÊNCIA DE PROPRIEDADE\n(NORMAM-211/DPC - Anexo 2-M)\n\nAutorizo a transferência da embarcação ${vesselName} ao adquirente indicado.\nProprietário/Vendedor: ${customerName}\nReconhecimento de firma por autenticidade das partes.`,
           },
         ],
       });
@@ -359,7 +359,7 @@ export function buildDynamicServiceGroups(
         files: [
           {
             id: "doc_comunicacao_despacho",
-            name: "Comunicacao-despacho-saida.pdf",
+            name: "Aviso-de-saida-anexo-4A.pdf",
             version: 1,
             generatedAt: new Date().toLocaleDateString("pt-BR") + " às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
             serviceId: "despacho_porto",
@@ -368,7 +368,7 @@ export function buildDynamicServiceGroups(
             status: "gerado",
             pagesCount: 1,
             fileSize: "190 KB",
-            contentSample: `COMUNICAÇÃO DE SAÍDA / ENTRADA DE EMBARCAÇÃO\n(NORMAM-211/DPC Capítulo 4)\n\nEmbarcação: ${vesselName}\nComandante: ${customerName}\nComunicação formal de despacho e rol de passageiros.`,
+            contentSample: `AVISO DE SAÍDA DE EMBARCAÇÃO\n(NORMAM-211/DPC - Anexo 4-A / NAVSEG)\n\nEmbarcação: ${vesselName}\nComandante/Mestre: ${customerName}\nAviso formal de singradura, porto de destino, data de retorno e rol de pessoas a bordo.`,
           },
         ],
       });
