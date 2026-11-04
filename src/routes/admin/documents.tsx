@@ -85,7 +85,12 @@ import {
   triggerPdfDownload,
   DocumentManualOverride,
 } from "@/services/admin/documentOverrideService";
-import { getCustomizedOutputDocsCatalog } from "@/services/documents/adminRequirementsStorage";
+import { 
+  getCustomizedOutputDocsCatalog, 
+  saveCustomizedOutputDocsCatalog, 
+  resetOutputDocsCatalogToDefaults 
+} from "@/services/documents/adminRequirementsStorage";
+import { OutputDocumentConfig, OutputDocRequirementItem } from "@/routes/processes.novo-pedido";
 import { buildBrandedDocumentPdf } from "@/services/brandedPdfBuilder";
 
 export const Route = createFileRoute("/admin/documents")({
@@ -195,11 +200,31 @@ function DocumentVault() {
   const [salvArea, setSalvArea] = useState<"interior" | "costeira" | "oceanica">("costeira");
   const [salvResult, setSalvResult] = useState<SalvatagemCalculada | null>(null);
 
-  // Catálogo de documentos oficiais para emissão rápida
-  const outputDocsCatalog = useMemo(() => getCustomizedOutputDocsCatalog(), []);
+  // Catálogo dinâmico de documentos oficiais e requisitos
+  const [docsCatalog, setDocsCatalog] = useState<OutputDocumentConfig[]>([]);
+  const [reqSearch, setReqSearch] = useState("");
+  const [reqSelectedService, setReqSelectedService] = useState<string>("all");
+
+  // Modais de Requisitos de Anexos
+  const [isReqModalOpen, setIsReqModalOpen] = useState(false);
+  const [reqModalMode, setReqModalMode] = useState<"add" | "edit">("add");
+  const [selectedDocIdForReq, setSelectedDocIdForReq] = useState<string | null>(null);
+  const [editingReqId, setEditingReqId] = useState<string | null>(null);
+  const [reqName, setReqName] = useState("");
+  const [reqWhy, setReqWhy] = useState("");
+  const [reqIsProtocolOnly, setReqIsProtocolOnly] = useState(false);
+
+  // Modal Novo Documento no Catálogo Geral
+  const [isNewDocModalOpen, setIsNewDocModalOpen] = useState(false);
+  const [newDocName, setNewDocName] = useState("");
+  const [newDocServiceId, setNewDocServiceId] = useState("inscricao");
+  const [newDocOfficialSource, setNewDocOfficialSource] = useState("");
+  const [newDocPurpose, setNewDocPurpose] = useState("");
+  const [newDocSignerRole, setNewDocSignerRole] = useState("Proprietário Requerente");
 
   // Carregar dados no mount
   useEffect(() => {
+    setDocsCatalog(getCustomizedOutputDocsCatalog());
     setCapitanias(getCapitanias());
     setExigencias(getExigencias());
     setHinResult(validateHullHinCode(hinInput));
@@ -267,6 +292,152 @@ function DocumentVault() {
   }, [documents]);
 
   // ==========================================
+  // ==========================================
+  // HANDLERS: REQUISITOS E ANEXOS POR DOCUMENTO
+  // ==========================================
+  const handleOpenAddRequirement = (docId: string) => {
+    setSelectedDocIdForReq(docId);
+    setReqModalMode("add");
+    setEditingReqId(null);
+    setReqName("");
+    setReqWhy("");
+    setReqIsProtocolOnly(false);
+    setIsReqModalOpen(true);
+  };
+
+  const handleOpenEditRequirement = (docId: string, req: OutputDocRequirementItem) => {
+    setSelectedDocIdForReq(docId);
+    setReqModalMode("edit");
+    setEditingReqId(req.id);
+    setReqName(req.name);
+    setReqWhy(req.why || "");
+    setReqIsProtocolOnly(!!req.isProtocolOnly);
+    setIsReqModalOpen(true);
+  };
+
+  const handleSaveRequirement = () => {
+    if (!reqName.trim()) {
+      toast.error("Informe o nome do documento/anexo necessário.");
+      return;
+    }
+    if (!selectedDocIdForReq) return;
+
+    let updatedCatalog: OutputDocumentConfig[];
+
+    if (reqModalMode === "add") {
+      const newReq: OutputDocRequirementItem = {
+        id: `req_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        name: reqName.trim(),
+        why: reqWhy.trim() || "Exigência regulamentar perante a Capitania dos Portos",
+        isProtocolOnly: reqIsProtocolOnly,
+      };
+
+      updatedCatalog = docsCatalog.map((doc) => {
+        if (doc.id === selectedDocIdForReq) {
+          return {
+            ...doc,
+            attachments: [...doc.attachments, newReq],
+          };
+        }
+        return doc;
+      });
+      toast.success("Documento necessário adicionado com sucesso!");
+    } else {
+      updatedCatalog = docsCatalog.map((doc) => {
+        if (doc.id === selectedDocIdForReq) {
+          return {
+            ...doc,
+            attachments: doc.attachments.map((a) => {
+              if (a.id === editingReqId) {
+                return {
+                  ...a,
+                  name: reqName.trim(),
+                  why: reqWhy.trim() || a.why,
+                  isProtocolOnly: reqIsProtocolOnly,
+                };
+              }
+              return a;
+            }),
+          };
+        }
+        return doc;
+      });
+      toast.success("Requisito de anexo atualizado!");
+    }
+
+    setDocsCatalog(updatedCatalog);
+    saveCustomizedOutputDocsCatalog(updatedCatalog);
+    setIsReqModalOpen(false);
+  };
+
+  const handleDeleteRequirement = (docId: string, reqId: string) => {
+    if (!confirm("Tem certeza que deseja excluir este documento necessário do catálogo?")) return;
+
+    const updatedCatalog = docsCatalog.map((doc) => {
+      if (doc.id === docId) {
+        return {
+          ...doc,
+          attachments: doc.attachments.filter((a) => a.id !== reqId),
+        };
+      }
+      return doc;
+    });
+
+    setDocsCatalog(updatedCatalog);
+    saveCustomizedOutputDocsCatalog(updatedCatalog);
+    toast.success("Documento necessário removido com sucesso!");
+  };
+
+  const handleSaveNewOutputDoc = () => {
+    if (!newDocName.trim()) {
+      toast.error("Informe o nome do documento oficial.");
+      return;
+    }
+
+    const serviceLabels: Record<string, string> = {
+      inscricao: "Inscrição de embarcação",
+      transferencia: "Transferência de propriedade",
+      renovacao: "Renovação de documento",
+      segunda_via: "Segunda via de documento",
+      vistoria: "Vistoria",
+      laudo_engenharia: "Laudo técnico pericial",
+      alteracao_cadastral: "Alteração Cadastral",
+      despacho_porto: "Despacho de Saída / Entrada",
+    };
+
+    const newDoc: OutputDocumentConfig = {
+      id: `doc_custom_${Date.now()}`,
+      name: newDocName.trim(),
+      serviceId: newDocServiceId,
+      serviceName: serviceLabels[newDocServiceId] || "Serviço Náutico Especial",
+      documentType: "official_form",
+      officialSource: newDocOfficialSource.trim() || "NORMAM-211/DPC (Diretoria de Portos e Costas)",
+      sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
+      editionDate: `Portaria DPC/MB ${new Date().getFullYear()}`,
+      purpose: newDocPurpose.trim() || "Formalização perante a Autoridade Marítima.",
+      signerRole: newDocSignerRole.trim() || "Proprietário Requerente",
+      personalDataFields: [{ name: "Qualificação do Titular", found: true }],
+      vesselDataFields: [{ name: "Dados da Embarcação", found: true }],
+      attachments: [],
+    };
+
+    const updated = [...docsCatalog, newDoc];
+    setDocsCatalog(updated);
+    saveCustomizedOutputDocsCatalog(updated);
+    setIsNewDocModalOpen(false);
+    setNewDocName("");
+    setNewDocOfficialSource("");
+    setNewDocPurpose("");
+    toast.success(`Documento oficial "${newDoc.name}" cadastrado no catálogo!`);
+  };
+
+  const handleResetCatalogToDefaults = () => {
+    if (!confirm("Deseja restaurar todos os documentos e requisitos para o padrão oficial da Marinha do Brasil? Quaisquer alterações locais serão substituídas.")) return;
+    const def = resetOutputDocsCatalogToDefaults();
+    setDocsCatalog(def);
+    toast.success("Catálogo restaurado para os padrões oficiais da NORMAM-211/DPC!");
+  };
+
   // OPERAÇÕES DE REPARO MANUAL
   // ==========================================
   const handleOpenRepairModal = (doc: DocumentWithRelations) => {
@@ -350,7 +521,7 @@ function DocumentVault() {
   // OPERAÇÕES DE EMISSÃO RÁPIDA AVULSA
   // ==========================================
   const handleGenerateQuickDoc = async () => {
-    const selectedTemplate = outputDocsCatalog.find(d => d.id === quickDocId);
+    const selectedTemplate = docsCatalog.find(d => d.id === quickDocId);
     const docName = selectedTemplate?.name || "Documento Oficial da Marinha";
 
     setIsGeneratingQuick(true);
@@ -584,7 +755,15 @@ function DocumentVault() {
               className="rounded-xl px-4 py-2 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-[#075BFF] data-[state=active]:shadow-2xs flex items-center gap-1.5"
             >
               <FileText className="h-3.5 w-3.5" />
-              Cofre & Reparo Manual de Documentos
+              Cofre & Reparo Manual
+            </TabsTrigger>
+
+            <TabsTrigger
+              value="requirements"
+              className="rounded-xl px-4 py-2 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-[#075BFF] data-[state=active]:shadow-2xs flex items-center gap-1.5"
+            >
+              <List className="h-3.5 w-3.5 text-blue-600" />
+              Documentos & Requisitos ({docsCatalog.length})
             </TabsTrigger>
 
             <TabsTrigger
@@ -621,6 +800,206 @@ function DocumentVault() {
           </TabsList>
 
           {/* ========================================================= */}
+          {/* ABA: DOCUMENTOS E REQUISITOS NECESSÁRIOS (NORMAM-211/212/201) */}
+          {/* ========================================================= */}
+          <TabsContent value="requirements" className="focus-visible:ring-0 mt-0 space-y-6">
+            {/* Header com Ações Rápidas */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs">
+              <div>
+                <h3 className="text-sm font-bold text-[#0B1739] flex items-center gap-2">
+                  <List className="h-4 w-4 text-[#075BFF]" />
+                  Matriz Regulamentar de Documentos Oficiais & Anexos Necessários
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Gerencie visualmente cada documento emitido perante a Capitania dos Portos e sua lista de comprovantes/anexos exigidos. Adicione, edite ou exclua requisitos sem encostar em código.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResetCatalogToDefaults}
+                  className="h-9 rounded-xl text-xs font-semibold text-slate-600 border-slate-200 hover:bg-slate-50 gap-1.5 cursor-pointer"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Restaurar Padrões DPC
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => setIsNewDocModalOpen(true)}
+                  className="h-9 rounded-xl text-xs font-bold bg-[#075BFF] hover:bg-blue-600 text-white gap-1.5 shadow-2xs cursor-pointer"
+                >
+                  <Plus className="h-4 w-4" />
+                  Novo Documento no Catálogo
+                </Button>
+              </div>
+            </div>
+
+            {/* Filtros de Busca e Serviço */}
+            <Card className="border-slate-200 shadow-2xs rounded-2xl bg-white">
+              <CardContent className="p-4 flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                  <Input
+                    placeholder="Pesquisar por nome do documento, código ou fonte da Marinha..."
+                    value={reqSearch}
+                    onChange={(e) => setReqSearch(e.target.value)}
+                    className="pl-10 h-10 bg-slate-50/70 border-slate-200 rounded-xl text-xs"
+                  />
+                </div>
+                <div className="w-full sm:w-[240px]">
+                  <Select value={reqSelectedService} onValueChange={setReqSelectedService}>
+                    <SelectTrigger className="h-10 bg-slate-50/70 border-slate-200 rounded-xl text-xs">
+                      <SelectValue placeholder="Filtrar por serviço" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl text-xs">
+                      <SelectItem value="all">Todos os Serviços</SelectItem>
+                      <SelectItem value="inscricao">Inscrição de embarcação</SelectItem>
+                      <SelectItem value="transferencia">Transferência</SelectItem>
+                      <SelectItem value="renovacao">Renovação</SelectItem>
+                      <SelectItem value="segunda_via">Segunda via</SelectItem>
+                      <SelectItem value="alteracao_motor">Alteração de motor</SelectItem>
+                      <SelectItem value="vistoria">Vistoria</SelectItem>
+                      <SelectItem value="habilitacao_cha">Habilitação náutica (CHA)</SelectItem>
+                      <SelectItem value="alteracao_cadastral">Alteração Cadastral</SelectItem>
+                      <SelectItem value="despacho_porto">Despacho de Saída</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Listagem dos Documentos e seus Anexos */}
+            <div className="space-y-4">
+              {docsCatalog
+                .filter((doc) => {
+                  const matchSearch =
+                    !reqSearch ||
+                    doc.name.toLowerCase().includes(reqSearch.toLowerCase()) ||
+                    doc.serviceName.toLowerCase().includes(reqSearch.toLowerCase()) ||
+                    doc.officialSource.toLowerCase().includes(reqSearch.toLowerCase()) ||
+                    doc.purpose.toLowerCase().includes(reqSearch.toLowerCase());
+                  const matchService = reqSelectedService === "all" || doc.serviceId === reqSelectedService;
+                  return matchSearch && matchService;
+                })
+                .map((doc) => (
+                  <Card key={doc.id} className="border-slate-200 shadow-2xs rounded-2xl overflow-hidden bg-white">
+                    <CardHeader className="p-4 bg-slate-50/80 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <h4 className="text-sm font-bold text-[#0B1739]">{doc.name}</h4>
+                          <Badge variant="outline" className="text-[10px] font-semibold bg-blue-50 text-[#075BFF] border-blue-200">
+                            {doc.serviceName}
+                          </Badge>
+                          <Badge variant="outline" className="text-[10px] font-semibold bg-slate-100 text-slate-700">
+                            {doc.documentType === "official_form" ? "Formulário Oficial DPC" : "Documento da Plataforma"}
+                          </Badge>
+                          <Badge className="text-[10px] font-bold bg-slate-800 text-white">
+                            {doc.attachments.length} {doc.attachments.length === 1 ? "anexo necessário" : "anexos necessários"}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-slate-500 font-mono">
+                          {doc.officialSource}
+                        </p>
+                      </div>
+
+                      <Button
+                        size="sm"
+                        onClick={() => handleOpenAddRequirement(doc.id)}
+                        className="h-8 rounded-xl text-xs font-bold bg-[#075BFF] hover:bg-blue-600 text-white gap-1.5 shadow-2xs shrink-0 cursor-pointer"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        Adicionar Anexo Necessário
+                      </Button>
+                    </CardHeader>
+
+                    <CardContent className="p-4 space-y-3">
+                      <p className="text-xs text-slate-600 bg-blue-50/40 p-2.5 rounded-xl border border-blue-100/60">
+                        <strong className="text-slate-800">Finalidade Regulatória:</strong> {doc.purpose}
+                      </p>
+
+                      {/* Lista de Documentos Necessários / Anexos */}
+                      {doc.attachments.length === 0 ? (
+                        <div className="p-6 text-center border border-dashed border-slate-200 rounded-xl bg-slate-50/40">
+                          <p className="text-xs text-slate-500 font-medium">
+                            Nenhum anexo adicional exigido para este documento.
+                          </p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleOpenAddRequirement(doc.id)}
+                            className="mt-2 text-xs font-bold text-[#075BFF] hover:bg-blue-50 cursor-pointer"
+                          >
+                            + Cadastrar primeiro documento necessário
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="border border-slate-200 rounded-xl overflow-hidden">
+                          <Table>
+                            <TableHeader className="bg-slate-50">
+                              <TableRow className="hover:bg-transparent">
+                                <TableHead className="text-xs font-semibold text-slate-700 py-2.5 w-[35%]">Documento / Anexo Necessário</TableHead>
+                                <TableHead className="text-xs font-semibold text-slate-700 py-2.5 w-[45%]">Finalidade / Por que é exigido</TableHead>
+                                <TableHead className="text-xs font-semibold text-slate-700 py-2.5 w-[10%]">Tipo</TableHead>
+                                <TableHead className="text-xs font-semibold text-slate-700 py-2.5 w-[10%] text-right">Ações</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {doc.attachments.map((att) => (
+                                <TableRow key={att.id} className="hover:bg-slate-50/60 border-slate-100">
+                                  <TableCell className="py-2.5 font-semibold text-xs text-[#0B1739]">
+                                    {att.name}
+                                  </TableCell>
+                                  <TableCell className="py-2.5 text-xs text-slate-600">
+                                    {att.why || "Comprovação regulamentar perante a Capitania dos Portos"}
+                                  </TableCell>
+                                  <TableCell className="py-2.5">
+                                    {att.isProtocolOnly ? (
+                                      <Badge variant="outline" className="text-[10px] font-semibold bg-amber-50 text-amber-700 border-amber-200">
+                                        Exclusivo Protocolo
+                                      </Badge>
+                                    ) : (
+                                      <Badge variant="outline" className="text-[10px] font-semibold bg-indigo-50 text-indigo-700 border-indigo-200">
+                                        Extração de Dados
+                                      </Badge>
+                                    )}
+                                  </TableCell>
+                                  <TableCell className="py-2.5 text-right">
+                                    <div className="flex items-center justify-end gap-1">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleOpenEditRequirement(doc.id, att)}
+                                        className="h-7 w-7 text-slate-500 hover:text-[#075BFF] hover:bg-blue-50 rounded-lg cursor-pointer"
+                                        title="Editar requisito"
+                                      >
+                                        <Edit3 className="h-3.5 w-3.5" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleDeleteRequirement(doc.id, att.id)}
+                                        className="h-7 w-7 text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-lg cursor-pointer"
+                                        title="Excluir requisito"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+            </div>
+          </TabsContent>
+
+                    {/* ========================================================= */}
           {/* ABA 1: COFRE & REPARO MANUAL DE DOCUMENTOS */}
           {/* ========================================================= */}
           <TabsContent value="vault" className="focus-visible:ring-0 mt-0 space-y-6">
@@ -793,7 +1172,7 @@ function DocumentVault() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="max-h-72">
-                        {outputDocsCatalog.map((doc) => (
+                        {docsCatalog.map((doc) => (
                           <SelectItem key={doc.id} value={doc.id} className="text-xs">
                             {doc.name}
                           </SelectItem>
@@ -1435,6 +1814,162 @@ function DocumentVault() {
         </Dialog>
 
         {/* ========================================================= */}
+        {/* ========================================================= */}
+        {/* MODAL: ADICIONAR / EDITAR REQUISITO DE ANEXO */}
+        {/* ========================================================= */}
+        <Dialog open={isReqModalOpen} onOpenChange={setIsReqModalOpen}>
+          <DialogContent className="sm:max-w-[500px] p-6 rounded-2xl bg-white">
+            <DialogHeader>
+              <DialogTitle className="text-base font-bold text-[#0B1739]">
+                {reqModalMode === "add" ? "Adicionar Documento Necessário / Anexo" : "Editar Documento Necessário"}
+              </DialogTitle>
+              <DialogDescription className="text-xs text-slate-500">
+                {reqModalMode === "add" 
+                  ? "Vincule um novo comprovante ou anexo obrigatório exigido pela Capitania para emissão deste documento."
+                  : "Modifique os detalhes ou a finalidade deste comprovante exigido pela Autoridade Marítima."}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3 py-2">
+              <div>
+                <Label className="text-xs font-semibold text-slate-700">Nome do Anexo / Documento Necessário *</Label>
+                <Input
+                  value={reqName}
+                  onChange={(e) => setReqName(e.target.value)}
+                  placeholder="Ex: Fotografia da Popa em Alta Resolução"
+                  className="mt-1 h-9 text-xs rounded-xl"
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs font-semibold text-slate-700">Finalidade / Por que é exigido?</Label>
+                <Textarea
+                  value={reqWhy}
+                  onChange={(e) => setReqWhy(e.target.value)}
+                  placeholder="Ex: Exigência exclusiva de balcão da CPSP para conferência do porto de inscrição e nome gravado no casco."
+                  className="mt-1 text-xs rounded-xl min-h-[70px]"
+                />
+              </div>
+
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-slate-800">Exclusivo para Protocolo Físico / Conferência</p>
+                  <p className="text-[11px] text-slate-500">Marque se não precisar de leitura de dados por OCR (ex: fotos da embarcação, GRU paga).</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={reqIsProtocolOnly}
+                  onChange={(e) => setReqIsProtocolOnly(e.target.checked)}
+                  className="h-4 w-4 rounded text-[#075BFF] focus:ring-blue-500 border-slate-300 cursor-pointer"
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsReqModalOpen(false)}
+                className="h-9 rounded-xl text-xs cursor-pointer"
+              >
+                Cancelar
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSaveRequirement}
+                className="h-9 rounded-xl text-xs font-bold bg-[#075BFF] hover:bg-blue-600 text-white cursor-pointer"
+              >
+                {reqModalMode === "add" ? "Adicionar Anexo" : "Salvar Alterações"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* ========================================================= */}
+        {/* MODAL: NOVO DOCUMENTO NO CATÁLOGO OFICIAL */}
+        {/* ========================================================= */}
+        <Dialog open={isNewDocModalOpen} onOpenChange={setIsNewDocModalOpen}>
+          <DialogContent className="sm:max-w-[500px] p-6 rounded-2xl bg-white">
+            <DialogHeader>
+              <DialogTitle className="text-base font-bold text-[#0B1739]">
+                Cadastrar Novo Documento Oficial no Catálogo
+              </DialogTitle>
+              <DialogDescription className="text-xs text-slate-500">
+                Adicione um novo anexo ou formulário regulamentar emitido perante a Capitania dos Portos.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3 py-2">
+              <div>
+                <Label className="text-xs font-semibold text-slate-700">Nome Oficial do Documento *</Label>
+                <Input
+                  value={newDocName}
+                  onChange={(e) => setNewDocName(e.target.value)}
+                  placeholder="Ex: Atestado de Estabilidade e Borda Livre"
+                  className="mt-1 h-9 text-xs rounded-xl"
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs font-semibold text-slate-700">Serviço Náutico Vinculado</Label>
+                <Select value={newDocServiceId} onValueChange={setNewDocServiceId}>
+                  <SelectTrigger className="mt-1 h-9 text-xs rounded-xl">
+                    <SelectValue placeholder="Selecione o serviço" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl text-xs">
+                    <SelectItem value="inscricao">Inscrição de embarcação</SelectItem>
+                    <SelectItem value="transferencia">Transferência</SelectItem>
+                    <SelectItem value="renovacao">Renovação</SelectItem>
+                    <SelectItem value="segunda_via">Segunda via</SelectItem>
+                    <SelectItem value="vistoria">Vistoria</SelectItem>
+                    <SelectItem value="laudo_engenharia">Laudo técnico pericial</SelectItem>
+                    <SelectItem value="alteracao_cadastral">Alteração Cadastral</SelectItem>
+                    <SelectItem value="despacho_porto">Despacho de Saída</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-xs font-semibold text-slate-700">Fonte Oficial / Portaria da Marinha</Label>
+                <Input
+                  value={newDocOfficialSource}
+                  onChange={(e) => setNewDocOfficialSource(e.target.value)}
+                  placeholder="Ex: NORMAM-211/DPC, Anexo 2-M (Portaria DPC/MB nº 200/2026)"
+                  className="mt-1 h-9 text-xs rounded-xl"
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs font-semibold text-slate-700">Finalidade / Objetivo Legal</Label>
+                <Textarea
+                  value={newDocPurpose}
+                  onChange={(e) => setNewDocPurpose(e.target.value)}
+                  placeholder="Ex: Formalizar comprovação técnica pericial de arqueação perante o setor de vistorias da Capitania."
+                  className="mt-1 text-xs rounded-xl min-h-[70px]"
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsNewDocModalOpen(false)}
+                className="h-9 rounded-xl text-xs cursor-pointer"
+              >
+                Cancelar
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSaveNewOutputDoc}
+                className="h-9 rounded-xl text-xs font-bold bg-[#075BFF] hover:bg-blue-600 text-white cursor-pointer"
+              >
+                Cadastrar Documento
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {/* MODAL: NOVA / EDITAR CAPITANIA (OM) */}
         {/* ========================================================= */}
         <Dialog open={capitaniaModalOpen} onOpenChange={setCapitaniaModalOpen}>

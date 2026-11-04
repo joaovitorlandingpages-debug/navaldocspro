@@ -210,3 +210,4 @@ export function resetCapitaniasToDefaults(): CapitaniaOM[] {
   }
   return DEFAULT_CAPITANIAS;
 }
+

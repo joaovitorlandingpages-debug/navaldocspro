@@ -241,3 +241,4 @@ export function calculateSalvatagemRequerida(
     pirotecnicosObrigatorios: pirotecnicos,
   };
 }
+

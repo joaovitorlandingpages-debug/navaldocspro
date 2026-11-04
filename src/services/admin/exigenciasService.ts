@@ -114,3 +114,4 @@ export function getDiasRestantes(dataLimiteStr: string): number {
     return 0;
   }
 }
+
