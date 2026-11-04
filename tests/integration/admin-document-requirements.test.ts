@@ -193,3 +193,4 @@ describe("Gestão de Documentos Oficiais e Requisitos de Anexos no Admin (NORMAM
     expect(check.length).toBe(OUTPUT_DOCS_CATALOG.length);
   });
 });
+

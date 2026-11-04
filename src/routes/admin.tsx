@@ -44,6 +44,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useTelemetry } from "@/hooks/useTelemetry";
+import { GlobalAnnouncementBanner } from "@/components/common/GlobalAnnouncementBanner";
 import { AdminOverviewDashboard } from "@/components/admin/AdminOverviewDashboard";
 
 export const Route = createFileRoute("/admin")({

@@ -33,6 +33,7 @@ import {
 import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { GlobalAnnouncementBanner } from "@/components/common/GlobalAnnouncementBanner";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { toast } from "sonner";
 import { ServicesCategoryModal } from "@/components/home/ServicesCategoryModal";

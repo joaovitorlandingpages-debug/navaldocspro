@@ -71,3 +71,4 @@ describe("Fluxo de BADE (Anexo 2-A) e Declaração de Construção Miúda (Anexo
     expect(docConst?.signerRole).toBe("Construtor / Declarante");
   });
 });
+

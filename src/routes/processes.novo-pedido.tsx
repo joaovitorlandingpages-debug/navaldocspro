@@ -26,6 +26,7 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getCustomizedOutputDocsCatalog } from "@/services/documents/adminRequirementsStorage";
+import { getActiveServicesCatalog } from "@/services/admin/systemSettingsService";
 
 export const Route = createFileRoute("/processes/novo-pedido")({
   validateSearch: (search: Record<string, unknown>): { customerId?: string; vesselId?: string; preview?: string; step?: string; services?: string } => ({
@@ -53,6 +54,39 @@ interface ServiceItem {
   icon: any;
   requiresVessel: boolean;
   category: "maritimo" | "pessoal" | "tecnico";
+}
+
+export function getEffectiveServicesCatalog(): ServiceItem[] {
+  try {
+    const dynamic = getActiveServicesCatalog();
+    if (dynamic && dynamic.length > 0) {
+      const iconMap: Record<string, any> = {
+        Ship,
+        ArrowLeftRight,
+        FileText,
+        Wrench,
+        Search,
+        FileCheck,
+        Award,
+        FileSpreadsheet,
+        UserCheck,
+        Anchor,
+      };
+
+      return dynamic.map((d) => ({
+        id: d.id,
+        name: d.name,
+        shortName: d.shortName,
+        description: d.description,
+        icon: iconMap[d.iconName] || Ship,
+        requiresVessel: d.requiresVessel,
+        category: d.category,
+      }));
+    }
+  } catch (e) {
+    console.warn("Erro ao carregar catálogo dinâmico de serviços:", e);
+  }
+  return SERVICES_CATALOG;
 }
 
 const SERVICES_CATALOG: ServiceItem[] = [
