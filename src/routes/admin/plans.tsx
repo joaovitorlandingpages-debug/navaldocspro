@@ -1,11 +1,12 @@
-import { createFileRoute, Navigate } from '@tanstack/react-router';
-import React, { useState } from 'react';
+import { createFileRoute, Navigate, Link } from '@tanstack/react-router';
+import React, { useState, useMemo } from 'react';
 import { 
   Tag, Plus, RefreshCw, CheckCircle2, AlertCircle, 
   Search, Eye, Zap, 
   Users, HardDrive, FileText, Cpu, Check, 
   Clock, ShieldAlert, Archive, Sparkles, Settings,
-  Compass, Anchor, Bell, ShieldCheck, Lock, ExternalLink
+  Compass, Anchor, Bell, ShieldCheck, Lock, ExternalLink,
+  Layers, ChevronRight, HelpCircle, ArrowRight
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,10 +27,15 @@ export const Route = createFileRoute('/admin/plans')({
   component: AdminPlansPage,
 });
 
+const CORE_SLUGS = ['essencial', 'profissional', 'equipe'];
+const ECOSYSTEM_SLUGS = ['arrais-pro', 'notificador-naval', 'pacote-completo'];
+
 function AdminPlansPage() {
   const queryClient = useQueryClient();
   const { profile, loading } = useAuth();
 
+  // Navegação principal por abas: Oficiais (3), Ecossistema, Arquivados, Todos
+  const [catalogTab, setCatalogTab] = useState<"core" | "ecosystem" | "archived" | "all">("core");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [appFilter, setAppFilter] = useState<string>("all");
@@ -85,6 +91,27 @@ function AdminPlansPage() {
       }
     },
     staleTime: 1000 * 60, // 1 minuto
+  });
+
+  // Mutação para padronizar catálogo nos 3 oficiais
+  const standardizeMutation = useMutation({
+    mutationFn: async () => {
+      if (!canPublishPrices) {
+        throw new Error("Apenas administradores autorizados podem padronizar o catálogo.");
+      }
+      return await StripeSyncService.standardizeOfficialCatalog();
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-plans-catalog'] });
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    },
+    onError: (err: any) => {
+      toast.error(`Erro ao padronizar catálogo: ${err.message}`);
+    }
   });
 
   // Mutação para sincronização individual com a Stripe
@@ -156,52 +183,83 @@ function AdminPlansPage() {
     }
   });
 
+  // Categorização rigorosa dos planos
+  const corePlans = useMemo(() => {
+    return plans
+      .filter(p => CORE_SLUGS.includes(p.slug.toLowerCase()))
+      .sort((a, b) => (a.priceMonthly || 0) - (b.priceMonthly || 0));
+  }, [plans]);
+
+  const ecosystemPlans = useMemo(() => {
+    return plans
+      .filter(p => 
+        ECOSYSTEM_SLUGS.includes(p.slug.toLowerCase()) || 
+        ((p.appsIncluded || []).length > 1 && !CORE_SLUGS.includes(p.slug.toLowerCase()))
+      )
+      .sort((a, b) => (a.priceMonthly || 0) - (b.priceMonthly || 0));
+  }, [plans]);
+
+  const archivedPlans = useMemo(() => {
+    return plans.filter(p => 
+      p.status === 'archived' || 
+      (!CORE_SLUGS.includes(p.slug.toLowerCase()) && !ECOSYSTEM_SLUGS.includes(p.slug.toLowerCase()) && p.status !== 'published')
+    );
+  }, [plans]);
+
+  // Filtragem efetiva de acordo com a aba ativa e filtros adicionais
+  const filteredPlans = useMemo(() => {
+    let baseList = plans;
+
+    if (catalogTab === "core") {
+      baseList = corePlans;
+    } else if (catalogTab === "ecosystem") {
+      baseList = ecosystemPlans;
+    } else if (catalogTab === "archived") {
+      baseList = archivedPlans;
+    }
+
+    return baseList.filter((plan) => {
+      const matchesSearch = 
+        !searchTerm ||
+        plan.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        plan.slug.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        plan.description.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesStatus = 
+        catalogTab === "core" || // Na aba oficial, não esconde os 3 oficiais pelo dropdown genérico
+        statusFilter === "all" ||
+        (statusFilter === "published" && plan.status === "published") ||
+        (statusFilter === "draft" && plan.status === "draft") ||
+        (statusFilter === "archived" && plan.status === "archived") ||
+        (statusFilter === "synced" && plan.stripeSyncStatus === "synced") ||
+        (statusFilter === "not_synced" && plan.stripeSyncStatus === "not_synced") ||
+        (statusFilter === "failed" && plan.stripeSyncStatus === "failed");
+
+      const apps = plan.appsIncluded || ["navaldocs"];
+      const isBundle = apps.length > 1;
+
+      const matchesApp = 
+        catalogTab !== "all" ||
+        appFilter === "all" ||
+        (appFilter === "navaldocs" && apps.includes("navaldocs") && !isBundle) ||
+        (appFilter === "arrais" && apps.includes("arrais") && !isBundle) ||
+        (appFilter === "notificador" && apps.includes("notificador") && !isBundle) ||
+        (appFilter === "bundles" && isBundle);
+
+      return matchesSearch && matchesStatus && matchesApp;
+    });
+  }, [plans, catalogTab, searchTerm, statusFilter, appFilter, corePlans, ecosystemPlans, archivedPlans]);
+
+  // Métricas do catálogo
+  const totalPlans = plans.length;
+  const corePublishedCount = corePlans.filter(p => p.status === 'published').length;
+  const coreSyncedCount = corePlans.filter(p => p.stripeSyncStatus === 'synced').length;
+
   if (loading) return null;
 
   if (!isAuthorized) {
     return <Navigate to="/dashboard" />;
   }
-
-  // Filtragem de planos
-  const filteredPlans = plans.filter((plan) => {
-    const matchesSearch = 
-      plan.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      plan.slug.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      plan.description.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesStatus = 
-      statusFilter === "all" ||
-      (statusFilter === "published" && plan.status === "published") ||
-      (statusFilter === "draft" && plan.status === "draft") ||
-      (statusFilter === "archived" && plan.status === "archived") ||
-      (statusFilter === "synced" && plan.stripeSyncStatus === "synced") ||
-      (statusFilter === "not_synced" && plan.stripeSyncStatus === "not_synced") ||
-      (statusFilter === "failed" && plan.stripeSyncStatus === "failed");
-
-    const apps = plan.appsIncluded || ["navaldocs"];
-    const isBundle = apps.length > 1;
-
-    const matchesApp = 
-      appFilter === "all" ||
-      (appFilter === "navaldocs" && apps.includes("navaldocs") && !isBundle) ||
-      (appFilter === "arrais" && apps.includes("arrais") && !isBundle) ||
-      (appFilter === "notificador" && apps.includes("notificador") && !isBundle) ||
-      (appFilter === "bundles" && isBundle);
-
-    return matchesSearch && matchesStatus && matchesApp;
-  });
-
-  // Métricas do catálogo
-  const totalPlans = plans.length;
-  const publishedPlans = plans.filter(p => p.status === 'published').length;
-  const draftPlans = plans.filter(p => p.status === 'draft').length;
-  const syncedPlans = plans.filter(p => p.stripeSyncStatus === 'synced').length;
-  const failedPlans = plans.filter(p => p.stripeSyncStatus === 'failed').length;
-
-  const navaldocsCount = plans.filter(p => (p.appsIncluded || ['navaldocs']).includes('navaldocs') && (p.appsIncluded || []).length === 1).length;
-  const arraisCount = plans.filter(p => (p.appsIncluded || []).includes('arrais') && (p.appsIncluded || []).length === 1).length;
-  const notificadorCount = plans.filter(p => (p.appsIncluded || []).includes('notificador') && (p.appsIncluded || []).length === 1).length;
-  const bundlesCount = plans.filter(p => (p.appsIncluded || []).length > 1).length;
 
   const handleEdit = (plan: AdminPlanData) => {
     setSelectedPlan(plan);
@@ -224,26 +282,50 @@ function AdminPlansPage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16 antialiased px-3 sm:px-0">
-      {/* 1. CABEÇALHO COM DIAGNÓSTICO DO AMBIENTE STRIPE */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* 1. CABEÇALHO PRINCIPAL E AÇÕES */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-[#1868db] uppercase tracking-wider">
-              Catálogo Comercial & Checkout
+              Tabela Comercial & Checkout
             </span>
-            <Badge variant="outline" className="text-[10px] font-semibold text-slate-500 border-slate-200">
-              {totalPlans} ofertas
+            <Badge variant="outline" className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border-emerald-200">
+              {corePublishedCount}/3 Planos Oficiais Ativos
             </Badge>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0d2342] tracking-tight mt-0.5">
-            Planos e preços
+            Planos e Preços
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl">
-            Gerenciamento do catálogo completo: NavalDocs, Arrais e Notificador. Precificação mensal e anual em Reais, versionamento de contratos e sincronização oficial com a Stripe.
+            Gestão dos 3 planos oficiais do NavalDocs Pro: precificação em Reais (BRL), franquias de processos e OCR, faturamento mensal/anual e sincronização com a Stripe.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Link para vitrine pública */}
+          <Button
+            asChild
+            variant="outline"
+            className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold h-10 px-3.5 rounded-xl gap-2 shadow-2xs"
+          >
+            <Link to="/plans" target="_blank">
+              <ExternalLink className="h-4 w-4 text-[#1868db]" />
+              <span>Vitrine do Cliente</span>
+            </Link>
+          </Button>
+
+          {/* Botão de Padronização nos 3 Oficiais */}
+          <Button
+            variant="outline"
+            onClick={() => standardizeMutation.mutate()}
+            disabled={standardizeMutation.isPending || !canPublishPrices}
+            className="bg-white border-blue-200 text-[#1868db] hover:bg-blue-50 text-xs font-bold h-10 px-3.5 rounded-xl gap-2 shadow-2xs"
+            title="Garante que apenas os 3 planos comerciais oficiais fiquem ativos"
+          >
+            <Sparkles className={`h-4 w-4 ${standardizeMutation.isPending ? 'animate-spin text-[#1868db]' : 'text-blue-500'}`} />
+            <span>{standardizeMutation.isPending ? 'Padronizando...' : 'Padronizar 3 Oficiais'}</span>
+          </Button>
+
           <Button
             variant="outline"
             onClick={() => setIsStripeDialogOpen(true)}
@@ -274,7 +356,7 @@ function AdminPlansPage() {
         </div>
       </div>
 
-      {/* 2. CARD DIAGNÓSTICO DO AMBIENTE E AUTORIZAÇÃO */}
+      {/* 2. CARD DE DIAGNÓSTICO DO GATEWAY E PERMISSÕES */}
       <div className="p-4 bg-white border border-slate-200/90 rounded-2xl shadow-2xs space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -303,7 +385,7 @@ function AdminPlansPage() {
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 mt-0.5">
-                Chave secreta e credenciais de faturamento operam exclusivamente no servidor seguro (Deno Edge Functions). Checkouts reais validam preços diretamente no backend.
+                Checkouts reais em BRL validados no servidor seguro (Deno Edge Functions). Alterações de preço geram novas versões imutáveis sem alterar contratos antigos.
               </p>
             </div>
           </div>
@@ -320,187 +402,353 @@ function AdminPlansPage() {
           </div>
         </div>
 
-        {/* Banner de permissão restrita */}
         <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px]">
           <span className="text-slate-500 flex items-center gap-1.5">
             <Lock className="h-3.5 w-3.5 text-slate-400" />
-            Publicação de preços autorizada para: <strong>João Vitor</strong> e <strong>Douglas Faresi</strong>
+            Publicação autorizada para os administradores: <strong>João Vitor</strong> e <strong>Douglas Faresi</strong>
           </span>
           <span className="text-slate-400">
-            Alterações de preço geram novas versões imutáveis sem modificar contratos antigos.
+            Assinaturas existentes preservam suas condições originais.
           </span>
         </div>
       </div>
 
-      {/* 3. CARDS DE RESUMO (KPIs) */}
+      {/* 3. RESUMO EXECUTIVO (KPIs FOCADOS NOS 3 PLANOS OFICIAIS) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card className="bg-white border-slate-200/90 shadow-2xs rounded-2xl p-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500">Total de Ofertas</span>
-            <div className="h-8 w-8 rounded-lg bg-blue-50 flex items-center justify-center text-[#1868db]">
-              <Tag className="h-4 w-4" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-[#0d2342] mt-2">{totalPlans}</p>
-          <span className="text-[11px] text-slate-400 mt-0.5 block">No catálogo comercial</span>
-        </Card>
-
-        <Card className="bg-white border-slate-200/90 shadow-2xs rounded-2xl p-4">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500">Publicados na Vitrine</span>
-            <div className="h-8 w-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
-              <CheckCircle2 className="h-4 w-4" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-emerald-700 mt-2">{publishedPlans}</p>
-          <span className="text-[11px] text-emerald-600/80 mt-0.5 block">Disponíveis para contratação</span>
-        </Card>
-
-        <Card className="bg-white border-slate-200/90 shadow-2xs rounded-2xl p-4">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500">Rascunhos Internos</span>
-            <div className="h-8 w-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
-              <Clock className="h-4 w-4" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-amber-700 mt-2">{draftPlans}</p>
-          <span className="text-[11px] text-amber-600/80 mt-0.5 block">Não contratáveis</span>
-        </Card>
-
-        <Card className="bg-white border-slate-200/90 shadow-2xs rounded-2xl p-4">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500">Sincronizados Stripe</span>
+            <span className="text-xs font-medium text-slate-500">Planos Oficiais Ativos</span>
             <div className="h-8 w-8 rounded-lg bg-blue-50 flex items-center justify-center text-[#1868db]">
               <Sparkles className="h-4 w-4" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-[#1868db] mt-2">{syncedPlans}</p>
-          <span className="text-[11px] text-slate-400 mt-0.5 block">
-            {failedPlans > 0 ? `${failedPlans} com erro na Stripe` : 'Gateway integrado'}
-          </span>
+          <p className="text-2xl font-bold text-[#0d2342] mt-2">3 Tiers</p>
+          <span className="text-[11px] text-slate-400 mt-0.5 block">Essencial · Profissional · Equipe</span>
+        </Card>
+
+        <Card className="bg-white border-slate-200/90 shadow-2xs rounded-2xl p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-slate-500">Vitrine dos Clientes</span>
+            <div className="h-8 w-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+              <CheckCircle2 className="h-4 w-4" />
+            </div>
+          </div>
+          <p className="text-2xl font-bold text-emerald-700 mt-2">{corePublishedCount} Disponíveis</p>
+          <span className="text-[11px] text-emerald-600/80 mt-0.5 block">100% no ar para contratação</span>
+        </Card>
+
+        <Card className="bg-white border-slate-200/90 shadow-2xs rounded-2xl p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-slate-500">Stripe Sync</span>
+            <div className="h-8 w-8 rounded-lg bg-blue-50 flex items-center justify-center text-[#1868db]">
+              <Zap className="h-4 w-4" />
+            </div>
+          </div>
+          <p className="text-2xl font-bold text-[#1868db] mt-2">{coreSyncedCount}/3 Oficiais</p>
+          <span className="text-[11px] text-slate-400 mt-0.5 block">Preços em BRL integrados</span>
+        </Card>
+
+        <Card className="bg-white border-slate-200/90 shadow-2xs rounded-2xl p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-slate-500">Módulos & Arquivados</span>
+            <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-600">
+              <Archive className="h-4 w-4" />
+            </div>
+          </div>
+          <p className="text-2xl font-bold text-slate-700 mt-2">{ecosystemPlans.length + archivedPlans.length} Ofertas</p>
+          <span className="text-[11px] text-slate-400 mt-0.5 block">Isolados em abas específicas</span>
         </Card>
       </div>
 
-      {/* 4. FILTROS POR APLICATIVO E STATUS */}
-      <Card className="bg-white border-slate-200/90 shadow-2xs rounded-2xl p-3.5 space-y-3">
-        {/* Abas de Aplicativos */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-100">
+      {/* 4. NAVEGAÇÃO PRINCIPAL POR ABAS (ORGANIZAÇÃO RIGOROSA) */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto">
+          {/* Aba 1: 3 Oficiais */}
           <button
             type="button"
-            onClick={() => setAppFilter("all")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-              appFilter === "all"
-                ? "bg-[#0d2342] text-white shadow-xs"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-            }`}
-          >
-            Todos os Apps ({totalPlans})
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setAppFilter("navaldocs")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
-              appFilter === "navaldocs"
+            onClick={() => { setCatalogTab("core"); setSearchTerm(""); }}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+              catalogTab === "core"
                 ? "bg-[#1868db] text-white shadow-xs"
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
-            <Compass className="h-3.5 w-3.5" />
-            <span>NavalDocs Pro ({navaldocsCount})</span>
+            <Sparkles className="h-4 w-4" />
+            <span>Planos Oficiais NavalDocs Pro</span>
+            <Badge className={`text-[10px] font-bold px-1.5 py-0.2 ${
+              catalogTab === "core" ? "bg-white/20 text-white" : "bg-white text-slate-700"
+            }`}>
+              3
+            </Badge>
           </button>
 
+          {/* Aba 2: Ecossistema Náutico */}
           <button
             type="button"
-            onClick={() => setAppFilter("arrais")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
-              appFilter === "arrais"
-                ? "bg-indigo-600 text-white shadow-xs"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-            }`}
-          >
-            <Anchor className="h-3.5 w-3.5" />
-            <span>Arrais Pro ({arraisCount})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setAppFilter("notificador")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
-              appFilter === "notificador"
-                ? "bg-amber-600 text-white shadow-xs"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-            }`}
-          >
-            <Bell className="h-3.5 w-3.5" />
-            <span>Notificador Naval ({notificadorCount})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setAppFilter("bundles")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
-              appFilter === "bundles"
+            onClick={() => { setCatalogTab("ecosystem"); setSearchTerm(""); }}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+              catalogTab === "ecosystem"
                 ? "bg-purple-700 text-white shadow-xs"
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>Pacotes Completos ({bundlesCount})</span>
+            <Layers className="h-4 w-4" />
+            <span>Ecossistema & Pacotes</span>
+            <Badge className={`text-[10px] font-bold px-1.5 py-0.2 ${
+              catalogTab === "ecosystem" ? "bg-white/20 text-white" : "bg-white text-slate-700"
+            }`}>
+              {ecosystemPlans.length}
+            </Badge>
+          </button>
+
+          {/* Aba 3: Histórico e Arquivados */}
+          <button
+            type="button"
+            onClick={() => { setCatalogTab("archived"); setSearchTerm(""); }}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+              catalogTab === "archived"
+                ? "bg-slate-800 text-white shadow-xs"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            <Archive className="h-4 w-4" />
+            <span>Histórico & Arquivados</span>
+            <Badge className={`text-[10px] font-bold px-1.5 py-0.2 ${
+              catalogTab === "archived" ? "bg-white/20 text-white" : "bg-white text-slate-700"
+            }`}>
+              {archivedPlans.length}
+            </Badge>
+          </button>
+
+          {/* Aba 4: Catálogo Completo */}
+          <button
+            type="button"
+            onClick={() => { setCatalogTab("all"); setSearchTerm(""); }}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+              catalogTab === "all"
+                ? "bg-[#0d2342] text-white shadow-xs"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            <Tag className="h-4 w-4" />
+            <span>Ver Todos</span>
+            <Badge className={`text-[10px] font-bold px-1.5 py-0.2 ${
+              catalogTab === "all" ? "bg-white/20 text-white" : "bg-white text-slate-700"
+            }`}>
+              {totalPlans}
+            </Badge>
           </button>
         </div>
 
-        {/* Busca e Status */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
-          <div className="relative flex-1">
-            <Search className="h-4 w-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <Input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar por nome, slug ou aplicativo..."
-              className="pl-9 text-xs sm:text-sm h-10 border-slate-200 rounded-xl"
-            />
-          </div>
+        {/* BANNERS INFORMATIVOS DE CADA CONTEXTO */}
+        {catalogTab === "core" && (
+          <div className="p-4 bg-gradient-to-r from-blue-50/90 via-sky-50/50 to-indigo-50/60 border border-blue-200/80 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shadow-2xs">
+            <div className="flex items-start gap-3">
+              <div className="h-9 w-9 rounded-xl bg-[#1868db] flex items-center justify-center text-white shrink-0 mt-0.5">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-xs sm:text-sm font-bold text-[#0d2342]">
+                    Grade Comercial Oficial NavalDocs Pro (3 Planos)
+                  </h3>
+                  <Badge className="bg-emerald-600 text-white text-[10px] font-bold">Oficial 2026</Badge>
+                </div>
+                <p className="text-xs text-slate-600 mt-0.5 max-w-2xl">
+                  Estes são os únicos 3 planos exibidos na vitrine pública para contratação por novos clientes: <strong>Essencial (R$ 249)</strong>, <strong>Profissional (R$ 549)</strong> e <strong>Equipe (R$ 1.099)</strong>.
+                </p>
+              </div>
+            </div>
 
-          <div className="flex items-center gap-2">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-56 h-10 text-xs font-medium border-slate-200 rounded-xl">
-                <SelectValue placeholder="Filtrar por status" />
-              </SelectTrigger>
-              <SelectContent className="bg-white border-slate-200">
-                <SelectItem value="all" className="text-xs">Todos os status</SelectItem>
-                <SelectItem value="published" className="text-xs font-semibold text-emerald-700">● Publicados (Vitrine)</SelectItem>
-                <SelectItem value="draft" className="text-xs font-semibold text-amber-700">● Rascunhos</SelectItem>
-                <SelectItem value="archived" className="text-xs text-slate-500">● Arquivados</SelectItem>
-                <SelectItem value="synced" className="text-xs font-semibold text-blue-700">⚡ Stripe: Sincronizados</SelectItem>
-                <SelectItem value="not_synced" className="text-xs text-slate-500">⚪ Stripe: Não sincronizados</SelectItem>
-                <SelectItem value="failed" className="text-xs font-semibold text-rose-700">⚠️ Stripe: Com falha</SelectItem>
-              </SelectContent>
-            </Select>
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="bg-white border-blue-200 text-[#1868db] hover:bg-blue-50 text-xs font-bold h-8 rounded-xl gap-1.5 shadow-2xs shrink-0"
+            >
+              <Link to="/plans" target="_blank">
+                <Eye className="h-3.5 w-3.5" />
+                <span>Ver Vitrine do Cliente</span>
+                <ExternalLink className="h-3 w-3" />
+              </Link>
+            </Button>
           </div>
-        </div>
-      </Card>
+        )}
+
+        {catalogTab === "ecosystem" && (
+          <div className="p-4 bg-purple-50/80 border border-purple-200/80 rounded-2xl flex items-start gap-3 shadow-2xs">
+            <div className="h-9 w-9 rounded-xl bg-purple-700 flex items-center justify-center text-white shrink-0 mt-0.5">
+              <Layers className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-xs sm:text-sm font-bold text-purple-950">
+                  Ecossistema Náutico & Pacotes Complementares
+                </h3>
+                <Badge className="bg-purple-200 text-purple-900 border-purple-300 text-[10px] font-bold">Módulos Extras</Badge>
+              </div>
+              <p className="text-xs text-purple-800 mt-0.5">
+                Módulos adicionais do ecossistema naval: <strong>Arrais Pro</strong> (Kits de Amadores), <strong>Notificador Naval</strong> (Vencimentos) e o <strong>Pacote Completo (3 Apps)</strong>. Estes planos não poluem a vitrine padrão do NavalDocs Pro.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {catalogTab === "archived" && (
+          <div className="p-4 bg-slate-100/90 border border-slate-200 rounded-2xl flex items-start gap-3 shadow-2xs">
+            <div className="h-9 w-9 rounded-xl bg-slate-700 flex items-center justify-center text-white shrink-0 mt-0.5">
+              <Archive className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-xs sm:text-sm font-bold text-slate-900">
+                  Planos Legados & Histórico de Contratos
+                </h3>
+                <Badge variant="outline" className="text-slate-600 border-slate-300 text-[10px] font-bold">Imutabilidade Contratual</Badge>
+              </div>
+              <p className="text-xs text-slate-600 mt-0.5">
+                Planos arquivados preservados com segurança para auditoria e cumprimento de contratos de assinantes antigos. Não são contratáveis por novos clientes.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* FILTROS E BUSCA (Exibidos em todas as abas se necessário, ou na aba 'all') */}
+        {catalogTab === "all" && (
+          <Card className="bg-white border-slate-200/90 shadow-2xs rounded-2xl p-3.5 space-y-3">
+            {/* Abas de Aplicativos */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-100">
+              <button
+                type="button"
+                onClick={() => setAppFilter("all")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                  appFilter === "all"
+                    ? "bg-[#0d2342] text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                Todos os Apps ({totalPlans})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAppFilter("navaldocs")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                  appFilter === "navaldocs"
+                    ? "bg-[#1868db] text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                <Compass className="h-3.5 w-3.5" />
+                <span>NavalDocs Pro ({corePlans.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAppFilter("arrais")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                  appFilter === "arrais"
+                    ? "bg-indigo-600 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                <Anchor className="h-3.5 w-3.5" />
+                <span>Arrais Pro</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAppFilter("notificador")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                  appFilter === "notificador"
+                    ? "bg-amber-600 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                <Bell className="h-3.5 w-3.5" />
+                <span>Notificador Naval</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAppFilter("bundles")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                  appFilter === "bundles"
+                    ? "bg-purple-700 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>Pacotes Integrados</span>
+              </button>
+            </div>
+
+            {/* Busca e Status */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
+              <div className="relative flex-1">
+                <Search className="h-4 w-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Input
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Buscar por nome, slug ou aplicativo..."
+                  className="pl-9 text-xs sm:text-sm h-10 border-slate-200 rounded-xl"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full sm:w-56 h-10 text-xs font-medium border-slate-200 rounded-xl">
+                    <SelectValue placeholder="Filtrar por status" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-slate-200">
+                    <SelectItem value="all" className="text-xs">Todos os status</SelectItem>
+                    <SelectItem value="published" className="text-xs font-semibold text-emerald-700">● Publicados (Vitrine)</SelectItem>
+                    <SelectItem value="draft" className="text-xs font-semibold text-amber-700">● Rascunhos</SelectItem>
+                    <SelectItem value="archived" className="text-xs text-slate-500">● Arquivados</SelectItem>
+                    <SelectItem value="synced" className="text-xs font-semibold text-blue-700">⚡ Stripe: Sincronizados</SelectItem>
+                    <SelectItem value="not_synced" className="text-xs text-slate-500">⚪ Stripe: Não sincronizados</SelectItem>
+                    <SelectItem value="failed" className="text-xs font-semibold text-rose-700">⚠️ Stripe: Com falha</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </Card>
+        )}
+      </div>
 
       {/* 5. LISTAGEM DE CARTÕES DE PLANOS */}
       {isLoading ? (
         <div className="py-20 flex flex-col items-center justify-center gap-3">
           <RefreshCw className="h-8 w-8 text-[#1868db] animate-spin" />
-          <p className="text-xs font-semibold text-slate-500">Carregando catálogo de planos...</p>
+          <p className="text-xs font-semibold text-slate-500">Carregando catálogo oficial...</p>
         </div>
       ) : filteredPlans.length === 0 ? (
         <Card className="bg-white border-slate-200/90 shadow-2xs rounded-2xl p-12 text-center">
           <Tag className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-          <h3 className="text-base font-bold text-[#0d2342]">Nenhuma oferta encontrada</h3>
+          <h3 className="text-base font-bold text-[#0d2342]">Nenhuma oferta encontrada nesta seção</h3>
           <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
-            Não foram localizados planos que atendam aos filtros selecionados. Tente alterar os termos da busca ou selecione outro aplicativo.
+            {catalogTab === "core" 
+              ? "Clique em 'Padronizar 3 Oficiais' para carregar a grade padrão do NavalDocs Pro."
+              : "Não foram localizados planos para esta categoria com os filtros atuais."}
           </p>
-          <Button
-            onClick={() => { setSearchTerm(""); setStatusFilter("all"); setAppFilter("all"); }}
-            variant="outline"
-            className="mt-4 text-xs font-semibold"
-          >
-            Limpar filtros
-          </Button>
+          <div className="mt-4 flex items-center justify-center gap-2">
+            {catalogTab === "core" ? (
+              <Button
+                onClick={() => standardizeMutation.mutate()}
+                className="bg-[#1868db] text-white text-xs font-bold"
+              >
+                Padronizar 3 Oficiais
+              </Button>
+            ) : (
+              <Button
+                onClick={() => { setSearchTerm(""); setStatusFilter("all"); setAppFilter("all"); }}
+                variant="outline"
+                className="text-xs font-semibold"
+              >
+                Limpar filtros
+              </Button>
+            )}
+          </div>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -512,6 +760,7 @@ function AdminPlansPage() {
               : 0;
 
             const apps = plan.appsIncluded || ["navaldocs"];
+            const isOfficialCore = CORE_SLUGS.includes(plan.slug.toLowerCase());
 
             return (
               <div
@@ -539,20 +788,28 @@ function AdminPlansPage() {
                     <div>
                       {/* Badges de Aplicativos Contemplados */}
                       <div className="flex flex-wrap items-center gap-1 mb-1.5">
-                        {apps.includes("navaldocs") && (
-                          <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-50 border-blue-200 text-[9px] font-bold px-1.5 py-0.2 rounded">
-                            NavalDocs
+                        {isOfficialCore ? (
+                          <Badge className="bg-blue-600 text-white hover:bg-blue-600 text-[9px] font-bold px-1.5 py-0.2 rounded">
+                            NavalDocs Pro
                           </Badge>
-                        )}
-                        {apps.includes("arrais") && (
-                          <Badge className="bg-indigo-50 text-indigo-700 hover:bg-indigo-50 border-indigo-200 text-[9px] font-bold px-1.5 py-0.2 rounded">
-                            Arrais
-                          </Badge>
-                        )}
-                        {apps.includes("notificador") && (
-                          <Badge className="bg-amber-50 text-amber-800 hover:bg-amber-50 border-amber-200 text-[9px] font-bold px-1.5 py-0.2 rounded">
-                            Notificador
-                          </Badge>
+                        ) : (
+                          <>
+                            {apps.includes("navaldocs") && (
+                              <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-50 border-blue-200 text-[9px] font-bold px-1.5 py-0.2 rounded">
+                                NavalDocs
+                              </Badge>
+                            )}
+                            {apps.includes("arrais") && (
+                              <Badge className="bg-indigo-50 text-indigo-700 hover:bg-indigo-50 border-indigo-200 text-[9px] font-bold px-1.5 py-0.2 rounded">
+                                Arrais
+                              </Badge>
+                            )}
+                            {apps.includes("notificador") && (
+                              <Badge className="bg-amber-50 text-amber-800 hover:bg-amber-50 border-amber-200 text-[9px] font-bold px-1.5 py-0.2 rounded">
+                                Notificador
+                              </Badge>
+                            )}
+                          </>
                         )}
                         <Badge variant="outline" className="text-[9px] font-mono text-slate-400 border-slate-200">
                           v{plan.version || 1}
@@ -627,7 +884,7 @@ function AdminPlansPage() {
                     {annualDiscountPercent > 0 && (
                       <div className="mt-1 text-[10px] font-semibold text-emerald-700 flex items-center gap-1">
                         <Sparkles className="h-3 w-3" />
-                        Economia de ~{annualDiscountPercent}% no plano anual
+                        Economia de ~{annualDiscountPercent}% no plano anual (2 meses grátis)
                       </div>
                     )}
                   </div>
@@ -687,7 +944,7 @@ function AdminPlansPage() {
                       {plan.stripePriceMonthlyId && <div className="truncate">Price Mo: {plan.stripePriceMonthlyId}</div>}
                       {plan.lastSyncedAt && (
                         <div className="text-[9px] text-slate-400">
-                          Sincronizado em: {new Date(plan.lastSyncedAt).toLocaleDateString('pt-BR')} {new Date(plan.lastSyncedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          Sincronizado: {new Date(plan.lastSyncedAt).toLocaleDateString('pt-BR')} {new Date(plan.lastSyncedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       )}
                     </div>

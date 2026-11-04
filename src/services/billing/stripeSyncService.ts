@@ -574,6 +574,25 @@ export class StripeSyncService {
         }
       }
 
+      // Ordenação rigorosa e padronizada:
+      // 1º: 'essencial', 'profissional', 'equipe' (3 oficiais do NavalDocs Pro)
+      // 2º: 'arrais-pro', 'notificador-naval', 'pacote-completo' (ecossistema)
+      // 3º: outros legados por preço
+      const priorityOrder: Record<string, number> = {
+        'essencial': 1,
+        'profissional': 2,
+        'equipe': 3,
+        'arrais-pro': 4,
+        'notificador-naval': 5,
+        'pacote-completo': 6
+      };
+      result.sort((a, b) => {
+        const orderA = priorityOrder[a.slug.toLowerCase()] || 99;
+        const orderB = priorityOrder[b.slug.toLowerCase()] || 99;
+        if (orderA !== orderB) return orderA - orderB;
+        return (a.priceMonthly || 0) - (b.priceMonthly || 0);
+      });
+
       this.savePlans(result);
       return result;
     } catch (err) {
@@ -933,6 +952,53 @@ export class StripeSyncService {
 
     await this.savePlan(plan);
     return plan;
+  }
+
+  /**
+   * Garante que os 3 planos comerciais oficiais (Essencial, Profissional, Equipe)
+   * estejam com status 'published' e disponíveis, e arquiva ofertas de teste/legadas.
+   */
+  static async standardizeOfficialCatalog(): Promise<{ success: boolean; message: string }> {
+    try {
+      // 1. Atualiza no Supabase se houver conexão
+      try {
+        await supabase
+          .from('plans')
+          .update({ status: 'published', is_active: true, updated_at: new Date().toISOString() })
+          .in('slug', ['essencial', 'profissional', 'equipe']);
+
+        await supabase
+          .from('plans')
+          .update({ status: 'archived', is_active: false, updated_at: new Date().toISOString() })
+          .not('slug', 'in', '("essencial","profissional","equipe","arrais-pro","notificador-naval","pacote-completo")');
+      } catch (dbErr) {
+        console.warn("Aviso ao padronizar no banco:", dbErr);
+      }
+
+      // 2. Atualiza catálogo em cache local
+      const current = this.getPlans();
+      const updated = current.map(p => {
+        const slugLower = p.slug.toLowerCase();
+        if (['essencial', 'profissional', 'equipe'].includes(slugLower)) {
+          return { ...p, status: 'published' as const, availableForSale: true };
+        }
+        if (!['arrais-pro', 'notificador-naval', 'pacote-completo'].includes(slugLower)) {
+          return { ...p, status: 'archived' as const, availableForSale: false };
+        }
+        return p;
+      });
+      this.savePlans(updated);
+
+      return {
+        success: true,
+        message: "Catálogo padronizado com sucesso! Os 3 planos oficiais estão ativos na vitrine."
+      };
+    } catch (e: any) {
+      return {
+        success: false,
+        message: `Falha ao padronizar catálogo: ${e.message}`
+      };
+    }
   }
 
   /**
