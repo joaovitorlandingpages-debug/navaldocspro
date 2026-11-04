@@ -121,9 +121,9 @@ describe("Auditoria e Fluxo Documental Documento por Documento", () => {
     const docsVistoria = buildOrderDocuments(["vistoria"], customerName, vesselName);
     expect(docsVistoria.map(d => d.id)).toEqual(["doc_req_vistoria"]);
 
-    // CHA Amador
+    // CHA Amador (Emissão/Renovação Anexo 5-H, Declaração de Extravio Anexo 5-D e Atestado ETN Anexo 5-E)
     const docsCha = buildOrderDocuments(["habilitacao_cha"], customerName, "");
-    expect(docsCha.map(d => d.id)).toEqual(["doc_req_cha"]);
+    expect(docsCha.map(d => d.id)).toEqual(["doc_req_cha", "doc_decl_perda_cha", "doc_atestado_ara"]);
 
     // Alteração Cadastral
     const docsAltCad = buildOrderDocuments(["alteracao_cadastral"], customerName, "");

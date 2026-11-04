@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-r
 import {
   ArrowLeft, Download, Eye, Ship, FileText, Wrench, ChevronDown, ChevronUp,
   AlertCircle, CheckCircle2, Lightbulb, Clock, Check, X, Loader2, Sparkles,
-  User, Calendar, FolderArchive, FileCheck, Palette
+  User, Calendar, FolderArchive, FileCheck, Palette, Search, Award, UserCheck, Anchor
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import JSZip from "jszip";
@@ -126,9 +126,9 @@ export function buildDynamicServiceGroups(
             serviceName: "Inscrição inicial de embarcação",
             folderName: `Processo_Inscricao_${vesselName.replace(/\s+/g, "_")}`,
             status: "gerado",
-            pagesCount: 2,
-            fileSize: "290 KB",
-            contentSample: `MARINHA DO BRASIL\nBOLETIM DE SIMPLIFICAÇÃO E ATUALIZAÇÃO DE DADOS DE EMBARCAÇÃO (BSADE)\n(NORMAM-211/DPC - Anexo 2-B)\n\nIdentificação da Embarcação: ${vesselName}\nProprietário: ${customerName}\nFinalidade: Inscrição Inicial e Registro de Dados Técnicos do Casco e Propulsão.`,
+            pagesCount: 1,
+            fileSize: "210 KB",
+            contentSample: `MARINHA DO BRASIL - DIRETORIA DE PORTOS E COSTAS\nBOLETIM SIMPLIFICADO DE ATUALIZAÇÃO DE DADOS DE EMBARCAÇÃO (BSADE)\n(NORMAM-211/DPC - Anexo 2-B)\n\nÀ Capitania dos Portos, Delegacia ou Agência\n\nNATUREZA DO REQUERIMENTO: [X] Inscrição de embarcação\nProprietário: ${customerName}\nEmbarcação: ${vesselName}\nFicha técnica estrutural, dimensões, arqueação, sistema de propulsão e lotação autorizada em 2 vias.`,
           },
           {
             id: "doc_procuracao",

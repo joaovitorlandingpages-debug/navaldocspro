@@ -35,3 +35,6 @@ scratch/
 supabase/.temp/
 *.zip
 *.patch
+
+artifacts_test_pdfs/
+Requerimento_Inscricao_Inicial_Real.pdf

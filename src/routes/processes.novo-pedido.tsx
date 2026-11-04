@@ -204,10 +204,10 @@ export const OUTPUT_DOCS_CATALOG: OutputDocumentConfig[] = [
     serviceId: "inscricao",
     serviceName: "Inscrição de embarcação",
     documentType: "official_form",
-    officialSource: "NORMAM-211/DPC, Anexo 2-C / Anexo 2-E (Portaria DPC/MB nº 115/2023 consolidada 2026)",
+    officialSource: "NORMAM-211/DPC, Anexo 2-C (Aprovado pela Portaria DPC/DGN/MB Nº 200, de 27 de fevereiro de 2026 - DOU de 03/03/2026)",
     sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
-    editionDate: "Edição Consolidada 2026 (Portaria DPC/MB nº 115/2023)",
-    purpose: "Formalizar o pedido oficial de inscrição da embarcação de esporte e recreio perante a Capitania dos Portos, Delegacia ou Agência.",
+    editionDate: "Portaria DPC/DGN/MB Nº 200/2026 (Vigente desde 27/02/2026)",
+    purpose: "Formalizar o pedido oficial de inscrição da embarcação de esporte e recreio perante a Capitania dos Portos, Delegacia ou Agência da Marinha.",
     signerRole: "Proprietário Requerente (ou Procurador constituído)",
     personalDataFields: [
       { name: "Nome Completo do Proprietário", found: true },
@@ -236,21 +236,27 @@ export const OUTPUT_DOCS_CATALOG: OutputDocumentConfig[] = [
     serviceId: "inscricao",
     serviceName: "Inscrição de embarcação",
     documentType: "official_form",
-    officialSource: "NORMAM-211/DPC, Anexo 2-B / Anexo 2-D (Portaria DPC/MB nº 115/2023 consolidada 2026)",
+    officialSource: "NORMAM-211/DPC, Anexo 2-B (Aprovado pela Portaria DPC/DGN/MB Nº 200, de 27 de fevereiro de 2026)",
     sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
-    editionDate: "Edição Consolidada 2026 (Portaria DPC/MB nº 115/2023)",
+    editionDate: "Portaria DPC/DGN/MB Nº 200/2026 (Vigente desde 27/02/2026)",
     purpose: "Boletim oficial emitido em 2 vias contendo a ficha técnica estrutural, dimensões, arqueação, sistema de propulsão e lotação da embarcação.",
     signerRole: "Proprietário ou Responsável Legal",
     personalDataFields: [
       { name: "Nome do Proprietário", found: true },
       { name: "CPF / CNPJ", found: true },
+      { name: "Endereço, Bairro e CEP", found: true },
+      { name: "Identidade, Órgão Emissor e Data", found: true },
+      { name: "Telefone, Celular e E-mail", found: true },
+      { name: "Nota Fiscal, Data da Venda e Vendedor", found: true },
     ],
     vesselDataFields: [
-      { name: "Comprimento total, Boca, Pontal e Calado", found: true },
-      { name: "Arqueação Bruta e Líquida", found: true },
-      { name: "Ano de Construção e Estaleiro", found: true },
-      { name: "Quantidade de Motores, Marca, Potência e Série", found: true },
-      { name: "Lotação autorizada (tripulantes + passageiros)", found: true },
+      { name: "Nome, Inscrição e Arqueação Bruta/Líquida", found: true },
+      { name: "Tipo, Atividade e Ano de Construção", found: true },
+      { name: "Comprimento, Boca, Pontal e Contorno", found: true },
+      { name: "Tripulantes e Passageiros (Lotação)", found: true },
+      { name: "Nº do Casco e Material do Casco", found: true },
+      { name: "Área de Navegação (Interior, Costeira ou Oceânica)", found: true },
+      { name: "Motorização: Marca, Potência e Nº de Série", found: true },
     ],
     attachments: [
       { id: "doc-nf-casco", name: "Nota Fiscal do Casco", isProtocolOnly: false, why: "Extração de dimensões e número de série do fabricante", sharedWithDocIds: ["doc_req_inscricao"] },
@@ -287,9 +293,9 @@ export const OUTPUT_DOCS_CATALOG: OutputDocumentConfig[] = [
     serviceId: "transferencia",
     serviceName: "Transferência de propriedade",
     documentType: "official_form",
-    officialSource: "NORMAM-211/DPC, Anexo 2-C / Anexo 2-E e item 0208",
+    officialSource: "NORMAM-211/DPC, Anexo 2-C (Aprovado pela Portaria DPC/DGN/MB Nº 200/2026) c/c item 2.11",
     sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
-    editionDate: "Edição Consolidada 2026 (Portaria DPC/MB nº 115/2023)",
+    editionDate: "Portaria DPC/DGN/MB Nº 200/2026 (Vigente desde 27/02/2026)",
     purpose: "Requerer a averbação de nova titularidade e expedição de novo TIE em nome do comprador adquirente.",
     signerRole: "Adquirente (Comprador) e/ou Vendedor",
     personalDataFields: [
@@ -308,14 +314,14 @@ export const OUTPUT_DOCS_CATALOG: OutputDocumentConfig[] = [
   },
   {
     id: "doc_decl_transf",
-    name: "Autorização de Transferência de Propriedade (Anexo 2-M)",
+    name: "Autorização de Transferência de Propriedade (Anexo 2-K)",
     serviceId: "transferencia",
     serviceName: "Transferência de propriedade",
     documentType: "official_form",
-    officialSource: "NORMAM-211/DPC, Anexo 2-M (Portaria DPC/MB nº 115/2023 consolidada 2026)",
+    officialSource: "NORMAM-211/DPC, Anexo 2-K (Portaria DPC/MB nº 115/2023 consolidada pela Portaria DPC/DGN/MB Nº 200/2026, págs. 202-203)",
     sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
-    editionDate: "Edição Consolidada 2026",
-    purpose: "Formulário oficial de autorização de transferência de propriedade com firmas reconhecidas por autenticidade do vendedor e comprador.",
+    editionDate: "Portaria DPC/DGN/MB Nº 200/2026 (Vigente desde 27/02/2026)",
+    purpose: "Formulário oficial de autorização de transferência de propriedade com firmas reconhecidas por autenticidade do vendedor e comprador (ou assinatura Gov.br Prata/Ouro nos termos do item 2.2.4).",
     signerRole: "Transmitente (Vendedor) e Adquirente (Comprador)",
     personalDataFields: [
       { name: "Identificação das Partes e Endereços", found: true },
@@ -325,7 +331,28 @@ export const OUTPUT_DOCS_CATALOG: OutputDocumentConfig[] = [
       { name: "Dados da Embarcação e Motores Instalados", found: true },
     ],
     attachments: [
-      { id: "doc-embarcacao-transf", name: "TIE da Embarcação", isProtocolOnly: false, why: "Vinculação formal da embarcação e motores", sharedWithDocIds: ["doc_req_transf"] },
+      { id: "doc-embarcacao-transf", name: "TIE da Embarcação", isProtocolOnly: false, why: "Vinculação formal da embarcação e motores", sharedWithDocIds: ["doc_req_transf", "doc_comunicacao_transf"] },
+    ],
+  },
+  {
+    id: "doc_comunicacao_transf",
+    name: "Comunicação de Transferência de Propriedade (Anexo 2-I)",
+    serviceId: "transferencia",
+    serviceName: "Transferência de propriedade",
+    documentType: "official_form",
+    officialSource: "NORMAM-211/DPC, Anexo 2-I (Portaria DPC/MB nº 115/2023 consolidada pela Portaria DPC/DGN/MB Nº 200/2026, pág. 198)",
+    sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
+    editionDate: "Portaria DPC/DGN/MB Nº 200/2026 (Vigente desde 27/02/2026)",
+    purpose: "Formulário oficial de comunicação de transferência protocolado pelo proprietário anterior (vendedor) para se isentar de multas e responsabilidades perante a Capitania dos Portos.",
+    signerRole: "Proprietário Anterior (Vendedor)",
+    personalDataFields: [
+      { name: "Qualificação do Vendedor e Novo Proprietário", found: true },
+    ],
+    vesselDataFields: [
+      { name: "Nome e Número de Inscrição da Embarcação", found: true },
+    ],
+    attachments: [
+      { id: "doc-embarcacao-transf", name: "TIE da Embarcação", isProtocolOnly: false, why: "Vinculação formal da embarcação", sharedWithDocIds: ["doc_req_transf", "doc_decl_transf"] },
     ],
   },
   {
@@ -334,10 +361,10 @@ export const OUTPUT_DOCS_CATALOG: OutputDocumentConfig[] = [
     serviceId: "renovacao",
     serviceName: "Renovação de documento",
     documentType: "official_form",
-    officialSource: "NORMAM-211/DPC, Anexo 2-C / Anexo 2-E e item 0212",
+    officialSource: "NORMAM-211/DPC, Anexo 2-C c/c item 2.7 (Portaria DPC/DGN/MB Nº 200/2026, págs. 61-62 e 186-187)",
     sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
-    editionDate: "Edição Consolidada 2026",
-    purpose: "Solicitar nova via de documento de inscrição com prazo de validade prorrogado por mais 5 anos.",
+    editionDate: "Portaria DPC/DGN/MB Nº 200/2026 (Vigente desde 27/02/2026)",
+    purpose: "Requerimento oficial padronizado perante a Capitania dos Portos solicitando a renovação e prorrogação da validade do TIE/TIEM por 5 anos.",
     signerRole: "Proprietário Requerente",
     personalDataFields: [
       { name: "Nome e Documento do Proprietário", found: true },
@@ -355,10 +382,10 @@ export const OUTPUT_DOCS_CATALOG: OutputDocumentConfig[] = [
     serviceId: "renovacao",
     serviceName: "Renovação de documento",
     documentType: "platform_generated",
-    officialSource: "Documento Próprio da Plataforma c/c NORMAM-211/DPC item 0212 e Lei Federal nº 7.115/1983",
+    officialSource: "NORMAM-211/DPC item 2.7 c/c Lei Federal nº 7.115/1983",
     sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
-    editionDate: "Modelo Próprio NavalDocs / Lei Federal 7.115/1983",
-    purpose: "Declaração particular elaborada pela plataforma atestando sob as penas da lei que a embarcação mantém inalteradas as condições de salvatagem.",
+    editionDate: "NORMAM-211/DPC item 2.7 / Lei Federal 7.115/1983",
+    purpose: "Declaração formal atestando sob as penas da lei que a embarcação mantém inalteradas as características de casco, propulsão original e salvatagem para renovação de TIE sem vistoria prévia.",
     signerRole: "Proprietário ou Responsável Operacional",
     personalDataFields: [
       { name: "Nome e CPF do Declarante", found: true },
@@ -376,10 +403,10 @@ export const OUTPUT_DOCS_CATALOG: OutputDocumentConfig[] = [
     serviceId: "alteracao_motor",
     serviceName: "Alteração de motor",
     documentType: "official_form",
-    officialSource: "NORMAM-211/DPC, item 0210 e Anexo 2-C / Anexo 2-E",
+    officialSource: "NORMAM-211/DPC, item 2.12 / 2.10 e Anexo 2-C (Portaria DPC/DGN/MB Nº 200/2026, págs. 70-72 e 186-187)",
     sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
-    editionDate: "Edição Consolidada 2026",
-    purpose: "Requerer a averbação da substituição de motor de propulsão e registrar nova potência/série no TIE.",
+    editionDate: "Portaria DPC/DGN/MB Nº 200/2026 (Vigente desde 27/02/2026)",
+    purpose: "Requerer a averbação da substituição de motor de propulsão e registrar nova potência/série no TIE acompanhado de termo de responsabilidade técnica.",
     signerRole: "Proprietário e Responsável Técnico (quando couber)",
     personalDataFields: [
       { name: "Qualificação do Requerente", found: true },
@@ -397,9 +424,9 @@ export const OUTPUT_DOCS_CATALOG: OutputDocumentConfig[] = [
     serviceId: "segunda_via",
     serviceName: "Segunda via de documento",
     documentType: "official_form",
-    officialSource: "NORMAM-211/DPC, Anexo 2-C / Anexo 2-E e item 0214",
+    officialSource: "NORMAM-211/DPC, Anexo 2-C c/c item 2.14 (Portaria DPC/DGN/MB Nº 200/2026)",
     sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
-    editionDate: "Edição Consolidada 2026",
+    editionDate: "Portaria DPC/DGN/MB Nº 200/2026 (Vigente desde 27/02/2026)",
     purpose: "Solicitar 2ª via de TIE/TIEM por perda, extravio, furto, roubo ou dano irreparável do documento original.",
     signerRole: "Proprietário Requerente",
     personalDataFields: [
@@ -416,13 +443,13 @@ export const OUTPUT_DOCS_CATALOG: OutputDocumentConfig[] = [
   },
   {
     id: "doc_decl_perda",
-    name: "Declaração de Perda / Extravio de Documento Náutico",
+    name: "Declaração de Perda / Extravio de Documento Náutico (Anexo 2-H)",
     serviceId: "segunda_via",
     serviceName: "Segunda via de documento",
     documentType: "official_form",
-    officialSource: "NORMAM-211/DPC, Anexo 2-J (Portaria DPC/MB nº 115/2023 consolidada 2026)",
+    officialSource: "NORMAM-211/DPC, Anexo 2-H (Portaria DPC/MB nº 115/2023 consolidada pela Portaria DPC/DGN/MB Nº 200/2026, pág. 196)",
     sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
-    editionDate: "Edição Consolidada 2026",
+    editionDate: "Portaria DPC/DGN/MB Nº 200/2026 (Vigente desde 27/02/2026)",
     purpose: "Formulário oficial preenchido pelo proprietário declarando o extravio de TIE/TIEM sob as penas do art. 299 do Código Penal.",
     signerRole: "Proprietário Declarante",
     personalDataFields: [
@@ -442,9 +469,9 @@ export const OUTPUT_DOCS_CATALOG: OutputDocumentConfig[] = [
     serviceId: "vistoria",
     serviceName: "Vistoria",
     documentType: "official_form",
-    officialSource: "NORMAM-211/DPC, Anexo 2-E e Capítulo 3 / NORMAM-201/DPC item 0302",
+    officialSource: "NORMAM-211/DPC, Anexo 2-C (Aprovado pela Portaria DPC/DGN/MB Nº 200/2026) e Capítulo 3",
     sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
-    editionDate: "Edição Consolidada 2026",
+    editionDate: "Portaria DPC/DGN/MB Nº 200/2026 (Vigente desde 27/02/2026)",
     purpose: "Requerer formalmente a realização de vistoria de arqueação, reclassificação ou renovação junto à Capitania dos Portos.",
     signerRole: "Requerente ou Responsável Técnico",
     personalDataFields: [
@@ -524,14 +551,56 @@ export const OUTPUT_DOCS_CATALOG: OutputDocumentConfig[] = [
     ],
   },
   {
+    id: "doc_decl_perda_cha",
+    name: "Declaração de Perda / Extravio de CHA (Anexo 5-D)",
+    serviceId: "habilitacao_cha",
+    serviceName: "2ª Via de CHA por Extravio",
+    documentType: "official_form",
+    officialSource: "NORMAM-211/DPC, Anexo 5-D (Declaração de Extravio, Furto, Roubo ou Dano da CHA)",
+    sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
+    editionDate: "Edição Consolidada NORMAM-211/DPC",
+    purpose: "Declaração sob as penas da lei (Art. 299 CP) de perda, furto, roubo ou dano da habilitação de amador.",
+    signerRole: "Amador Declarante",
+    personalDataFields: [
+      { name: "Nome Completo do Amador", found: true },
+      { name: "CPF, RG e Endereço", found: true },
+      { name: "Categoria da CHA Extraviada", found: true },
+    ],
+    vesselDataFields: [],
+    attachments: [
+      { id: "doc-comp-residencia", name: "Comprovante de Residência", isProtocolOnly: false, why: "Exigência formal do Anexo 5-D para confirmação de domicílio" },
+    ],
+  },
+  {
+    id: "doc_atestado_ara",
+    name: "Atestado de Treinamento para Arrais-Amador (Anexo 5-E)",
+    serviceId: "habilitacao_cha",
+    serviceName: "Emissão de CHA Inicial / Arrais-Amador",
+    documentType: "official_form",
+    officialSource: "NORMAM-211/DPC, Anexo 5-E (Atestado de Treinamento para Arrais-Amador)",
+    sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
+    editionDate: "Edição Consolidada NORMAM-211/DPC",
+    purpose: "Comprovação de realização de no mínimo 6 horas de treinamento teórico e prático em embarcação de esporte e recreio junto a ETN credenciada.",
+    signerRole: "Responsável pelo Estabelecimento / Instrutor Náutico",
+    personalDataFields: [
+      { name: "Nome do Aluno Candidato", found: true },
+      { name: "CPF do Aluno", found: true },
+      { name: "Dados da ETN e Instrutor", found: true },
+    ],
+    vesselDataFields: [],
+    attachments: [
+      { id: "doc-id-proprietario", name: "Documento de Identidade do Aluno", isProtocolOnly: false, why: "Conferência de qualificação no treinamento" },
+    ],
+  },
+  {
     id: "doc_req_alteracao_cadastral",
     name: "Requerimento de Alteração Cadastral do Proprietário",
     serviceId: "alteracao_cadastral",
     serviceName: "Alteração Cadastral",
     documentType: "official_form",
-    officialSource: "NORMAM-211/DPC, Anexo 2-C / Anexo 2-E e item 0213",
+    officialSource: "NORMAM-211/DPC, Anexo 2-C (Aprovado pela Portaria DPC/DGN/MB Nº 200/2026) e item 0213",
     sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
-    editionDate: "Edição Consolidada 2026",
+    editionDate: "Portaria DPC/DGN/MB Nº 200/2026 (Vigente desde 27/02/2026)",
     purpose: "Requerer a averbação de mudança de domicílio ou dados civis do titular perante os registros da Autoridade Marítima.",
     signerRole: "Proprietário Requerente",
     personalDataFields: [
@@ -2412,88 +2481,98 @@ function NovoPedidoPage() {
                         </div>
                       </div>
 
-                      {/* GRID DE REQUISITOS (PESSOAL / EMBARCAÇÃO / ANEXOS) */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* 1. DADOS PESSOAIS */}
-                        <div className="p-3.5 rounded-xl border border-slate-200/70 bg-slate-50/50 space-y-2.5">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-[#0f1d36] flex items-center gap-1.5">
-                              <User className="h-3.5 w-3.5 text-[#1868db]" />
-                              <span>Dados Pessoais</span>
-                            </span>
-                            <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px]">
-                              {client ? "No Cadastro" : "Pendente"}
-                            </Badge>
-                          </div>
-                          <ul className="text-[11px] text-slate-600 space-y-1.5">
-                            {doc.personalDataFields.map((f, i) => (
-                              <li key={i} className="flex items-start gap-1.5">
-                                <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                                <span>{f.name}</span>
-                              </li>
-                            ))}
-                          </ul>
-                          {client ? (
-                            <p className="text-[10px] text-slate-400 pt-1 border-t border-slate-200/60">
-                              Identificado: <strong className="text-slate-700">{client.name}</strong> ({client.document_number || "Doc"})
-                            </p>
-                          ) : (
+                      {/* SUBDIVISÃO RIGOROSA: SEÇÃO A (DADOS DO FORMULÁRIO) E SEÇÃO B (ANEXOS DO PROTOCOLO) */}
+                      <div className="space-y-4">
+                        {/* SEÇÃO A: DADOS NECESSÁRIOS PARA PREENCHER O REQUERIMENTO */}
+                        <div className="p-4 rounded-xl border border-blue-100 bg-blue-50/30 space-y-3">
+                          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-blue-100/80 pb-2">
+                            <div>
+                              <span className="text-xs font-bold text-[#0f1d36] uppercase tracking-wide flex items-center gap-1.5">
+                                <span className="h-5 w-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-black">A</span>
+                                <span>Dados Necessários para Preenchimento do Requerimento</span>
+                              </span>
+                              <p className="text-[11px] text-slate-500 mt-0.5">
+                                Estes dados são gravados diretamente nos campos do Anexo 2-C. Permite preenchimento manual na Etapa 2 ou extração direta dos documentos enviados via OCR.
+                              </p>
+                            </div>
                             <button
                               type="button"
                               onClick={() => setCurrentStep(2)}
-                              className="text-[10px] font-bold text-[#1868db] hover:underline cursor-pointer block pt-1"
+                              className="text-[11px] font-bold text-[#1868db] hover:underline cursor-pointer flex items-center gap-1 bg-white px-2.5 py-1 rounded-md border border-blue-200 shadow-2xs"
                             >
-                              + Preencher cliente na etapa anterior →
+                              <span>Editar Dados Manualmente (Etapa 2)</span>
+                              <span>→</span>
                             </button>
-                          )}
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                            {/* Bloco Requerente */}
+                            <div className="p-3 rounded-lg border border-slate-200/80 bg-white space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold text-[#0f1d36] flex items-center gap-1.5">
+                                  <User className="h-3.5 w-3.5 text-[#1868db]" />
+                                  <span>Qualificação do Requerente</span>
+                                </span>
+                                <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px]">
+                                  {client ? "Confirmado" : "Pendente"}
+                                </Badge>
+                              </div>
+                              <ul className="text-[11px] text-slate-600 space-y-1">
+                                {doc.personalDataFields.map((f, i) => (
+                                  <li key={i} className="flex items-center gap-1.5">
+                                    <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                                    <span>{f.name}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                              {client && (
+                                <p className="text-[10px] text-slate-500 pt-1.5 border-t border-slate-100">
+                                  Requerente ativo: <strong className="text-slate-800">{client.name}</strong> ({client.document_number || "Sem doc"})
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Bloco Embarcação */}
+                            <div className="p-3 rounded-lg border border-slate-200/80 bg-white space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold text-[#0f1d36] flex items-center gap-1.5">
+                                  <Ship className="h-3.5 w-3.5 text-[#1868db]" />
+                                  <span>Características da Embarcação</span>
+                                </span>
+                                <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px]">
+                                  {vess ? "Confirmado" : "Pendente"}
+                                </Badge>
+                              </div>
+                              <ul className="text-[11px] text-slate-600 space-y-1">
+                                {doc.vesselDataFields.map((f, i) => (
+                                  <li key={i} className="flex items-center gap-1.5">
+                                    <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                                    <span>{f.name}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                              {vess && (
+                                <p className="text-[10px] text-slate-500 pt-1.5 border-t border-slate-100">
+                                  Embarcação ativa: <strong className="text-slate-800">{vess.name}</strong> {vess.registration_number ? `(${vess.registration_number})` : "(Inscrição Inicial)"}
+                                </p>
+                              )}
+                            </div>
+                          </div>
                         </div>
 
-                        {/* 2. DADOS DA EMBARCAÇÃO */}
-                        <div className="p-3.5 rounded-xl border border-slate-200/70 bg-slate-50/50 space-y-2.5">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-[#0f1d36] flex items-center gap-1.5">
-                              <Ship className="h-3.5 w-3.5 text-[#1868db]" />
-                              <span>Dados da Embarcação</span>
+                        {/* SEÇÃO B: ANEXOS PARA INSTRUIR O SERVIÇO NA CAPITANIA */}
+                        <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/60 space-y-3">
+                          <div className="border-b border-slate-200/80 pb-2">
+                            <span className="text-xs font-bold text-[#0f1d36] uppercase tracking-wide flex items-center gap-1.5">
+                              <span className="h-5 w-5 rounded-full bg-slate-700 text-white flex items-center justify-center text-[10px] font-black">B</span>
+                              <span>Anexos para Instruir o Serviço e Condições de Aplicação</span>
                             </span>
-                            <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px]">
-                              {vess ? "No Cadastro" : "Pendente"}
-                            </Badge>
-                          </div>
-                          <ul className="text-[11px] text-slate-600 space-y-1.5">
-                            {doc.vesselDataFields.map((f, i) => (
-                              <li key={i} className="flex items-start gap-1.5">
-                                <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                                <span>{f.name}</span>
-                              </li>
-                            ))}
-                          </ul>
-                          {vess ? (
-                            <p className="text-[10px] text-slate-400 pt-1 border-t border-slate-200/60">
-                              Embarcação: <strong className="text-slate-700">{vess.name}</strong> {vess.registration_number ? `(${vess.registration_number})` : ""}
+                            <p className="text-[11px] text-slate-500 mt-0.5">
+                              Estes documentos compõem o dossiê que acompanha o requerimento no protocolo. Documentos de protocolo físico (ex: fotos) não impedem a geração do PDF preenchido.
                             </p>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => setCurrentStep(2)}
-                              className="text-[10px] font-bold text-[#1868db] hover:underline cursor-pointer block pt-1"
-                            >
-                              + Preencher embarcação na etapa anterior →
-                            </button>
-                          )}
-                        </div>
-
-                        {/* 3. DOCUMENTOS E ANEXOS COMPARTILHADOS */}
-                        <div className="p-3.5 rounded-xl border border-slate-200/70 bg-slate-50/50 space-y-2.5">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-[#0f1d36] flex items-center gap-1.5">
-                              <Paperclip className="h-3.5 w-3.5 text-[#1868db]" />
-                              <span>Anexos Necessários</span>
-                            </span>
-                            <span className="text-[10px] text-slate-400">
-                              {doc.attachments.length} aplicáveis
-                            </span>
                           </div>
-                          <div className="space-y-2">
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                             {doc.attachments.map((att) => {
                               const existingReq = requirements.find(r => r.id === att.id);
                               const isAttached = existingReq && existingReq.status === "recebido";
@@ -2501,38 +2580,44 @@ function NovoPedidoPage() {
                               return (
                                 <div
                                   key={att.id}
-                                  className="p-2 rounded-lg bg-white border border-slate-200/80 space-y-1"
+                                  className="p-2.5 rounded-lg bg-white border border-slate-200/80 space-y-1.5 shadow-2xs"
                                 >
                                   <div className="flex items-start justify-between gap-1.5">
-                                    <span className="text-[11px] font-semibold text-slate-800 line-clamp-1">
+                                    <span className="text-xs font-semibold text-slate-800 line-clamp-1">
                                       {att.name}
                                     </span>
                                     {isAttached ? (
-                                      <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 shrink-0">
+                                      <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 shrink-0">
                                         Anexado
                                       </span>
                                     ) : (
-                                      <span className="text-[9px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200 shrink-0">
-                                        {att.isProtocolOnly ? "Protocolo" : "Preenchimento"}
+                                      <span className={cn(
+                                        "text-[9px] font-bold px-2 py-0.5 rounded border shrink-0",
+                                        att.isProtocolOnly
+                                          ? "text-blue-700 bg-blue-50 border-blue-200"
+                                          : "text-amber-700 bg-amber-50 border-amber-200"
+                                      )}>
+                                        {att.isProtocolOnly ? "Protocolo Físico" : "Obrigatório no Processo"}
                                       </span>
                                     )}
                                   </div>
 
-                                  <p className="text-[10px] text-slate-500">
+                                  <div className="text-[11px] text-slate-600 bg-slate-50/70 p-2 rounded border border-slate-100">
+                                    <strong className="text-slate-700 font-medium">Condição / Finalidade: </strong>
                                     {att.isProtocolOnly ? (
-                                      <span className="text-amber-700 font-medium">
-                                        Exigido apenas para protocolo na Capitania (não bloqueia gerar PDF).
+                                      <span className="text-slate-600">
+                                        Exigência de protocolo presencial na Capitania/Delegacia para conferência. Não bloqueia a geração do PDF preenchido pelo sistema.
                                       </span>
                                     ) : (
                                       <span>{att.why}</span>
                                     )}
-                                  </p>
+                                  </div>
 
                                   {att.sharedWithDocIds && att.sharedWithDocIds.length > 0 && (
                                     <div className="pt-0.5">
                                       <span className="inline-flex items-center gap-1 text-[9px] font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
                                         <RefreshCw className="h-2.5 w-2.5 text-slate-400" />
-                                        <span>Reutilizado em outros formulários</span>
+                                        <span>Reutilizado também no BSADE / Procuração</span>
                                       </span>
                                     </div>
                                   )}

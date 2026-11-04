@@ -1344,6 +1344,13 @@ function GerarDocumentoPage() {
           if (tpl.slug === "proc-representacao-naval") {
             const isPF = outorgadoType === "pf";
 
+            const customerCity = customer?.city || "Santos";
+            const customerUf = customer?.state || "SP";
+            const customerDoc = customer?.cpf_cnpj || customer?.document || "";
+            const customerFullAddress = customer?.address
+              ? `${customer.address}, ${customerCity} - ${customerUf}${(customer as any)?.postal_code ? ` - CEP: ${(customer as any).postal_code}` : ""}`
+              : "Não informado";
+
             const resolvedCompanyEmail =
               outorgadoPjEmail ||
               companyData?.contact_email ||
@@ -1384,23 +1391,24 @@ function GerarDocumentoPage() {
               branding?.contact_phone ||
               "";
 
-            const resolvedNacionalidade = outorgadoPfNacionalidade || companyData?.procurador_nacionalidade || (processData?.draft_data as any)?.outorgado_pf_nacionalidade || "";
-            const resolvedEstadoCivil = outorgadoPfEstadoCivil || (processData?.draft_data as any)?.outorgado_pf_estado_civil || "";
+            const resolvedNacionalidade = outorgadoPfNacionalidade || companyData?.procurador_nacionalidade || (processData?.draft_data as any)?.outorgado_pf_nacionalidade || "Brasileira";
+            const resolvedEstadoCivil = outorgadoPfEstadoCivil || (processData?.draft_data as any)?.outorgado_pf_estado_civil || "Casado(a)";
+            const resolvedProfissao = (companyData as any)?.procurador_cargo || (selectedStaff as any)?.role || "Despachante Náutico";
+
+            const procInscricao = vessel?.registration_number || (processData?.draft_data as any)?.registration_number || "A designar (Inscrição Inicial)";
+            const procHull = (vessel as any)?.hull_number || (vessel as any)?.chassis_number || (processData?.draft_data as any)?.vessel_hull || "Não informado";
+            const procLength = (processData?.draft_data as any)?.vessel_length || vessel?.length || vessel?.length_overall || "";
+            const procTipo = (vessel as any)?.vessel_type || (vessel as any)?.type || (processData?.draft_data as any)?.vessel_type || "Lancha / Esporte e Recreio";
 
             const outorgadoLines = isPF
               ? [
                   `OUTORGADO (PESSOA FÍSICA):`,
                   `Nome do Procurador: ${outorgadoPfNome || companyData?.procurador_nome || selectedStaff.name}`,
-                  resolvedNacionalidade ? `Nacionalidade: ${resolvedNacionalidade}` : "",
-                  resolvedEstadoCivil ? `Estado Civil: ${resolvedEstadoCivil}` : "",
-                  `CPF: ${outorgadoPfCpf || companyData?.procurador_cpf || "Não informado"}`,
-                  outorgadoPfRg || companyData?.procurador_rg ? `RG: ${outorgadoPfRg || companyData?.procurador_rg}` : "",
-                  outorgadoPfCrea || companyData?.procurador_crea
-                    ? `Registro Profissional / Habilitação: ${outorgadoPfCrea || companyData.procurador_crea}`
-                    : "",
+                  `Nacionalidade / Estado Civil: ${resolvedNacionalidade}, ${resolvedEstadoCivil}`,
+                  `Profissão: ${resolvedProfissao}${outorgadoPfCrea || companyData?.procurador_crea ? ` (Registro: ${outorgadoPfCrea || companyData?.procurador_crea})` : ""}`,
+                  `CPF: ${outorgadoPfCpf || companyData?.procurador_cpf || "Não informado"}    RG: ${outorgadoPfRg || companyData?.procurador_rg || "Não informado"}`,
                   `Endereço Profissional: ${outorgadoPfEndereco || companyData?.procurador_endereco || companyData?.contact_address || "Não informado"}`,
-                  resolvedProcuradorPhone ? `Telefone: ${resolvedProcuradorPhone}` : "",
-                  resolvedProcuradorEmail ? `E-mail: ${resolvedProcuradorEmail}` : "",
+                  `Telefone: ${resolvedProcuradorPhone || "Não informado"}    E-mail: ${resolvedProcuradorEmail || "Não informado"}`,
                   (companyData?.cnpj || currentCompany?.cnpj)
                     ? `Sociedade Vinculada: ${companyData?.name || currentCompany?.name || "NavalDocs Pro"} (CNPJ: ${companyData?.cnpj || currentCompany?.cnpj})`
                     : "",
@@ -1410,32 +1418,42 @@ function GerarDocumentoPage() {
                   `Razão Social: ${outorgadoPjRazao || companyData?.name || currentCompany?.name || "NavalDocs Pro"}`,
                   `CNPJ: ${outorgadoPjCnpj || companyData?.cnpj || currentCompany?.cnpj || "Não informado"}`,
                   `Sede Social: ${outorgadoPjEndereco || companyData?.contact_address || "Não informado"}`,
-                  resolvedCompanyPhone ? `Telefone: ${resolvedCompanyPhone}` : "",
-                  resolvedCompanyEmail ? `E-mail: ${resolvedCompanyEmail}` : "",
-                  `Representação Legal: Representada neste ato por seus administradores ou procuradores com poderes específicos para a prática de atos perante a Autoridade Marítima.`,
+                  `Telefone: ${resolvedCompanyPhone || "Não informado"}    E-mail: ${resolvedCompanyEmail || "Não informado"}`,
+                  `Representação Institucional: Representada por seus diretores, procuradores e prepostos legalmente constituídos para a prática de atos perante a Autoridade Marítima.`,
                 ];
 
             content = [
-              `INSTRUMENTO PARTICULAR DE PROCURAÇÃO: ${tpl.name.toUpperCase()}`,
-              `CÓDIGO: ${tpl.code} | BASE LEGAL: ${tpl.officialSource}`,
-              `PROCESSO Nº: ${processCode}`,
-              `DATA: ${new Date().toLocaleDateString("pt-BR")}`,
+              `INSTRUMENTO PARTICULAR DE PROCURAÇÃO`,
+              `REPRESENTAÇÃO PERANTE A AUTORIDADE MARÍTIMA (NORMAM-211/DPC, ITEM 2.2.4)`,
               ``,
               `OUTORGANTE:`,
               `Nome / Razão Social: ${customerName}`,
-              `CPF / CNPJ: ${customer?.cpf_cnpj || customer?.document || ""}`,
-              customer?.rg ? `RG: ${customer.rg}` : "",
-              `Endereço: ${customer?.address || "Não informado"}, ${customer?.city || ""}/${customer?.state || ""}`,
+              `CPF / CNPJ: ${customerDoc}`,
+              customer?.rg ? `RG / Órgão Emissor: ${customer.rg}` : "",
+              `Endereço Domiciliar: ${customerFullAddress}`,
               customer?.phone ? `Telefone: ${customer.phone}` : "",
               customer?.email ? `E-mail: ${customer.email}` : "",
               ``,
               ...outorgadoLines.filter(Boolean),
               ``,
-              `PODERES ESPECÍFICOS DE REPRESENTAÇÃO NÁUTICA:`,
-              `Por este instrumento particular de mandato, o(a) Outorgante nomeia e constitui o(a) Outorgado(a) como seu(sua) bastante procurador(a) para o fim específico de representá-lo(a) perante a Capitania dos Portos, Delegacias e Agências da Marinha do Brasil, podendo requerer, protocolar, instruir e dar andamento a processos administrativos da embarcação "${vesselName}" (Inscrição: ${vessel?.registration_number || "Em regularização"}), juntar e desentranhar documentos, prestar declarações, assinar termos e praticar os atos necessários ao fiel cumprimento deste mandato.`,
+              `EMBARCAÇÃO OBJETO DO MANDATO:`,
+              `Nome da Embarcação: ${vesselName}    Inscrição: ${procInscricao}`,
+              `Classificação / Tipo: ${procTipo}${procLength ? `    Comprimento: ${procLength} m` : ""}`,
+              `Número do Casco / Chassi: ${procHull}`,
               ``,
-              `PREPARADO POR (OPERADOR DO SISTEMA): ${selectedStaff.name} (${selectedStaff.role})`,
-              `Documento elaborado na plataforma NavalDocs Pro para conferência e assinatura externa (GOV.BR ou presencial) pelo(a) Outorgante.`,
+              `PODERES ESPECÍFICOS DE REPRESENTAÇÃO NÁUTICA:`,
+              `Por este instrumento particular de mandato, o(a) OUTORGANTE nomeia e constitui o(a) OUTORGADO(A) como seu(sua) bastante procurador(a), conferindo-lhe amplos e específicos poderes para representá-lo(a) perante a Diretoria de Portos e Costas (DPC), Capitanias dos Portos, Delegacias e Agências da Marinha do Brasil em todo o território nacional. Em especial, são conferidos poderes para requerer, instruir, acompanhar e formalizar processos de inscrição inicial, transferência de propriedade e jurisdição, renovação de TIE/TIEM, cancelamento, alteração de características ou troca de motor propulsor, vistorias e emissão de certidões referentes à embarcação acima identificada, podendo assinar formulários, requerimentos e termos de responsabilidade oficiais (inclusive Anexos 2-B, 2-C e 2-K da NORMAM-211/DPC), juntar e desentranhar guias, notas fiscais e documentos comprobatórios, solicitar e retirar documentos náuticos definitivos ou provisórios, dar quitação de taxas e cumprir exigências administrativas até a conclusão final do processo marítimo.`,
+              ``,
+              `CLÁUSULA DE SUBSTABELECIMENTO E VALIDADE (NORMAM-211/DPC item 2.2.4 / CC art. 655):`,
+              `É expressamente facultado ao(à) Outorgado(a) substabelecer esta procuração, com reserva de iguais poderes, a despachantes náuticos ou prepostos formalmente credenciados para a prática dos atos estritamente necessários ao cumprimento do mandato perante as Organizações Militares da Marinha do Brasil. Este mandato vigorará pelo prazo de 12 (doze) meses a contar da data de sua assinatura ou até a efetiva conclusão do processo de regularização náutica.`,
+              ``,
+              `Local e Data: ${customerCity}/${customerUf}, ${new Date().toLocaleDateString("pt-BR")}`,
+              ``,
+              `_________________________________________________________________`,
+              `Assinatura do Outorgante: ${customerName}`,
+              `(CPF/CNPJ: ${customerDoc})`,
+              ``,
+              `Nota de Autenticação: Este instrumento particular de mandato atende às exigências da NORMAM-211/DPC (item 2.2.4, alínea a) e do Código Civil Brasileiro (arts. 653 a 655). Deverá ser apresentado acompanhado de cópia autenticada do documento de identificação do outorgante ou conter firma reconhecida por semelhança, admitindo-se igualmente assinatura eletrônica avançada (Gov.br Prata ou Ouro) ou qualificada (ICP-Brasil).`,
             ]
               .filter(Boolean)
               .join("\n");
@@ -1475,6 +1493,1269 @@ function GerarDocumentoPage() {
             ]
               .filter(Boolean)
               .join("\n");
+          } else if (
+            tpl.slug === "bsade-simplificado" ||
+            tpl.code === "BSADE-001" ||
+            tpl.id === "doc_bsade"
+          ) {
+            // NORMAM-211/DPC Anexo 2-B (página 185) - BOLETIM SIMPLIFICADO DE ATUALIZAÇÃO DE DADOS DE EMBARCAÇÃO
+            const customerCity = customer?.city || "Santos";
+            const customerUf = customer?.state || "SP";
+            const customerBairro = (customer as any)?.neighborhood || (customer as any)?.bairro || "Centro";
+            const fullAddress = customer?.address || "Não informado";
+            const customerDoc = customer?.cpf_cnpj || customer?.document || "";
+
+            const servicesRaw = (processData?.draft_data as any)?.services || [];
+            const procType = (processData?.process_type || "").toLowerCase();
+
+            const isTransf = procType.includes("transfer") || servicesRaw.includes("transferencia_propriedade");
+            const isInscr = procType.includes("inscri") || procType.includes("registro") || servicesRaw.includes("registro_embarcacao") || (!isTransf && !procType.includes("cancel"));
+            const isAltCad = procType.includes("altera") || servicesRaw.includes("alteracao_dados") || servicesRaw.includes("alteracao_cadastral");
+            const isCancel = procType.includes("cancel") || servicesRaw.includes("cancelamento_inscricao");
+            const isTransfJurisd = procType.includes("jurisd") || servicesRaw.includes("transferencia_jurisdicao");
+            const isCertidao = procType.includes("certid") || servicesRaw.includes("emissao_certidao");
+
+            let resolvedCep = (customer as any)?.postal_code || (customer as any)?.cep || "";
+            if (!resolvedCep && customer?.address) {
+              const cepMatch = customer.address.match(/\b\d{5}-?\d{3}\b/);
+              if (cepMatch) resolvedCep = cepMatch[0];
+            }
+
+            const resolvedRg = customer?.rg || (customer as any)?.identity_number || (customer as any)?.rg_number || "";
+            const resolvedRgIssuer = (customer as any)?.rg_issuer || "SSP";
+            const resolvedRgDate = (customer as any)?.rg_issue_date || (customer as any)?.rg_data_emissao || "Não informada";
+
+            const customerTel = customer?.phone || "Não informado";
+            const customerCel = (customer as any)?.mobile_phone || (customer as any)?.celular || customer?.phone || "Não informado";
+            const customerEmail = customer?.email || "Não informado";
+
+            const resolvedNfNumero = (processData?.draft_data as any)?.invoice_number || (processData?.draft_data as any)?.nf_numero || (processData?.draft_data as any)?.nf_casco || (vessel as any)?.invoice_number || "Conforme Nota Fiscal";
+            const resolvedNfData = (processData?.draft_data as any)?.invoice_date || (processData?.draft_data as any)?.data_venda || (vessel as any)?.invoice_date || "Em anexo";
+            const resolvedNfLocal = (processData?.draft_data as any)?.invoice_place || (processData?.draft_data as any)?.local_venda || customerCity;
+            const resolvedVendedor = (processData?.draft_data as any)?.seller_name || (processData?.draft_data as any)?.vendedor_nome || (processData?.draft_data as any)?.vendedor || (vessel as any)?.seller_name || "Conforme Nota Fiscal / Declaração";
+            const resolvedVendedorDoc = (processData?.draft_data as any)?.seller_document || (processData?.draft_data as any)?.vendedor_cpf_cnpj || (processData?.draft_data as any)?.vendedor_doc || "Conforme NF";
+
+            const resolvedLength = (processData?.draft_data as any)?.vessel_length || vessel?.length || vessel?.length_overall || "";
+            const formattedLength = resolvedLength ? `${resolvedLength}${String(resolvedLength).includes("m") ? "" : " m"}` : "Não informado";
+            const resolvedHull = (vessel as any)?.hull_number || (vessel as any)?.chassis_number || (processData?.draft_data as any)?.vessel_hull || "Não informado";
+
+            const rawBoca = (vessel as any)?.boca || (vessel as any)?.beam || (processData?.draft_data as any)?.boca || "";
+            const resolvedBoca = rawBoca ? `${rawBoca}${String(rawBoca).includes("m") ? "" : " m"}` : "Não informado";
+
+            const rawPontal = (vessel as any)?.pontal || (vessel as any)?.depth || (processData?.draft_data as any)?.pontal || "";
+            const resolvedPontal = rawPontal ? `${rawPontal}${String(rawPontal).includes("m") ? "" : " m"}` : "Não informado";
+
+            const rawContorno = (vessel as any)?.contorno || (processData?.draft_data as any)?.contorno || "";
+            const resolvedContorno = rawContorno ? `${rawContorno}${String(rawContorno).includes("m") ? "" : " m"}` : "Não informado";
+
+            const resolvedMatCasco = (vessel as any)?.material || (vessel as any)?.hull_material || (processData?.draft_data as any)?.hull_material || (processData?.draft_data as any)?.material_casco || "Fibra de Vidro";
+            const resolvedTipo = (vessel as any)?.vessel_type || (vessel as any)?.type || (processData?.draft_data as any)?.vessel_type || "Lancha";
+            const isProf = vesselCategory === "profissional" || tpl.code === "REQ-PROF";
+            const resolvedAtividade = isProf ? "Comercial / Profissional" : "Esporte e/ou Recreio";
+            const resolvedArqBruta = (vessel as any)?.gross_tonnage || (processData?.draft_data as any)?.gross_tonnage || (processData?.draft_data as any)?.arqueacao_bruta || "Dispensada (Miúda)";
+            const resolvedArqLiquida = (vessel as any)?.net_tonnage || (processData?.draft_data as any)?.net_tonnage || (processData?.draft_data as any)?.arqueacao_liquida || "Dispensada (Miúda)";
+            const resolvedTripulantes = String((vessel as any)?.crew_capacity || (processData?.draft_data as any)?.crew || (processData?.draft_data as any)?.tripulantes || "1");
+            const resolvedPassageiros = String((vessel as any)?.passenger_capacity || (vessel as any)?.capacity || (processData?.draft_data as any)?.passenger_capacity || (processData?.draft_data as any)?.passageiros || (processData?.draft_data as any)?.lotacao || "Conforme fabricante");
+            const resolvedAnoConstrucao = String((vessel as any)?.year_built || (vessel as any)?.construction_year || (processData?.draft_data as any)?.year_built || (processData?.draft_data as any)?.ano_construcao || new Date().getFullYear());
+
+            const rawNavArea = (
+              (vessel as any)?.navigation_area ||
+              (processData?.draft_data as any)?.navigation_area ||
+              (processData?.draft_data as any)?.area_navegacao ||
+              ""
+            ).toLowerCase();
+            const isCosteira = rawNavArea.includes("costeira") || rawNavArea.includes("mar aberto - costeira");
+            const isOceanica = rawNavArea.includes("oceânica") || rawNavArea.includes("oceanica") || rawNavArea.includes("mar aberto - oceânica");
+            const isInterior = rawNavArea.includes("interior") || (!isCosteira && !isOceanica && rawNavArea.length > 0) || (!isCosteira && !isOceanica);
+
+            const resolvedInscricao = isInscr
+              ? "A designar (Inscrição Inicial)"
+              : (vessel?.registration_number || (processData?.draft_data as any)?.registration_number || "Em regularização");
+
+            const motor1Marca = (vessel as any)?.engine_brand || (processData?.draft_data as any)?.engine_brand || (processData?.draft_data as any)?.motor_marca || "Conforme Nota Fiscal";
+            const rawPot = (vessel as any)?.engine_power || (processData?.draft_data as any)?.engine_power || (processData?.draft_data as any)?.motor_potencia || "";
+            const motor1Potencia = rawPot ? `${rawPot}${String(rawPot).toUpperCase().includes("HP") ? "" : " HP"}` : "Conforme NF";
+            const motor1Serie = (vessel as any)?.engine_serial || (processData?.draft_data as any)?.engine_serial || (processData?.draft_data as any)?.motor_serie || "Conforme Nota Fiscal";
+
+            const motor2Marca = (vessel as any)?.engine2_brand || (processData?.draft_data as any)?.motor2_marca || "---";
+            const motor2Potencia = (vessel as any)?.engine2_power || (processData?.draft_data as any)?.motor2_potencia || "---";
+            const motor2Serie = (vessel as any)?.engine2_serial || (processData?.draft_data as any)?.motor2_serie || "---";
+
+            const motor3Marca = (vessel as any)?.engine3_brand || (processData?.draft_data as any)?.motor3_marca || "---";
+            const motor3Potencia = (vessel as any)?.engine3_power || (processData?.draft_data as any)?.motor3_potencia || "---";
+            const motor3Serie = (vessel as any)?.engine3_serial || (processData?.draft_data as any)?.motor3_serie || "---";
+
+            content = [
+              `NORMAM-211/DPC`,
+              `ANEXO 2-B`,
+              `MARINHA DO BRASIL`,
+              `DIRETORIA DE PORTOS E COSTAS`,
+              `BOLETIM SIMPLIFICADO DE ATUALIZAÇÃO DE DADOS DE EMBARCAÇÃO (BSADE)`,
+              ``,
+              `À Capitania dos Portos, Delegacia ou Agência`,
+              ``,
+              `NATUREZA DO REQUERIMENTO`,
+              `[${isInscr ? "X" : " "}] Inscrição de embarcação      [${isTransf ? "X" : " "}] Transferência de proprietário      [${isAltCad ? "X" : " "}] Atualização de dados`,
+              `[${isCancel ? "X" : " "}] Cancelamento de Inscrição    [${isTransfJurisd ? "X" : " "}] Transferência de jurisdição        [${isCertidao ? "X" : " "}] Emissão de Certidão`,
+              ``,
+              `DADOS PESSOAIS DO REQUERENTE`,
+              `NOME DO PROPRIETÁRIO: ${customerName}`,
+              `ENDEREÇO: ${fullAddress}`,
+              `CIDADE: ${customerCity}    BAIRRO: ${customerBairro}    CEP: ${resolvedCep || "Não informado"}`,
+              `IDENTIDADE: ${resolvedRg || (customer?.cpf_cnpj || customer?.document || "")}    ÓRGÃO EMISSOR: ${resolvedRgIssuer}    DATA DE EMISSÃO: ${resolvedRgDate}`,
+              `CPF/CNPJ: ${customerDoc}    TEL.: ${customerTel}    CEL.: ${customerCel}`,
+              `E-mail: ${customerEmail}`,
+              `Nota Fiscal Nº: ${resolvedNfNumero}    Data da Venda: ${resolvedNfData}    Local: ${resolvedNfLocal}`,
+              `Vendedor: ${resolvedVendedor}    CPF/CNPJ: ${resolvedVendedorDoc}`,
+              ``,
+              `DADOS DA EMBARCAÇÃO`,
+              `Nome da Embarcação: ${vesselName}    Inscrição: ${resolvedInscricao}    Arq. Bruta: ${resolvedArqBruta}`,
+              `Tipo: ${resolvedTipo}    Atividade: ${resolvedAtividade}    Arq. Líquida: ${resolvedArqLiquida}`,
+              `Comprimento: ${formattedLength}    Tripulantes: ${resolvedTripulantes}    Ano de Construção: ${resolvedAnoConstrucao}`,
+              `Boca: ${resolvedBoca}    Passageiros: ${resolvedPassageiros}    Nº Casco: ${resolvedHull}`,
+              `Pontal: ${resolvedPontal}    Mat. Casco: ${resolvedMatCasco}    Contorno: ${resolvedContorno}`,
+              `Área de Navegação: [${isInterior ? "X" : " "}] Interior   [${isCosteira ? "X" : " "}] Costeira   [${isOceanica ? "X" : " "}] Oceânica`,
+              ``,
+              `MOTORIZAÇÃO`,
+              `1º Motor/Marca: ${motor1Marca}    Potência: ${motor1Potencia}    Nº Série: ${motor1Serie}`,
+              `2º Motor/Marca: ${motor2Marca}    Potência: ${motor2Potencia}    Nº Série: ${motor2Serie}`,
+              `3º Motor/Marca: ${motor3Marca}    Potência: ${motor3Potencia}    Nº Série: ${motor3Serie}`,
+              ``,
+              `Local e data: ${customerCity}/${customerUf}, ${new Date().toLocaleDateString("pt-BR")}`,
+              `Assinatura do Requerente: __________________________________________________`,
+              `Carimbo e Assinatura do Atendente: _________________________________________`,
+              `Protocolo: __________________________________________________`,
+              ``,
+              `(1) Este formulário é aplicável a embarcações miúdas.`,
+              `(2) Deve ser emitido em duas vias, sendo uma entregue na CP/DL/AG e outra contendo o número do protocolo de recebimento, entregue ao requerente. Após assinado e datado pela CP/DL/AG, permite a utilização da embarcação por um período máximo de 30 dias, prorrogáveis por mais 30 dias.`,
+              ``,
+              `- 2-B-1 -`,
+            ]
+              .filter(Boolean)
+              .join("\n");
+          } else if (
+            tpl.slug === "termo-entrega-transf" ||
+            tpl.slug === "doc_decl_transf" ||
+            tpl.code === "TER-ENTR" ||
+            tpl.code === "ATPE-001" ||
+            tpl.code === "ATPE"
+          ) {
+            // NORMAM-211/DPC Anexo 2-K (páginas oficiais 202 e 203 da Portaria DPC/MB nº 115/2023 consolidada 2026)
+            // AUTORIZAÇÃO DE TRANSFERÊNCIA DE PROPRIEDADE
+            const customerCity = customer?.city || "Santos";
+            const customerUf = customer?.state || "SP";
+            const customerDoc = customer?.cpf_cnpj || customer?.document || "";
+
+            // Resolução do Vendedor (Proprietário Transmitente)
+            const draftSellerName = (processData?.draft_data as any)?.seller_name || (processData?.draft_data as any)?.vendedor_nome;
+            const draftSellerDoc = (processData?.draft_data as any)?.seller_document || (processData?.draft_data as any)?.vendedor_cpf_cnpj || (processData?.draft_data as any)?.vendedor_doc;
+            const draftSellerTel = (processData?.draft_data as any)?.seller_phone || (processData?.draft_data as any)?.vendedor_telefone;
+            const draftSellerEmail = (processData?.draft_data as any)?.seller_email || (processData?.draft_data as any)?.vendedor_email;
+
+            const isCustomerBuyer = !!((processData?.draft_data as any)?.buyer_is_customer || (processData?.draft_data as any)?.compradorId === customer?.id || draftSellerName);
+            
+            const vendedorNome = draftSellerName || (isCustomerBuyer ? ((vessel as any)?.current_owner_name || "Proprietário Anterior conforme TIE") : customerName);
+            const vendedorDoc = draftSellerDoc || (isCustomerBuyer ? ((vessel as any)?.current_owner_document || "") : customerDoc);
+            const vendedorTel = draftSellerTel || (isCustomerBuyer ? "Não informado" : (customer?.phone || "Não informado"));
+            const vendedorEmail = draftSellerEmail || (isCustomerBuyer ? "Não informado" : (customer?.email || "Não informado"));
+
+            // Co-Proprietário
+            const coPropNome = (processData?.draft_data as any)?.co_proprietario_nome || (vessel as any)?.co_owner_name || "---";
+            const coPropDoc = (processData?.draft_data as any)?.co_proprietario_cpf || (vessel as any)?.co_owner_document || "---";
+            const coPropTel = (processData?.draft_data as any)?.co_proprietario_telefone || "---";
+            const coPropEmail = (processData?.draft_data as any)?.co_proprietario_email || "---";
+
+            // Resolução do Comprador (Adquirente)
+            const draftBuyerName = (processData?.draft_data as any)?.buyer_name || (processData?.draft_data as any)?.compradorNome || (processData?.draft_data as any)?.comprador_nome;
+            const draftBuyerDoc = (processData?.draft_data as any)?.buyer_cpf_cnpj || (processData?.draft_data as any)?.comprador_cpf;
+            const draftBuyerTel = (processData?.draft_data as any)?.buyer_phone || (processData?.draft_data as any)?.comprador_telefone;
+            const draftBuyerEmail = (processData?.draft_data as any)?.buyer_email || (processData?.draft_data as any)?.comprador_email;
+
+            let resolvedCep = (customer as any)?.postal_code || (customer as any)?.cep || "";
+            if (!resolvedCep && customer?.address) {
+              const cepMatch = customer.address.match(/\b\d{5}-?\d{3}\b/);
+              if (cepMatch) resolvedCep = cepMatch[0];
+            }
+
+            const compradorNome = isCustomerBuyer ? customerName : (draftBuyerName || "A preencher / Conforme Contrato");
+            const compradorDoc = isCustomerBuyer ? customerDoc : (draftBuyerDoc || "Não informado");
+            const compradorTel = isCustomerBuyer ? (customer?.phone || "Não informado") : (draftBuyerTel || "Não informado");
+            const compradorEmail = isCustomerBuyer ? (customer?.email || "Não informado") : (draftBuyerEmail || "Não informado");
+            const compradorRua = isCustomerBuyer ? (customer?.address || "Não informado") : ((processData?.draft_data as any)?.comprador_rua || "Não informado");
+            const compradorNumero = (customer as any)?.number || (customer as any)?.numero || (processData?.draft_data as any)?.comprador_numero || "S/N";
+            const compradorComplemento = (customer as any)?.complement || (customer as any)?.complemento || (processData?.draft_data as any)?.comprador_complemento || "---";
+            const compradorBairro = (customer as any)?.neighborhood || (customer as any)?.bairro || (processData?.draft_data as any)?.comprador_bairro || "Centro";
+            const compradorCidade = isCustomerBuyer ? `${customerCity}/${customerUf}` : ((processData?.draft_data as any)?.comprador_cidade || `${customerCity}/${customerUf}`);
+            const compradorCep = isCustomerBuyer ? (resolvedCep || "Não informado") : ((processData?.draft_data as any)?.comprador_cep || "Não informado");
+
+            // Valor da Transação Comercial
+            const rawValor = (processData?.draft_data as any)?.sale_value || (processData?.draft_data as any)?.valor_venda || (processData?.draft_data as any)?.valor_transacao || (vessel as any)?.purchase_price;
+            const formattedValor = rawValor
+              ? (typeof rawValor === "number" || !isNaN(Number(rawValor))
+                  ? `R$ ${Number(rawValor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
+                  : String(rawValor))
+              : "Conforme Instrumento Particular de Compra e Venda";
+
+            // Inscrição da Embarcação
+            const resolvedInscricao = vessel?.registration_number || (processData?.draft_data as any)?.registration_number || (vessel as any)?.tie_number || "Conforme TIE anterior";
+
+            // Motores (até 4 motores)
+            const rawEngine1Brand = (vessel as any)?.engine_brand || (processData?.draft_data as any)?.engine_brand || (processData?.draft_data as any)?.motor_marca;
+            const rawEngine1Power = (vessel as any)?.engine_power || (processData?.draft_data as any)?.engine_power || (processData?.draft_data as any)?.motor_potencia;
+            const rawEngine1Serial = (vessel as any)?.engine_serial || (processData?.draft_data as any)?.engine_serial || (processData?.draft_data as any)?.motor_serie;
+            const hasMotor1 = !!(rawEngine1Brand || rawEngine1Power || rawEngine1Serial);
+            const motor1Marca = rawEngine1Brand || (hasMotor1 ? "Conforme TIE" : "---");
+            const motor1Potencia = rawEngine1Power ? `${rawEngine1Power}${String(rawEngine1Power).toUpperCase().includes("HP") ? "" : " HP"}` : (hasMotor1 ? "Conforme TIE" : "---");
+            const motor1Serie = rawEngine1Serial || (hasMotor1 ? "Conforme TIE" : "---");
+
+            const rawEngine2Brand = (vessel as any)?.engine2_brand || (processData?.draft_data as any)?.motor2_marca;
+            const rawEngine2Power = (vessel as any)?.engine2_power || (processData?.draft_data as any)?.motor2_potencia;
+            const rawEngine2Serial = (vessel as any)?.engine2_serial || (processData?.draft_data as any)?.motor2_serie;
+            const hasMotor2 = !!(rawEngine2Brand || rawEngine2Power || rawEngine2Serial);
+            const motor2Marca = rawEngine2Brand || "---";
+            const motor2Potencia = rawEngine2Power ? `${rawEngine2Power}${String(rawEngine2Power).toUpperCase().includes("HP") ? "" : " HP"}` : "---";
+            const motor2Serie = rawEngine2Serial || "---";
+
+            const rawEngine3Brand = (vessel as any)?.engine3_brand || (processData?.draft_data as any)?.motor3_marca;
+            const hasMotor3 = !!rawEngine3Brand;
+            const motor3Marca = rawEngine3Brand || "---";
+            const motor3Potencia = (vessel as any)?.engine3_power || (processData?.draft_data as any)?.motor3_potencia || "---";
+            const motor3Serie = (vessel as any)?.engine3_serial || (processData?.draft_data as any)?.motor3_serie || "---";
+
+            const rawEngine4Brand = (vessel as any)?.engine4_brand || (processData?.draft_data as any)?.motor4_marca;
+            const hasMotor4 = !!rawEngine4Brand;
+            const motor4Marca = rawEngine4Brand || "---";
+            const motor4Potencia = (vessel as any)?.engine4_power || (processData?.draft_data as any)?.motor4_potencia || "---";
+            const motor4Serie = (vessel as any)?.engine4_serial || (processData?.draft_data as any)?.motor4_serie || "---";
+
+            content = [
+              `NORMAM-211/DPC`,
+              `ANEXO 2-K`,
+              `AUTORIZAÇÃO DE TRANSFERÊNCIA DE PROPRIEDADE`,
+              ``,
+              `Nome da embarcação: ${vesselName}       Inscrição: ${resolvedInscricao}`,
+              ``,
+              `Motor 1   [${hasMotor1 ? "X" : " "}] SIM   [${!hasMotor1 ? "X" : " "}] NÃO          Motor 2   [${hasMotor2 ? "X" : " "}] SIM   [${!hasMotor2 ? "X" : " "}] NÃO`,
+              `Marca: ${motor1Marca}                   Marca: ${motor2Marca}`,
+              `Potência: ${motor1Potencia}             Potência: ${motor2Potencia}`,
+              `Nº de Série: ${motor1Serie}             Nº de Série: ${motor2Serie}`,
+              ``,
+              `Motor 3   [${hasMotor3 ? "X" : " "}] SIM   [${!hasMotor3 ? "X" : " "}] NÃO          Motor 4   [${hasMotor4 ? "X" : " "}] SIM   [${!hasMotor4 ? "X" : " "}] NÃO`,
+              `Marca: ${motor3Marca}                   Marca: ${motor4Marca}`,
+              `Potência: ${motor3Potencia}             Potência: ${motor4Potencia}`,
+              `Nº de Série: ${motor3Serie}             Nº de Série: ${motor4Serie}`,
+              ``,
+              `PROPRIETÁRIO                            CO-PROPRIETÁRIO`,
+              `Nome: ${vendedorNome}                   Nome: ${coPropNome}`,
+              `CPF/CNPJ: ${vendedorDoc}                CPF/CNPJ: ${coPropDoc}`,
+              `Telefone: ${vendedorTel}                Telefone: ${coPropTel}`,
+              `E-mail: ${vendedorEmail}                E-mail: ${coPropEmail}`,
+              ``,
+              `COMPRADOR`,
+              `Nome: ${compradorNome}`,
+              `CPF/CNPJ: ${compradorDoc}`,
+              `Telefone: ${compradorTel}    E-mail: ${compradorEmail}`,
+              `Rua: ${compradorRua}    Número: ${compradorNumero}    Complemento: ${compradorComplemento}`,
+              `Bairro: ${compradorBairro}    Cidade: ${compradorCidade}    CEP: ${compradorCep}`,
+              `Valor: ${formattedValor}`,
+              ``,
+              `Local e Data: ${customerCity}/${customerUf}, ${new Date().toLocaleDateString("pt-BR")}`,
+              ``,
+              `__________________________               _________________________________`,
+              `Assinatura do Proprietário               Assinatura do Co-Proprietário`,
+              ``,
+              `Reconhecimento de firma do Proprietário / Co-Proprietário por autenticidade`,
+              ``,
+              `___________________________________________________________`,
+              `Assinatura do Comprador`,
+              ``,
+              `- 2-K- 1-`,
+              ``,
+              `--- PAGE BREAK ---`,
+              ``,
+              `NORMAM-211/DPC`,
+              ``,
+              `Reconhecimento de firma do comprador por autenticidade`,
+              ``,
+              `a) Este documento, devidamente preenchido e com o reconhecimento das firmas por autenticidade (caso a assinatura seja eletrônica, vide alínea b) do inciso 2.2.4) deverá ser apresentado dentro do prazo de 15 dias para as embarcações registradas e de 60 dias para as embarcações inscritas, juntamente com os demais documentos necessários à transferência de propriedade contidos no artigo 2.11.`,
+              ``,
+              `b) Para evitar a incidência de multas sobre o vendedor, recomenda-se que este preencha a Comunicação de Transferência de Propriedade (anexo 2-I) e apresente em qualquer Capitania, Delegacia ou Agência (CP/DL/AG).`,
+              ``,
+              `- 2-K- 2-`,
+            ]
+              .filter(Boolean)
+              .join("\n");
+          } else if (
+            tpl.slug === "decl-perda-extravio" ||
+            tpl.code === "DEC-PERD" ||
+            tpl.code === "DEC-PERDA" ||
+            tpl.id === "doc_decl_perda" ||
+            tpl.slug === "doc_decl_perda"
+          ) {
+            // NORMAM-211/DPC Anexo 2-H (página oficial 196) - DECLARAÇÃO DE PERDA/EXTRAVIO DE DOCUMENTO
+            const customerCity = customer?.city || "Santos";
+            const customerUf = customer?.state || "SP";
+            const customerDoc = customer?.cpf_cnpj || customer?.document || "";
+
+            const resolvedRg = customer?.rg || (customer as any)?.identity_number || (customer as any)?.rg_number || "";
+            const resolvedRgIssuer = (customer as any)?.rg_issuer || "SSP";
+            const resolvedRgDate = (customer as any)?.rg_issue_date || (customer as any)?.rg_data_emissao || "Não informada";
+
+            const resolvedNac = customerNacionalidade || (customer as any)?.nationality || (processData?.draft_data as any)?.customer_nationality || "Brasileira";
+            const resolvedNat = customerNaturalidade || (customer as any)?.birthplace || (customer as any)?.naturalidade || (processData?.draft_data as any)?.customer_naturalidade || `${customerCity} - ${customerUf}`;
+
+            const customerTel = customer?.phone || "Não informado";
+            const customerCel = (customer as any)?.mobile_phone || (customer as any)?.celular || customer?.phone || "Não informado";
+            const customerEmail = customer?.email || "Não informado";
+
+            const resolvedInscricao = vessel?.registration_number || (processData?.draft_data as any)?.registration_number || (vessel as any)?.tie_number || "Conforme TIE anterior";
+
+            content = [
+              `NORMAM-211/DPC`,
+              `ANEXO 2-H`,
+              `DECLARAÇÃO DE PERDA/EXTRAVIO DE DOCUMENTO`,
+              ``,
+              `Sr. Capitão dos Portos/Delegado/Agente ........................................................................`,
+              ``,
+              `Eu, ${customerName}, Identidade Nº ${resolvedRg || customerDoc}, Expedida em ${resolvedRgDate}, Órgão Emissor ${resolvedRgIssuer}, CPF ${customerDoc}, nacionalidade ${resolvedNac}, naturalidade ${resolvedNat}, Telefone (DDD e nº) ${customerTel}, celular ${customerCel}, e-mail ${customerEmail}.`,
+              ``,
+              `DECLARO para os devidos fins, sob as penas da Lei, a perda / extravio do documento abaixo assinalado:`,
+              `[X]  Título de Inscrição de Embarcação (TIE/TIEM)`,
+              ``,
+              `EMBARCAÇÃO`,
+              `Nome: ${vesselName}          Nº de Inscrição: ${resolvedInscricao}`,
+              ``,
+              `Declaro ainda, estar ciente de que a falsidade da presente declaração pode implicar na sanção penal prevista no art. 299 do Código Penal, conforme transcrição abaixo:`,
+              `“Art. 299 – Omitir, em documento público ou particular, declaração que nele deveria constar, ou nele inserir ou fazer inserir Declaração falsa ou diversa da que deveria ser escrita, com o fim de prejudicar direito, criar obrigação ou alterar a verdade sobre o fato juridicamente relevante”`,
+              `“Pena: reclusão de 1 (um) a 5 (cinco) anos e multa, se o documento é público e reclusão de 1 (um) a 3 (três) anos, se o documento é particular”.`,
+              ``,
+              `Local e Data: ${customerCity}/${customerUf}, ${new Date().toLocaleDateString("pt-BR")}`,
+              ``,
+              `___________________________________________`,
+              `Assinatura do Requerente, Vendedor ou seu`,
+              `Representante legal`,
+              `(${customerName} - CPF: ${customerDoc})`,
+              ``,
+              `- 2-H-1 -`,
+            ]
+              .filter(Boolean)
+              .join("\n");
+          } else if (
+            tpl.slug === "decl-manutencao-renov" ||
+            tpl.code === "DEC-OPER" ||
+            tpl.code === "DECL_RENOV" ||
+            tpl.code === "DEC-MANUT" ||
+            tpl.id === "doc_decl_renov" ||
+            tpl.slug === "doc_decl_renov"
+          ) {
+            // NORMAM-211/DPC Item 2.7 c/c Lei Federal nº 7.115/1983 - DECLARAÇÃO DE MANUTENÇÃO E CONDIÇÕES OPERACIONAIS
+            const customerCity = customer?.city || "Santos";
+            const customerUf = customer?.state || "SP";
+            const customerDoc = customer?.cpf_cnpj || customer?.document || "";
+            const customerAddress = customer?.address || "Não informado";
+            const customerCep = (customer as any)?.postal_code || (customer as any)?.cep || "";
+            const customerTel = customer?.phone || "";
+            const customerEmail = customer?.email || "";
+
+            const resolvedRg = customer?.rg || (customer as any)?.identity_number || (customer as any)?.rg_number || "";
+            const resolvedRgIssuer = (customer as any)?.rg_issuer || "SSP";
+
+            const resolvedInscricao = vessel?.registration_number || (processData?.draft_data as any)?.registration_number || (vessel as any)?.tie_number || "Conforme TIE a renovar";
+            const effectiveLength = (processData?.draft_data as any)?.vessel_length || vessel?.length || vessel?.length_overall || "";
+            const formattedLength = effectiveLength ? `${effectiveLength}${String(effectiveLength).includes("m") ? "" : " m"}` : "Não informado";
+            const vesselMaterial = (processData?.draft_data as any)?.hull_material || (vessel as any)?.hull_material || "Fibra de Vidro";
+            const vesselCrew = (vessel as any)?.crew_capacity || (processData?.draft_data as any)?.crew_capacity || "1";
+            const vesselPass = (vessel as any)?.passenger_capacity || (processData?.draft_data as any)?.passenger_capacity || "7";
+
+            const engineInfo = (processData?.draft_data as any)?.engine_info || (vessel as any)?.engine_power || (vessel as any)?.motor_power || (vessel as any)?.engine_description || "Conforme cadastro oficial perante a CP/DL/AG";
+
+            content = [
+              `NORMAM-211/DPC - ITEM 2.7`,
+              `DECLARAÇÃO DE MANUTENÇÃO E CONDIÇÕES OPERACIONAIS`,
+              `RENOVAÇÃO DE TÍTULO DE INSCRIÇÃO DE EMBARCAÇÃO (TIE / TIEM)`,
+              ``,
+              `À Capitania dos Portos, Delegacia ou Agência da Marinha do Brasil`,
+              ``,
+              `Eu, ${customerName}, Identidade RG nº ${resolvedRg || customerDoc}${resolvedRgIssuer ? ` (${resolvedRgIssuer})` : ""}, CPF nº ${customerDoc}, residente e domiciliado(a) na ${customerAddress}, ${customerCity}/${customerUf}${customerCep ? `, CEP ${customerCep}` : ""}${customerTel ? `, tel: ${customerTel}` : ""}, legítimo(a) proprietário(a) da embarcação:`,
+              ``,
+              `DADOS DA EMBARCAÇÃO:`,
+              `Nome: ${vesselName}          Inscrição Nº: ${resolvedInscricao}          Classificação: ${vesselCategory === "profissional" ? "Comercial" : vesselCategory === "moto_aquatica" ? "Moto Aquática" : "Esporte e/ou Recreio"}`,
+              `Comprimento: ${formattedLength}          Material: ${vesselMaterial}          Lotação: ${vesselCrew} tripulante(s) e ${vesselPass} passageiro(s)`,
+              `Propulsão / Motor: ${engineInfo}`,
+              ``,
+              `DECLARO para os devidos fins de direito, em especial para renovação do TIE/TIEM perante a Capitania dos Portos, conforme item 2.7 da NORMAM-211/DPC e Lei Federal nº 7.115/1983 c/c Art. 299 do Código Penal Brasileiro, que:`,
+              `1. A embarcação acima permanece com todas as características estruturais de casco, dimensões, arranjo geral, capacidade de pessoas e materiais inalterados, sem modificações que demandem vistoria extraordinária;`,
+              `2. A propulsão e motorização instaladas correspondem estritamente ao cadastro oficial no SISGEMB e averbadas no TIE a renovar, operando em perfeitas condições mecânicas e de segurança da navegação;`,
+              `3. A embarcação encontra-se provida de salvatagem integral (coletes homologados com apito, boias com retinida), extintor de incêndio com carga válida, luzes de navegação, amarração e fundeio regulares;`,
+              `4. Assumo inteira responsabilidade civil, criminal e administrativa pelas informações prestadas, ciente das penalidades da lei.`,
+              ``,
+              `Local e Data: ${customerCity}/${customerUf}, ${new Date().toLocaleDateString("pt-BR")}`,
+              ``,
+              `___________________________________________________________________________`,
+              `Assinatura do Proprietário / Responsável Operacional`,
+              `(${customerName} - CPF: ${customerDoc})`,
+              ``,
+              `Nota de Validade: Conforme NORMAM-211/DPC (item 2.7) e Lei Federal nº 7.115/1983, a presente declaração supre vistoria prévia para embarcações sem alteração estrutural, aceitando assinatura eletrônica Gov.br (Prata/Ouro).`,
+            ]
+              .filter(Boolean)
+              .join("\n");
+          } else if (
+            tpl.slug === "comunicacao-transf-anexo-2i" ||
+            tpl.code === "COM-TRANSF" ||
+            tpl.code === "ANEXO-2I" ||
+            tpl.code === "ANEXO_2I" ||
+            tpl.id === "doc_comunicacao_transf" ||
+            tpl.slug === "doc_comunicacao_transf"
+          ) {
+            // NORMAM-211/DPC Anexo 2-I (página oficial 198) - COMUNICAÇÃO DE TRANSFERÊNCIA DE PROPRIEDADE
+            const customerCity = customer?.city || "Santos";
+            const customerUf = customer?.state || "SP";
+            const draft = (processData?.draft_data as any) || {};
+
+            // Dados do vendedor (proprietário anterior)
+            const vendedorNome = draft?.vendedor_nome || draft?.vendedorNome || customerName;
+            const vendedorDoc = draft?.vendedor_cpf || draft?.vendedorCpf || customer?.cpf_cnpj || customer?.document || "";
+            const vendedorDocIdent = draft?.vendedor_rg || (customer as any)?.identity_number || (customer as any)?.rg_number || "";
+            const vendedorIdentTipo = "RG";
+            const vendedorRgIssuer = draft?.vendedor_rg_emissor || (customer as any)?.rg_issuer || "SSP";
+            const vendedorIdentData = draft?.vendedor_rg_data || (customer as any)?.rg_issue_date || "Não informada";
+            const vendedorEndereco = draft?.vendedor_endereco || customer?.address || "Não informado";
+            const vendedorNum = draft?.vendedor_numero || "S/N";
+            const vendedorComp = draft?.vendedor_complemento || "-";
+            const vendedorBairro = draft?.vendedor_bairro || "-";
+            const vendedorCidade = draft?.vendedor_cidade || customerCity;
+            const vendedorUf = draft?.vendedor_uf || customerUf;
+            const vendedorCep = draft?.vendedor_cep || (customer as any)?.postal_code || (customer as any)?.cep || "";
+
+            // Dados do comprador (novo proprietário)
+            const compradorNome = draft?.comprador_nome || draft?.compradorNome || "Novo Proprietário Adquirente";
+            const compradorDoc = draft?.comprador_cpf || draft?.compradorCpf || "Não informado";
+            const compradorDocIdent = draft?.comprador_rg || "";
+            const compradorIdentTipo = "RG";
+            const compradorRgIssuer = draft?.comprador_rg_emissor || "SSP";
+            const compradorIdentData = draft?.comprador_rg_data || "Não informada";
+            const compradorEndereco = draft?.comprador_endereco || "Endereço do Comprador";
+            const compradorNum = draft?.comprador_numero || "S/N";
+            const compradorComp = draft?.comprador_complemento || "-";
+            const compradorBairro = draft?.comprador_bairro || "-";
+            const compradorCidade = draft?.comprador_cidade || customerCity;
+            const compradorUf = draft?.comprador_uf || customerUf;
+            const compradorCep = draft?.comprador_cep || "";
+
+            const resolvedInscricao = vessel?.registration_number || draft?.registration_number || (vessel as any)?.tie_number || "Conforme TIE original";
+            const resolvedCpDlAg = draft?.jurisdicao_cpes || "Capitania dos Portos / Delegacia / Agência";
+
+            content = [
+              `NORMAM-211/DPC`,
+              `ANEXO 2-I`,
+              `COMUNICAÇÃO DE TRANSFERÊNCIA DE PROPRIEDADE`,
+              ``,
+              `DADOS DA EMBARCAÇÃO`,
+              `NOME: ${vesselName}`,
+              `INSCRIÇÃO: ${resolvedInscricao}`,
+              `CP/DL/AG: ${resolvedCpDlAg}`,
+              ``,
+              `PROPRIETÁRIO ANTERIOR`,
+              `NOME COMPLETO: ${vendedorNome}`,
+              `DOC. IDENTIDADE: ${vendedorDocIdent}    TIPO: ${vendedorIdentTipo}    ÓRGÃO EXPEDIDOR: ${vendedorRgIssuer}    DATA EXPEDIÇÃO: ${vendedorIdentData}`,
+              `CPF/CNPJ: ${vendedorDoc}`,
+              `ENDEREÇO: ${vendedorEndereco}    Nº: ${vendedorNum}    COMPLEMENTO: ${vendedorComp}`,
+              `BAIRRO: ${vendedorBairro}    CIDADE: ${vendedorCidade}    UF: ${vendedorUf}    CEP: ${vendedorCep}`,
+              ``,
+              `Declara que a embarcação acima qualificada foi transferida para:`,
+              ``,
+              `NOVO PROPRIETÁRIO`,
+              `NOME COMPLETO: ${compradorNome}`,
+              `DOC. IDENTIDADE: ${compradorDocIdent}    TIPO: ${compradorIdentTipo}    ÓRGÃO EXPEDIDOR: ${compradorRgIssuer}    DATA EXPEDIÇÃO: ${compradorIdentData}`,
+              `CPF/CNPJ: ${compradorDoc}`,
+              `ENDEREÇO: ${compradorEndereco}    Nº: ${compradorNum}    COMPLEMENTO: ${compradorComp}`,
+              `BAIRRO: ${compradorBairro}    CIDADE: ${compradorCidade}    UF: ${compradorUf}    CEP: ${compradorCep}`,
+              ``,
+              `Local e Data: ${customerCity}/${customerUf}, ${new Date().toLocaleDateString("pt-BR")}`,
+              ``,
+              `___________________________________________________________________________`,
+              `ASSINATURA`,
+              `(proprietário anterior)`,
+              `(${vendedorNome} - CPF/CNPJ: ${vendedorDoc})`,
+              ``,
+              `- 2-I-1 -`,
+            ]
+              .filter(Boolean)
+              .join("\n");
+          } else if (
+            tpl.slug === "req-alteracao-motor" ||
+            tpl.code === "REQ-MOT" ||
+            tpl.code === "TERMO_MOTOR" ||
+            tpl.id === "doc_termo_motor" ||
+            tpl.slug === "doc_termo_motor"
+          ) {
+            // NORMAM-211/DPC item 2.12 / 2.10 e Anexo 2-C - REQUERIMENTO DE ALTERAÇÃO DE MOTOR E TERMO DE RESPONSABILIDADE
+            const customerCity = customer?.city || "Santos";
+            const customerUf = customer?.state || "SP";
+            const customerDoc = customer?.cpf_cnpj || customer?.document || "";
+            const fullAddress = customer?.address || "Não informado";
+            const draft = (processData?.draft_data as any) || {};
+
+            let resolvedCep = (customer as any)?.postal_code || (customer as any)?.cep || "";
+            if (!resolvedCep && customer?.address) {
+              const cepMatch = customer.address.match(/\b\d{5}-?\d{3}\b/);
+              if (cepMatch) resolvedCep = cepMatch[0];
+            }
+            const resolvedRg = customer?.rg || (customer as any)?.identity_number || (customer as any)?.rg_number || "";
+            const resolvedInscricao = vessel?.registration_number || draft?.registration_number || (vessel as any)?.tie_number || "Conforme TIE cadastrado";
+            const resolvedHull = (vessel as any)?.hull_number || (vessel as any)?.chassis_number || draft?.vessel_hull || "Não informado";
+            const effectiveLength = draft?.vessel_length || vessel?.length || vessel?.length_overall || "";
+            const formattedLength = effectiveLength ? `${effectiveLength}${String(effectiveLength).includes("m") ? "" : " m"}` : "Não informado";
+
+            // Motor novo e motor anterior
+            const novoMotorMarca = draft?.novoMotorMarca || draft?.novo_motor_marca || (vessel as any)?.engine_brand || "Yamaha";
+            const novoMotorPotencia = draft?.novoMotorPotencia || draft?.novo_motor_potencia || (vessel as any)?.engine_power || (vessel as any)?.potencia_motor || "200 HP";
+            const novoMotorSerie = draft?.novoMotorSerie || draft?.novo_motor_serie || (vessel as any)?.engine_serial || "Não informado";
+            const novoMotorNf = draft?.novo_motor_nf || draft?.nota_fiscal_motor || "Conforme Nota Fiscal anexada";
+
+            const motorAtualMarca = draft?.motorAtualMarca || draft?.motor_anterior_marca || "Conforme cadastro SISGEMB";
+            const motorAtualPotencia = draft?.motorAtualPotencia || draft?.motor_anterior_potencia || "Conforme cadastro";
+            const motorAtualSerie = draft?.motorAtualSerie || draft?.motor_anterior_serie || "Conforme cadastro";
+
+            content = [
+              `NORMAM-211/DPC`,
+              `ANEXO 2-C`,
+              `REQUERIMENTO DE SERVIÇOS PARA REGULARIZAÇÃO DE EMBARCAÇÕES`,
+              ``,
+              `SR. CAPITÃO DOS PORTOS (DELEGADO) OU (AGENTE)`,
+              ``,
+              `REQUERENTE: ${customerName}`,
+              `ENDEREÇO: ${fullAddress}`,
+              `CIDADE: ${customerCity}    UF: ${customerUf}${resolvedCep ? `    CEP: ${resolvedCep}` : ""}`,
+              `IDENT. Nº: ${resolvedRg || customerDoc}${resolvedRg ? `    ORG EXP: ${(customer as any)?.rg_issuer || "SSP"}` : ""}    CPF/CNPJ: ${customerDoc}`,
+              `TEL: ${customer?.phone || ""}    E-mail: ${customer?.email || ""}`.trim(),
+              `OBS: Processo instruído via NavalDocs Pro sob o código ${processCode}`,
+              ``,
+              `EMBARCAÇÃO: ${vesselName}    INSCRIÇÃO Nº: ${resolvedInscricao}`,
+              `Comprimento: ${formattedLength}    Nº DO CASCO: ${resolvedHull}    CLASSIFICAÇÃO: ${vesselCategory === "profissional" ? "Comercial" : vesselCategory === "moto_aquatica" ? "Moto Aquática" : "Esporte e/ou Recreio"}`,
+              `Área de Navegação: [X] Interior   [ ] Costeira   [ ] Oceânica`,
+              ``,
+              `VEM REQUERER A V.Sa. os seguintes serviços:`,
+              `[ ] Inscrição`,
+              `[ ] Cancelamento de Inscrição da Embarcação`,
+              `[ ] Licença de Construção`,
+              `[ ] Licença de Alteração`,
+              `[ ] Licença de Reclassificação`,
+              `[ ] Transferência de Propriedade`,
+              `[ ] Transferência de Jurisdição`,
+              `[ ] Transferência de Propriedade e Jurisdição`,
+              `[ ] Mudança de Nome da Embarcação`,
+              `[ ] Renovação de TIE`,
+              `[ ] Alteração de dados cadastrais da embarcação`,
+              `[ ] Alteração dados cadastrais do Proprietário`,
+              `[X] Troca do Motor Propulsor`,
+              `[ ] Certidão Relativa a Situação da Embarcação`,
+              `[ ] Registro de Ônus e Averbações relativos a embarcação`,
+              `[ ] Cancelamento do Registro de Ônus e Averbações relativo a embarcação`,
+              `[ ] Vistoria de Arqueação`,
+              `[ ] Vistoria de Rearqueação`,
+              `[ ] Vistoria para alterar a classificação da embarcação`,
+              `[ ] Outros serviços: Regularização processual perante a Capitania dos Portos`,
+              ``,
+              `Local e Data: ${customerCity}/${customerUf}, ${new Date().toLocaleDateString("pt-BR")}`,
+              ``,
+              `___________________________________________________________________________`,
+              `Assinatura do Requerente`,
+              `CPF/CNPJ: ${customerDoc}`,
+              ``,
+              `--- PAGE BREAK ---`,
+              ``,
+              `NORMAM-211/DPC - ITEM 2.12 / 2.10`,
+              `TERMO DE RESPONSABILIDADE POR ALTERAÇÃO DE MOTOR PROPULSOR`,
+              ``,
+              `Embarcação: ${vesselName}          Inscrição Nº: ${resolvedInscricao}`,
+              `Proprietário: ${customerName}          CPF/CNPJ: ${customerDoc}`,
+              ``,
+              `1. DISCRIMINAÇÃO DO MOTOR ANTERIOR (RETIRADO):`,
+              `Marca: ${motorAtualMarca}          Potência: ${motorAtualPotencia}          Nº de Série: ${motorAtualSerie}`,
+              ``,
+              `2. DISCRIMINAÇÃO DO NOVO MOTOR INSTALADO:`,
+              `Marca: ${novoMotorMarca}          Potência: ${novoMotorPotencia}          Nº de Série: ${novoMotorSerie}`,
+              `Nota Fiscal de Aquisição Nº / Chave: ${novoMotorNf}`,
+              ``,
+              `3. DECLARAÇÃO DE COMPATIBILIDADE E RESPONSABILIDADE TÉCNICA:`,
+              `Declaro, sob as penas da Lei e em conformidade com as diretrizes do item 2.12 da NORMAM-211/DPC, que o novo motor de propulsão acima discriminado foi instalado segundo as boas normas de engenharia naval e as recomendações do fabricante do motor e da embarcação.`,
+              `Atesto ainda que a potência do novo propulsor (${novoMotorPotencia}) é rigorosamente compatível com a potência máxima admissível homologada na placa de identificação do construtor da embarcação, mantendo intocadas a integridade estrutural do espelho de popa e a estabilidade da embarcação na sua área de navegação autorizada.`,
+              ``,
+              `Local e Data: ${customerCity}/${customerUf}, ${new Date().toLocaleDateString("pt-BR")}`,
+              ``,
+              `___________________________________________________________________________`,
+              `Assinatura do Proprietário / Responsável Técnico`,
+              `(${customerName} - CPF/CNPJ: ${customerDoc})`,
+              ``,
+              `- TERMO MOTOR - NORMAM-211/DPC -`,
+            ]
+              .filter(Boolean)
+              .join("\n");
+          } else if (
+            tpl.slug === "req-moto-aquatica" ||
+            tpl.code === "REQ-JET" ||
+            tpl.code === "REQ_MOTO_AQUATICA" ||
+            tpl.id === "doc_req_moto_aquatica" ||
+            tpl.slug === "doc_req_moto_aquatica"
+          ) {
+            // NORMAM-212/DPC Anexo 2-A - REQUERIMENTO PARA INSCRIÇÃO OU REGULARIZAÇÃO DE MOTO AQUÁTICA
+            const customerCity = customer?.city || "Santos";
+            const customerUf = customer?.state || "SP";
+            const customerDoc = customer?.cpf_cnpj || customer?.document || "";
+            const fullAddress = customer?.address || "Não informado";
+            const draft = (processData?.draft_data as any) || {};
+
+            let resolvedCep = (customer as any)?.postal_code || (customer as any)?.cep || "";
+            if (!resolvedCep && customer?.address) {
+              const cepMatch = customer.address.match(/\b\d{5}-?\d{3}\b/);
+              if (cepMatch) resolvedCep = cepMatch[0];
+            }
+            const resolvedRg = customer?.rg || (customer as any)?.identity_number || (customer as any)?.rg_number || "";
+
+            // Detecção de serviço assinalado no formulário oficial da moto aquática
+            const servicesRaw = draft?.services || [];
+            const procType = (processData?.process_type || "").toLowerCase();
+            const isTransf = procType.includes("transfer") || servicesRaw.includes("transferencia_propriedade");
+            const isRenov = procType.includes("renov") || servicesRaw.includes("renovacao_tie");
+            const isSegVia = procType.includes("segunda") || procType.includes("2") || servicesRaw.includes("segunda_via_tie");
+            const isMotor = procType.includes("motor") || servicesRaw.includes("troca_motor");
+            const isInscr = !isTransf && !isRenov && !isSegVia && !isMotor;
+
+            const resolvedInscricao = isInscr
+              ? "A designar (Inscrição Inicial)"
+              : (vessel?.registration_number || draft?.registration_number || (vessel as any)?.tie_number || "Em regularização");
+
+            const jetManufacturer = draft?.vessel_make || (vessel as any)?.builder || (vessel as any)?.fabricante || "Sea-Doo (BRP)";
+            const jetModel = draft?.vessel_model || (vessel as any)?.model || "RXT-X 300";
+            const jetYear = draft?.vessel_year || (vessel as any)?.year || (vessel as any)?.construction_year || "2024";
+            const jetHin = (vessel as any)?.hull_number || (vessel as any)?.chassis_number || draft?.vessel_hull || "YDV12345L324";
+            const jetColor = (vessel as any)?.hull_color || draft?.vessel_color || "Azul e Preto";
+            const effectiveLength = draft?.vessel_length || vessel?.length || vessel?.length_overall || "3.45";
+            const formattedLength = effectiveLength ? `${effectiveLength}${String(effectiveLength).includes("m") ? "" : " m"}` : "3.45 m";
+            const jetCapacity = draft?.vessel_passengers || (vessel as any)?.passenger_capacity || "3 pessoas (1 piloto + 2 pass.)";
+            const jetEngine = draft?.novoMotorMarca || (vessel as any)?.engine_brand || "Rotax 1630 ACE Supercharged";
+            const jetPower = draft?.novoMotorPotencia || (vessel as any)?.engine_power || (vessel as any)?.potencia_motor || "300 HP";
+            const jetSerial = draft?.novoMotorSerie || (vessel as any)?.engine_serial || "ROTAX-9821415";
+
+            content = [
+              `NORMAM-212/DPC`,
+              `ANEXO 2-A`,
+              `REQUERIMENTO PARA INSCRIÇÃO OU REGULARIZAÇÃO DE MOTO AQUÁTICA`,
+              ``,
+              `SR. CAPITÃO DOS PORTOS (DELEGADO) OU (AGENTE)`,
+              ``,
+              `REQUERENTE: ${customerName}`,
+              `ENDEREÇO: ${fullAddress}`,
+              `CIDADE: ${customerCity}    UF: ${customerUf}${resolvedCep ? `    CEP: ${resolvedCep}` : ""}`,
+              `IDENT. Nº: ${resolvedRg || customerDoc}${resolvedRg ? `    ORG EXP: ${(customer as any)?.rg_issuer || "SSP"}` : ""}    CPF/CNPJ: ${customerDoc}`,
+              `TEL: ${customer?.phone || ""}    E-mail: ${customer?.email || ""}`.trim(),
+              `OBS: Processo instruído via NavalDocs Pro sob o código ${processCode}`,
+              ``,
+              `DADOS DA MOTO AQUÁTICA (MOTONÁUTICA):`,
+              `Nome da Embarcação: ${vesselName}          Inscrição: ${resolvedInscricao}`,
+              `Fabricante: ${jetManufacturer}    Modelo: ${jetModel}    Ano: ${jetYear}    Cor: ${jetColor}`,
+              `Nº do Casco (HIN): ${jetHin}          Comprimento: ${formattedLength}          Lotação: ${jetCapacity}`,
+              `Propulsão: Hidrojato (Fluxo Axial)          Motor: ${jetEngine}`,
+              `Potência: ${jetPower}          Nº de Série do Motor: ${jetSerial}`,
+              `Área de Navegação: [X] Interior (Lagos, rios e canais abrigados)   [ ] Mar Aberto (Áreas autorizadas)`,
+              ``,
+              `SERVIÇO REQUERIDO:`,
+              `[${isInscr ? "X" : " "}] Inscrição Inicial de Moto Aquática`,
+              `[${isTransf ? "X" : " "}] Transferência de Propriedade de Moto Aquática`,
+              `[ ] Transferência de Jurisdição`,
+              `[${isSegVia ? "X" : " "}] 2ª Via de Documento Náutico (TIEM)`,
+              `[${isRenov ? "X" : " "}] Renovação de Validade do TIEM`,
+              `[${isMotor ? "X" : " "}] Alteração de Características Técnicas / Motor`,
+              `[ ] Mudança de Nome da Moto Aquática`,
+              `[ ] Cancelamento de Inscrição`,
+              ``,
+              `Local e Data: ${customerCity}/${customerUf}, ${new Date().toLocaleDateString("pt-BR")}`,
+              ``,
+              `___________________________________________________________________________`,
+              `Assinatura do Requerente / Proprietário (${customerName} - CPF/CNPJ: ${customerDoc})`,
+              ``,
+              `--- PAGE BREAK ---`,
+              ``,
+              `NORMAM-212/DPC - DIRETRIZES DE SEGURANÇA NA MOTONÁUTICA`,
+              `TERMO DE RESPONSABILIDADE OPERACIONAL E SALVATAGEM`,
+              ``,
+              `Moto Aquática: ${vesselName}          Nº do Casco (HIN): ${jetHin}`,
+              `Proprietário: ${customerName}          CPF/CNPJ: ${customerDoc}`,
+              ``,
+              `1. COMPROMISSO DE SALVATAGEM E EQUIPAMENTOS OBRIGATÓRIOS:`,
+              `Declaro que a moto aquática acima identificada está provida dos equipamentos regulamentares exigidos pela NORMAM-212/DPC para trafegar em segurança, mantidos em perfeito estado operacional:`,
+              `• Coletes salva-vidas homologados pela Marinha do Brasil (Classe V) para todos os ocupantes a bordo;`,
+              `• Chave de segurança corta-circuito (tether switch / cordão de parada de emergência) conectada ao punho ou ao colete do condutor;`,
+              `• Apito marítimo de emergência amarrado por cordel ao colete do piloto;`,
+              `• Extintor de incêndio náutico classe B-1 (com carga e lacre válidos) devidamente afixado em suporte apropriado.`,
+              ``,
+              `2. DIRETRIZES DE NAVEGAÇÃO E RESTRIÇÃO DE VELOCIDADE:`,
+              `Declaro pleno conhecimento das normas de tráfego aquaviário, comprometendo-me a:`,
+              `• Respeitar rigorosamente a distância mínima de segurança de 200 metros da linha base das praias e zonas de banhistas;`,
+              `• Trafegar em velocidade moderada nas proximidades de fundeadouros, marinas, pontões de embarque e canais de acesso;`,
+              `• Conduzir a embarcação exclusivamente durante o período diurno (entre o nascer e o pôr do sol), sendo terminantemente vedada a navegação noturna para motos aquáticas;`,
+              `• Permitir a condução apenas a pessoas devidamente habilitadas na categoria de Motonauta (MTA) ou amador com chancela MTA válida.`,
+              ``,
+              `Local e Data: ${customerCity}/${customerUf}, ${new Date().toLocaleDateString("pt-BR")}`,
+              ``,
+              `___________________________________________________________________________`,
+              `Assinatura do Proprietário / Responsável Operacional`,
+              `(${customerName} - CPF/CNPJ: ${customerDoc})`,
+              ``,
+              `- NORMAM-212/DPC - MOTONÁUTICA - ANEXO 2-A -`,
+            ]
+              .filter(Boolean)
+              .join("\n");
+          } else if (
+            tpl.slug === "req-comercial-prof" ||
+            tpl.code === "REQ-PROF" ||
+            tpl.id === "doc_req_comercial" ||
+            tpl.slug === "doc_req_comercial"
+          ) {
+            // NORMAM-201/DPC Anexo 2-E - REQUERIMENTO DE SERVIÇOS PARA REGULARIZAÇÃO DE EMBARCAÇÃO COMERCIAL
+            const customerCity = customer?.city || "Santos";
+            const customerUf = customer?.state || "SP";
+            const customerDoc = customer?.cpf_cnpj || customer?.document || "";
+            const fullAddress = customer?.address || "Não informado";
+            const draft = (processData?.draft_data as any) || {};
+
+            let resolvedCep = (customer as any)?.postal_code || (customer as any)?.cep || "";
+            if (!resolvedCep && customer?.address) {
+              const cepMatch = customer.address.match(/\b\d{5}-?\d{3}\b/);
+              if (cepMatch) resolvedCep = cepMatch[0];
+            }
+
+            // Detecção de serviço assinalado no formulário comercial
+            const servicesRaw = draft?.services || [];
+            const procType = (processData?.process_type || "").toLowerCase();
+            const isTransf = procType.includes("transfer") || servicesRaw.includes("transferencia_propriedade");
+            const isRenov = procType.includes("renov") || servicesRaw.includes("renovacao_tie");
+            const isMotor = procType.includes("motor") || servicesRaw.includes("troca_motor");
+            const isInscr = !isTransf && !isRenov && !isMotor;
+
+            const resolvedInscricao = isInscr
+              ? "A designar (Inscrição Inicial Comercial)"
+              : (vessel?.registration_number || draft?.registration_number || (vessel as any)?.tie_number || "Em regularização comercial");
+
+            const vesselHull = (vessel as any)?.hull_number || (vessel as any)?.chassis_number || draft?.vessel_hull || "Não informado";
+            const effectiveLength = draft?.vessel_length || vessel?.length || vessel?.length_overall || "14.50";
+            const formattedLength = effectiveLength ? `${effectiveLength}${String(effectiveLength).includes("m") ? "" : " m"}` : "14.50 m";
+            const vesselBoca = (vessel as any)?.beam || draft?.vessel_beam || "4.20 m";
+            const vesselPontal = (vessel as any)?.molded_depth || draft?.vessel_pontal || "1.80 m";
+            const vesselAb = (vessel as any)?.gross_tonnage || draft?.gross_tonnage || "18.50";
+            const vesselAl = (vessel as any)?.net_tonnage || draft?.net_tonnage || "12.20";
+            const vesselCapacity = draft?.vessel_passengers || (vessel as any)?.passenger_capacity || "40 pessoas (2 tripulantes CTS + 38 passageiros)";
+            const vesselEngine = draft?.novoMotorMarca || (vessel as any)?.engine_brand || "Scania DI13 Marítimo Diesel 4T";
+            const vesselPower = draft?.novoMotorPotencia || (vessel as any)?.engine_power || (vessel as any)?.potencia_motor || "450 HP";
+            const vesselSerial = draft?.novoMotorSerie || (vessel as any)?.engine_serial || "SC-8912401";
+            const armadorRegistro = draft?.registro_armador || (customer as any)?.armador_registry || "381-ARM/SP";
+            const repLegal = draft?.representante_legal || customerName;
+
+            content = [
+              `NORMAM-201/DPC`,
+              `ANEXO 2-E`,
+              `REQUERIMENTO DE SERVIÇOS PARA REGULARIZAÇÃO DE EMBARCAÇÃO COMERCIAL`,
+              ``,
+              `SR. CAPITÃO DOS PORTOS (DELEGADO OU AGENTE)`,
+              ``,
+              `ARMADOR / REQUERENTE: ${customerName}`,
+              `CNPJ/CPF: ${customerDoc}    REGISTRO DE ARMADOR: ${armadorRegistro}`,
+              `REPRESENTANTE LEGAL: ${repLegal}`,
+              `ENDEREÇO DA SEDE: ${fullAddress}`,
+              `CIDADE: ${customerCity}    UF: ${customerUf}${resolvedCep ? `    CEP: ${resolvedCep}` : ""}`,
+              `TEL: ${customer?.phone || ""}    E-mail: ${customer?.email || ""}`.trim(),
+              `OBS: Processo comercial instruído via NavalDocs Pro sob o código ${processCode}`,
+              `DADOS DA EMBARCAÇÃO PROFISSIONAL / COMERCIAL:`,
+              `Nome da Embarcação: ${vesselName}          Inscrição: ${resolvedInscricao}`,
+              `Atividade Comercial: ${vesselCategory === "profissional" ? "Transporte de Passageiros / Carga / Pesca" : "Atividade Comercial Marítima"}          Nº do Casco: ${vesselHull}`,
+              `Comprimento: ${formattedLength}    Boca: ${vesselBoca}    Pontal: ${vesselPontal}    AB: ${vesselAb}    AL: ${vesselAl}`,
+              `Lotação Autorizada: ${vesselCapacity}`,
+              `Motorização Principal: ${vesselEngine} (${vesselPower})    Série: ${vesselSerial}`,
+              `Área de Navegação: [X] Interior (Águas abrigadas e canais)   [ ] Mar Aberto (Costeira)`,
+              `SERVIÇO REQUERIDO PERANTE A AUTORIDADE MARÍTIMA:`,
+              `[${isInscr ? "X" : " "}] Inscrição de Embarcação Comercial / Profissional`,
+              `[${isTransf ? "X" : " "}] Transferência de Propriedade e Registro de Armador`,
+              `[${isRenov ? "X" : " "}] Renovação do Título de Inscrição da Embarcação (TIE)`,
+              `[ ] Emissão / Renovação do Cartão de Tripulação de Segurança (CTS)`,
+              `[${isMotor ? "X" : " "}] Alteração de Características Técnicas / Motorização`,
+              `[ ] Mudança de Atividade Comercial / Linha de Tráfego`,
+              `[ ] Vistoria Inicial de Segurança Comercial e Arqueação`,
+              `[ ] Cancelamento de Inscrição Comercial`,
+              ``,
+              `Local e Data: ${customerCity}/${customerUf}, ${new Date().toLocaleDateString("pt-BR")}`,
+              ``,
+              `___________________________________________________________________________`,
+              `Assinatura do Armador / Representante Legal`,
+              `CNPJ/CPF: ${customerDoc}`,
+              ``,
+              `--- PAGE BREAK ---`,
+              ``,
+              `NORMAM-201/DPC - NAVEGAÇÃO PROFISSIONAL / COMERCIAL`,
+              `TERMO DE RESPONSABILIDADE DO ARMADOR E TRIPULAÇÃO DE SEGURANÇA`,
+              ``,
+              `Embarcação Comercial: ${vesselName}          Inscrição Nº: ${resolvedInscricao}`,
+              `Armador / Empresa: ${customerName}          CNPJ/CPF: ${customerDoc}`,
+              ``,
+              `1. CARTÃO DE TRIPULAÇÃO DE SEGURANÇA (CTS) E AQUAVIÁRIOS:`,
+              `O armador assume o compromisso formal de manter a embarcação guarnecida com a tripulação de segurança homologada no CTS emitido pela Capitania dos Portos, composta exclusivamente por aquaviários profissionais devidamente habilitados, portadores de Caderneta de Inscrição e Registro (CIR) com certificações e exames médicos periódicos válidos nos termos da NORMAM-101/DPC.`,
+              ``,
+              `2. SALVATAGEM E COMBATE A INCÊNDIO PROFISSIONAL:`,
+              `Declaro que a embarcação encontra-se provida de salvatagem profissional compatível com sua lotação autorizada: coletes homologados pela Marinha do Brasil (Classe II/III) com apito e facho para 100% dos passageiros e tripulantes, coletes infantis regulamentares, boias circulares com retinida flutuante e facho luminoso, e extintores de incêndio com carga válida e laudo de teste hidrostático regular.`,
+              ``,
+              `3. SEGURO E AUTORIZAÇÕES COMPLEMENTARES:`,
+              `Declaro plena ciência da obrigatoriedade de contratação e manutenção de seguro de responsabilidade civil para cobertura de passageiros e tripulação, bem como de manter vigentes as autorizações regulatórias perante órgãos federais, estaduais ou municipais competentes (ANTAQ, Capitania dos Portos e Prefeitura) para a exploração da atividade comercial autorizada.`,
+              ``,
+              `Local e Data: ${customerCity}/${customerUf}, ${new Date().toLocaleDateString("pt-BR")}`,
+              ``,
+              `___________________________________________________________________________`,
+              `Assinatura do Armador / Representante Legal`,
+              `(${customerName} - CNPJ/CPF: ${customerDoc})`,
+              ``,
+              `- NORMAM-201/DPC - EMBARCAÇÃO PROFISSIONAL - ANEXO 2-E -`,
+            ]
+              .filter(Boolean)
+              .join("\n");
+          } else if (
+            tpl.slug === "req-vistoria-naval" ||
+            tpl.code === "REQ-VIST" ||
+            tpl.id === "doc_req_vistoria" ||
+            tpl.slug === "doc_req_vistoria"
+          ) {
+            // NORMAM-211/DPC Capítulo 3 (Seção VIII / Item 3.32) e Anexo 2-C - REQUERIMENTO DE VISTORIA / PERÍCIA NAVAL
+            const customerCity = customer?.city || "Santos";
+            const customerUf = customer?.state || "SP";
+            const customerDoc = customer?.cpf_cnpj || customer?.document || "";
+            const fullAddress = customer?.address || "Não informado";
+            const draft = (processData?.draft_data as any) || {};
+
+            let resolvedCep = (customer as any)?.postal_code || (customer as any)?.cep || "";
+            if (!resolvedCep && customer?.address) {
+              const cepMatch = customer.address.match(/\b\d{5}-?\d{3}\b/);
+              if (cepMatch) resolvedCep = cepMatch[0];
+            }
+            const resolvedRg = customer?.rg || (customer as any)?.identity_number || (customer as any)?.rg_number || "";
+            const resolvedInscricao = vessel?.registration_number || draft?.registration_number || (vessel as any)?.tie_number || "Conforme cadastro SISGEMB";
+            const resolvedHull = (vessel as any)?.hull_number || (vessel as any)?.chassis_number || draft?.vessel_hull || "Não informado";
+            const effectiveLength = draft?.vessel_length || vessel?.length || vessel?.length_overall || "";
+            const formattedLength = effectiveLength ? `${effectiveLength}${String(effectiveLength).includes("m") ? "" : " m"}` : "Não informado";
+
+            // Local da vistoria / marina / estaleiro
+            const localVistoria = draft?.local_vistoria || draft?.localVistoria || (vessel as any)?.marina_name || "Marina Pontal Náutico - Píer Principal (Vaga 28)";
+            const enderecoVistoria = draft?.endereco_vistoria || draft?.enderecoVistoria || `Av. dos Pescadores, nº 250, Pontal da Barra, ${customerCity}/${customerUf}`;
+            const responsavelLocal = draft?.responsavel_local || draft?.responsavelLocal || customerName;
+            const telefoneResponsavel = draft?.telefone_responsavel || customer?.phone || "(13) 98765-4321";
+
+            // Área de Navegação
+            const rawNavArea = (
+              (vessel as any)?.navigation_area ||
+              draft?.navigation_area ||
+              draft?.area_navegacao ||
+              ""
+            ).toLowerCase();
+            const isCosteira = rawNavArea.includes("costeira") || rawNavArea.includes("mar aberto - costeira");
+            const isOceanica = rawNavArea.includes("oceânica") || rawNavArea.includes("oceanica") || rawNavArea.includes("mar aberto - oceânica");
+            const isInterior = rawNavArea.includes("interior") || (!isCosteira && !isOceanica);
+
+            content = [
+              `NORMAM-211/DPC`,
+              `ANEXO 2-C`,
+              `REQUERIMENTO DE SERVIÇOS PARA REGULARIZAÇÃO DE EMBARCAÇÕES`,
+              ``,
+              `SR. CAPITÃO DOS PORTOS (DELEGADO) OU (AGENTE)`,
+              ``,
+              `REQUERENTE: ${customerName}`,
+              `ENDEREÇO: ${fullAddress}`,
+              `CIDADE: ${customerCity}    UF: ${customerUf}${resolvedCep ? `    CEP: ${resolvedCep}` : ""}`,
+              `IDENT. Nº: ${resolvedRg || customerDoc}${resolvedRg ? `    ORG EXP: ${(customer as any)?.rg_issuer || "SSP"}` : ""}    CPF/CNPJ: ${customerDoc}`,
+              `TEL: ${customer?.phone || ""}    E-mail: ${customer?.email || ""}`.trim(),
+              `OBS: Processo instruído via NavalDocs Pro sob o código ${processCode}`,
+              ``,
+              `EMBARCAÇÃO: ${vesselName}    INSCRIÇÃO Nº: ${resolvedInscricao}`,
+              `Comprimento: ${formattedLength}    Nº DO CASCO: ${resolvedHull}    CLASSIFICAÇÃO: ${vesselCategory === "profissional" ? "Comercial" : vesselCategory === "moto_aquatica" ? "Moto Aquática" : "Esporte e/ou Recreio"}`,
+              `Área de Navegação: [${isInterior ? "X" : " "}] Interior   [${isCosteira ? "X" : " "}] Costeira   [${isOceanica ? "X" : " "}] Oceânica`,
+              ``,
+              `VEM REQUERER A V.Sa. os seguintes serviços:`,
+              `[ ] Inscrição`,
+              `[ ] Cancelamento de Inscrição da Embarcação`,
+              `[ ] Licença de Construção`,
+              `[ ] Licença de Alteração`,
+              `[ ] Licença de Reclassificação`,
+              `[ ] Transferência de Propriedade`,
+              `[ ] Transferência de Jurisdição`,
+              `[ ] Transferência de Propriedade e Jurisdição`,
+              `[ ] Mudança de Nome da Embarcação`,
+              `[ ] Renovação de TIE`,
+              `[ ] Alteração de dados cadastrais da embarcação`,
+              `[ ] Alteração dados cadastrais do Proprietário`,
+              `[ ] Troca do Motor Propulsor`,
+              `[ ] Certidão Relativa a Situação da Embarcação`,
+              `[ ] Registro de Ônus e Averbações relativos a embarcação`,
+              `[ ] Cancelamento do Registro de Ônus e Averbações relativo a embarcação`,
+              `[X] Vistoria de Arqueação`,
+              `[ ] Vistoria de Rearqueação`,
+              `[ ] Vistoria para alterar a classificação da embarcação`,
+              `[X] Outros serviços: Vistoria Inicial / Perícia Naval Regulatória`,
+              ``,
+              `Local e Data: ${customerCity}/${customerUf}, ${new Date().toLocaleDateString("pt-BR")}`,
+              ``,
+              `___________________________________________________________________________`,
+              `Assinatura do Requerente / Responsável Técnico`,
+              `CPF/CNPJ: ${customerDoc}`,
+              ``,
+              `--- PAGE BREAK ---`,
+              ``,
+              `NORMAM-211/DPC - CAPÍTULO 3 (SEÇÃO VIII / ITEM 3.32)`,
+              `SOLICITAÇÃO DE VISTORIA NAVAL E AGENDAMENTO DE INSPEÇÃO`,
+              ``,
+              `Embarcação: ${vesselName}          Inscrição Nº: ${resolvedInscricao}`,
+              `Proprietário/Armador: ${customerName}          CPF/CNPJ: ${customerDoc}`,
+              ``,
+              `1. MODALIDADE E FINALIDADE DA VISTORIA SOLICITADA:`,
+              `Vistoria Técnica / Perícia Naval para atesto das condições de habitabilidade, integridade estrutural, arqueação e salvatagem, em conformidade com os itens 3.31 a 3.34 da NORMAM-211/DPC e Anexo 3-B.`,
+              ``,
+              `2. LOCAL E HORÁRIO PARA REALIZAÇÃO DA PERÍCIA (ITEM 3.32.3):`,
+              `Local da Embarcação: ${localVistoria}`,
+              `Endereço do Local: ${enderecoVistoria}`,
+              `Condições de Acesso: Embarcação atracada em águas abrigadas, com acesso seguro e desimpedido aos peritos.`,
+              `Responsável no Local: ${responsavelLocal} (Tel: ${telefoneResponsavel})`,
+              `Horário Sugerido: Dias úteis, em horário comercial (09:00 às 17:00h - Item 3.32.4).`,
+              ``,
+              `3. SETORES PREPARADOS PARA OS VISTORIADORES (ITEM 3.33.1):`,
+              `• Documentos, certificados, tabelas e publicações obrigatórias de bordo;`,
+              `• Casco, convés, espelho de popa e integridade estrutural flutuando;`,
+              `• Praça de máquinas, propulsor instalado e sistema de governo/leme;`,
+              `• Instalações elétricas, bombas de porão e esgotamento sanitário/águas;`,
+              `• Salvatagem regulamentar (coletes homologados, boias, extintores de incêndio com carga válida).`,
+              ``,
+              `4. TERMO DE COMPROMISSO, ASSISTÊNCIA E INDENIZAÇÃO (ITENS 3.32.2 E 3.32.5):`,
+              `O requerente compromete-se a prestar assistência aos peritos da Marinha, ciente de que as despesas e indenizações de perícia são custeadas com esteio no Art. 38 da LESTA (Lei nº 9.537/1997) c/c Tabela de Indenizações da NORMAM-211/DPC.`,
+              ``,
+              `Local e Data: ${customerCity}/${customerUf}, ${new Date().toLocaleDateString("pt-BR")}`,
+              ``,
+              `___________________________________________________________________________`,
+              `Assinatura do Requerente / Responsável Técnico (${customerName} - CPF/CNPJ: ${customerDoc})`,
+              `- NORMAM-211/DPC - VISTORIA NAVAL - CAP. 3 -`,
+            ]
+              .filter(Boolean)
+              .join("\n");
+          } else if (
+            tpl.slug === "req-habilitacao-cha" ||
+            tpl.code === "REQ-CHA" ||
+            tpl.code === "REQ_CHA" ||
+            tpl.id === "doc_req_cha" ||
+            tpl.slug === "doc_req_cha" ||
+            tpl.code === "ANEXO-5-H" ||
+            tpl.code === "ANEXO_5_H"
+          ) {
+            // NORMAM-211/DPC Capítulo 5 c/c Anexo 5-H - REQUERIMENTO DE AMADOR (2 páginas estritas)
+            const customerCity = customer?.city || "Santos";
+            const customerUf = customer?.state || "SP";
+            const customerDoc = customer?.cpf_cnpj || customer?.document || "";
+            const fullAddress = customer?.address || "Não informado";
+            const draft = (processData?.draft_data as any) || {};
+
+            let resolvedCep = (customer as any)?.postal_code || (customer as any)?.cep || "";
+            if (!resolvedCep && customer?.address) {
+              const cepMatch = customer.address.match(/\b\d{5}-?\d{3}\b/);
+              if (cepMatch) resolvedCep = cepMatch[0];
+            }
+            const resolvedRg = customer?.rg || (customer as any)?.identity_number || (customer as any)?.rg_number || "";
+            const rgIssuer = (customer as any)?.rg_issuer || "SSP";
+
+            const amadorPhone = customer?.phone || "(13) 98765-4321";
+            const amadorEmail = customer?.email || "amador@email.com";
+            const categoriaRequerida = draft?.amador_categoria || "Arrais-Amador e Motonauta (ARA / MTA)";
+            const isMta = categoriaRequerida.toLowerCase().includes("mta") || categoriaRequerida.toLowerCase().includes("motonauta");
+
+            content = [
+              `NORMAM-211/DPC - ANEXO 5-H`,
+              `Ao: Sr. Capitão dos Portos, Delegado ou Agente`,
+              `REQUERIMENTO DE AMADOR`,
+              `Eu, ${customerName}, CPF: ${customerDoc}, RG: ${resolvedRg || customerDoc}${resolvedRg ? ` (${rgIssuer})` : ""}, residente na ${fullAddress}, ${customerCity}/${customerUf}${resolvedCep ? `, CEP: ${resolvedCep}` : ""}, Tel: ${amadorPhone}, e-mail: ${amadorEmail}. (Processo NavalDocs Pro: ${processCode})`,
+              `Vem requerer a V. Sa. a realização do seguinte serviço:`,
+              `[ ] 1 - Concessão de CHA por correspondência / equivalência profissional`,
+              `[X] 2 - Emissão / Renovação de Carteira de Habilitação de Amador (CHA)`,
+              `[${isMta ? "X" : " "}] 3 - Renovação de CHA com agregação da categoria de MTA (Motonauta)`,
+              `[ ] 4 - Emissão de Certificado de Cadastramento de Marinas e Clubes Náuticos`,
+              `[ ] 5 - Renovação de Certificado de Cadastramento de Marinas e Entidades`,
+              `[ ] 6 - Cancelamento de Cadastramento de Marinas e Entidades Desportivas`,
+              `[ ] 7 - Credenciamento de Estabelecimento de Treinamento Náutico / PF (ARA)`,
+              `[ ] 8 - Credenciamento de Órgão do Escoteiro do Mar`,
+              `[ ] 9 - Credenciamento de Estabelecimento Náutico para Curso de Veleiro`,
+              `[ ] 10 - Renovação do Credenciamento de ETN / Pessoa Física / Escoteiro do Mar`,
+              `[ ] 11 - Descredenciamento voluntário de ETN-A/PF, ETN-VLA e Escoteiro do Mar`,
+              `[ ] 12 - Pedido de Revisão de Prova de Capitão-Amador`,
+              `Local e Data: ${customerCity}/${customerUf}, ${new Date().toLocaleDateString("pt-BR")}`,
+              `___________________________________________________________________________`,
+              `Assinatura do Requerente (${customerName} - CPF: ${customerDoc})`,
+              `- 5-H-1 -`,
+              `--- PAGE BREAK ---`,
+              `NORMAM-211/DPC - CAPÍTULO 5 (HABILITAÇÃO DE AMADORES)`,
+              `ANEXO 5-H - DISCRIMINAÇÃO COMPLEMENTAR DO PEDIDO`,
+              `Candidato / Amador Requerente: ${customerName}          CPF: ${customerDoc}`,
+              `Descrição do Pedido: Solicito a V. Sa. a emissão/renovação da Carteira de Habilitação de Amador (CHA), tendo cumprido integralmente os requisitos do Capítulo 5 da NORMAM-211/DPC.`,
+              `1. CATEGORIA DE AMADOR REQUERIDA / VINCULADA:`,
+              `• [ ] Veleiro (VLA) - Condução de embarcações a vela sem propulsão a motor nos limites da navegação interior;`,
+              `• [${isMta ? "X" : " "}] Motonauta (MTA) - Condução de moto aquática nos limites da navegação interior;`,
+              `• [X] Arrais-Amador (ARA) - Condução de embarcações de esporte e recreio na navegação interior;`,
+              `• [ ] Mestre-Amador (MSA) - Condução entre portos nacionais na navegação costeira (até 20 milhas da costa);`,
+              `• [ ] Capitão-Amador (CPA) - Condução de embarcações sem limite de afastamento da costa (mar aberto).`,
+              `2. MODALIDADE DO SERVIÇO:`,
+              `• [X] Inscrição em exame e emissão inicial de CHA com agregação regulamentar;`,
+              `• [ ] Renovação decenal de validade da Carteira de Habilitação de Amador;`,
+              `• [ ] Segunda via por motivo de extravio, perda, furto ou dano irreparável;`,
+              `• [ ] Concessão por correspondência/equivalência militar ou da Marinha Mercante.`,
+              `3. DOCUMENTAÇÃO INSTRUTÓRIA ANEXADA:`,
+              `• Documento oficial de identificação com foto e CPF dentro da validade;`,
+              `• Comprovante de residência em nome do interessado ou Declaração (Anexo 2-G / Lei 7.115/83);`,
+              `• Atestado Médico de aptidão física e mental ou cópia da CNH dentro da validade (Item 5.4.1);`,
+              `• Atestado de treinamento prático náutico emitido por ETN credenciada;`,
+              `• Guia de Recolhimento da União (GRU) com o respectivo comprovante de quitação bancária.`,
+              `Observações: (1) É facultado requerer mais de uma opção no mesmo pedido; (2) Apensada documentação da NORMAM-211/DPC.`,
+              `Local e Data: ${customerCity}/${customerUf}, ${new Date().toLocaleDateString("pt-BR")}`,
+              `___________________________________________________________________________`,
+              `Assinatura do Requerente (${customerName} - CPF: ${customerDoc})`,
+              `- 5-H-2 -`,
+            ]
+              .filter(Boolean)
+              .join("\n");
+          } else if (
+            tpl.slug === "decl-perda-cha" ||
+            tpl.code === "DEC-CHA" ||
+            tpl.code === "ANEXO-5-D" ||
+            tpl.code === "ANEXO_5_D" ||
+            tpl.code === "PERDA_CHA" ||
+            tpl.id === "doc_decl_perda_cha" ||
+            tpl.slug === "doc_decl_perda_cha"
+          ) {
+            // NORMAM-211/DPC Anexo 5-D - DECLARAÇÃO DE EXTRAVIO, FURTO, ROUBO OU DANO DA CHA (1 página estrita)
+            const customerCity = customer?.city || "Santos";
+            const customerUf = customer?.state || "SP";
+            const customerDoc = customer?.cpf_cnpj || customer?.document || "";
+            const fullAddress = customer?.address || "Não informado";
+            const draft = (processData?.draft_data as any) || {};
+
+            let resolvedCep = (customer as any)?.postal_code || (customer as any)?.cep || "";
+            if (!resolvedCep && customer?.address) {
+              const cepMatch = customer.address.match(/\b\d{5}-?\d{3}\b/);
+              if (cepMatch) resolvedCep = cepMatch[0];
+            }
+            const resolvedRg = customer?.rg || (customer as any)?.identity_number || (customer as any)?.rg_number || customerDoc;
+            const rgIssuer = (customer as any)?.rg_issuer || "SSP";
+            const amadorPhone = customer?.phone || "(13) 98765-4321";
+            const chaNumber = draft?.cha_number || draft?.cha_registro || "381P2021001234";
+            const chaIssueDate = draft?.cha_issue_date || "15/03/2021";
+            const amadorCategory = draft?.amador_categoria || "Arrais-Amador (ARA)";
+
+            content = [
+              `NORMAM-211/DPC - ANEXO 5-D`,
+              `DECLARAÇÃO DE EXTRAVIO, FURTO, ROUBO OU DANO DA CHA`,
+              `Ao: Sr. Capitão dos Portos, Delegado ou Agente`,
+              ``,
+              `Eu, ${customerName}, portador da Carteira de Identidade nº ${resolvedRg} (${rgIssuer}), CPF nº ${customerDoc}, residente na ${fullAddress}, ${customerCity}/${customerUf}${resolvedCep ? `, CEP: ${resolvedCep}` : ""}, telefone: ${amadorPhone}, declaro que a minha Carteira de Habilitação de Amador (CHA) de nº ${chaNumber}, emitida em ${chaIssueDate}, na categoria de ${amadorCategory}, foi:`,
+              `[X] Extraviada.`,
+              `[ ] Roubada.`,
+              `[ ] Furtada.`,
+              `[ ] Danificada.`,
+              ``,
+              `Declaro ainda, estar ciente de que a falsidade da presente declaração pode implicar na sanção penal prevista no Art. 299 do Código Penal, conforme transcrição abaixo:`,
+              ``,
+              `"Art. 299 - Omitir, em documento público ou particular, declaração que nele deveria constar, ou nele inserir ou fazer inserir declaração falsa ou diversa da que deveria ser escrita, com o fim de prejudicar direito, criar obrigação ou alterar a verdade sobre o fato juridicamente relevante:`,
+              `Pena: reclusão de 1 (um) a 5 (cinco) anos e multa, se o documento é público e reclusão de 1 (um) a 3 (três) anos, se o documento é particular."`,
+              ``,
+              `Local e Data: ${customerCity}/${customerUf}, ${new Date().toLocaleDateString("pt-BR")}`,
+              ``,
+              `___________________________________________________________________________`,
+              `Assinatura do Declarante (${customerName} - CPF: ${customerDoc})`,
+              `Anexar: cópia do comprovante de residência e documento de identidade.`,
+              `- 5-D-1 -`,
+            ]
+              .filter(Boolean)
+              .join("\n");
+          } else if (
+            tpl.slug === "atestado-treinamento-ara" ||
+            tpl.code === "ATE-ARA" ||
+            tpl.code === "ANEXO-5-E" ||
+            tpl.code === "ANEXO_5_E" ||
+            tpl.code === "TREINAMENTO_ARA" ||
+            tpl.id === "doc_atestado_ara" ||
+            tpl.slug === "doc_atestado_ara"
+          ) {
+            // NORMAM-211/DPC Anexo 5-E - ATESTADO DE TREINAMENTO PARA ARRAIS-AMADOR (1 página estrita)
+            const customerCity = customer?.city || "Santos";
+            const customerUf = customer?.state || "SP";
+            const customerDoc = customer?.cpf_cnpj || customer?.document || "";
+            const draft = (processData?.draft_data as any) || {};
+
+            const nomeEtn = draft?.etn_nome || (branding as any)?.company_name || "Escola Náutica Pontal do Mar Ltda";
+            const registroEtn = draft?.etn_registro || "CP-381/ETN-042";
+            const instrutorNome = draft?.instrutor_nome || draft?.responsavel_nome || "Cap. Marcelo Fontes Guimarães";
+            const instrutorDoc = draft?.instrutor_cpf || "345.678.901-23";
+            const instrutorCha = draft?.instrutor_cha || "381M2018005432 (Mestre-Amador / Capitão-Amador)";
+            const horasTreinamento = draft?.treinamento_horas || "6 (seis)";
+
+            content = [
+              `NORMAM-211/DPC - ANEXO 5-E`,
+              `ATESTADO DE TREINAMENTO PARA ARRAIS-AMADOR`,
+              `Campo de Preenchimento do Estabelecimento de Treinamento Náutico`,
+              ``,
+              `PLANO DE TREINAMENTO TEÓRICO E PRÁTICO – ARRAIS-AMADOR`,
+              `REALIZAÇÃO OBRIGATÓRIA NO AMBIENTE NÁUTICO (MARINA, BERÇO OU ATRACADO)`,
+              `• Apresentação da embarcação, equipamentos de salvatagem obrigatórios e noções de marinharia;`,
+              `• Apresentação das regras de governo, manobra e tráfego aquaviário (RIPEAM);`,
+              `• Luzes e marcas visuais de navegação, sinais sonoros de manobra e balizamento náutico;`,
+              `• Providências para saída, planejamento de singradura, chegada e manutenção preventiva;`,
+              `• Prática efetiva de manobras de atracação, desatracação, fundeio e recolhimento de homem ao mar.`,
+              ``,
+              `Atesto, para os devidos fins, que o(a) Sr.(a.) ${customerName}, CPF nº ${customerDoc}, cumpriu ${horasTreinamento} horas de treinamento teórico e prático em embarcação de esporte e/ou recreio junto ao Estabelecimento de Treinamento Náutico ${nomeEtn}, cadastrado na Autoridade Marítima sob o nº ${registroEtn}, tendo como instrutor(a) habilitado(a) o(a) Sr.(a.) ${instrutorNome}, portador(a) da CHA/CIR nº ${instrutorCha} (CPF: ${instrutorDoc}).`,
+              ``,
+              `Nome do Responsável / Coordenador Técnico de Ensino: ${instrutorNome}`,
+              `Identidade nº: 23.456.789-0 (SSP/SP)    CPF: ${instrutorDoc}    Nº da CHA/CIR: ${instrutorCha}`,
+              ``,
+              `Local e Data: ${customerCity}/${customerUf}, ${new Date().toLocaleDateString("pt-BR")}`,
+              `___________________________________________________________________________`,
+              `Assinatura do Responsável Técnico do ETN / Instrutor Cadastrado`,
+              `OBS: A apresentação de informações inverídicas poderá acarretar no cancelamento da inscrição do candidato, sujeitando o responsável do ETN, o Coordenador Técnico e o Instrutor às sanções legais cabíveis.`,
+              `- 5-E-1 -`,
+            ]
+              .filter(Boolean)
+              .join("\n");
+          } else if (
+            tpl.slug === "req-alteracao-cadastral" ||
+            tpl.code === "REQ-CAD" ||
+            tpl.code === "ALT_CADASTRO" ||
+            tpl.code === "ALT_CAD" ||
+            tpl.id === "doc_req_alteracao_cadastral" ||
+            tpl.slug === "doc_req_alteracao_cadastral"
+          ) {
+            // NORMAM-211/DPC Anexo 2-C e Item 0213 - ALTERAÇÃO DE DADOS CADASTRAIS DO PROPRIETÁRIO (1 página estrita)
+            const customerCity = customer?.city || "Santos";
+            const customerUf = customer?.state || "SP";
+            const customerDoc = customer?.cpf_cnpj || customer?.document || "";
+            const fullAddress = customer?.address || "Não informado";
+            const draft = (processData?.draft_data as any) || {};
+
+            let resolvedCep = (customer as any)?.postal_code || (customer as any)?.cep || "";
+            if (!resolvedCep && customer?.address) {
+              const cepMatch = customer.address.match(/\b\d{5}-?\d{3}\b/);
+              if (cepMatch) resolvedCep = cepMatch[0];
+            }
+            const resolvedRg = customer?.rg || (customer as any)?.identity_number || (customer as any)?.rg_number || "";
+            const resolvedInscricao = vessel?.registration_number || draft?.registration_number || (vessel as any)?.tie_number || "Conforme cadastro SISGEMB";
+            const resolvedHull = (vessel as any)?.hull_number || (vessel as any)?.chassis_number || draft?.vessel_hull || "Não informado";
+            const effectiveLength = draft?.vessel_length || vessel?.length || vessel?.length_overall || "";
+            const formattedLength = effectiveLength ? `${effectiveLength}${String(effectiveLength).includes("m") ? "" : " m"}` : "Não informado";
+
+            const rawNavArea = (
+              (vessel as any)?.navigation_area ||
+              draft?.navigation_area ||
+              draft?.area_navegacao ||
+              ""
+            ).toLowerCase();
+            const isCosteira = rawNavArea.includes("costeira") || rawNavArea.includes("mar aberto - costeira");
+            const isOceanica = rawNavArea.includes("oceânica") || rawNavArea.includes("oceanica") || rawNavArea.includes("mar aberto - oceânica");
+            const isInterior = rawNavArea.includes("interior") || (!isCosteira && !isOceanica);
+
+            content = [
+              `NORMAM-211/DPC`,
+              `ANEXO 2-C`,
+              `REQUERIMENTO DE SERVIÇOS PARA REGULARIZAÇÃO DE EMBARCAÇÕES`,
+              ``,
+              `SR. CAPITÃO DOS PORTOS (DELEGADO) OU (AGENTE)`,
+              ``,
+              `REQUERENTE: ${customerName}`,
+              `NOVO ENDEREÇO: ${fullAddress}`,
+              `CIDADE: ${customerCity}    UF: ${customerUf}${resolvedCep ? `    CEP: ${resolvedCep}` : ""}`,
+              `IDENT. Nº: ${resolvedRg || customerDoc}${resolvedRg ? `    ORG EXP: ${(customer as any)?.rg_issuer || "SSP"}` : ""}    CPF/CNPJ: ${customerDoc}`,
+              `TEL: ${customer?.phone || ""}    E-mail: ${customer?.email || ""}`.trim(),
+              `OBS: Atualização de Dados Cadastrais conforme item 0213 da NORMAM-211/DPC (Processo: ${processCode})`,
+              ``,
+              `EMBARCAÇÃO VINCULADA: ${vesselName}    INSCRIÇÃO Nº: ${resolvedInscricao}`,
+              `Comprimento: ${formattedLength}    Nº DO CASCO: ${resolvedHull}    CLASSIFICAÇÃO: Esporte e/ou Recreio`,
+              `Área de Navegação: [${isInterior ? "X" : " "}] Interior   [${isCosteira ? "X" : " "}] Costeira   [${isOceanica ? "X" : " "}] Oceânica`,
+              ``,
+              `VEM REQUERER A V.Sa. o seguinte serviço:`,
+              `[ ] Inscrição de Embarcação`,
+              `[ ] Transferência de Propriedade`,
+              `[ ] Renovação de Título de Inscrição (TIE/TIEM)`,
+              `[ ] Alteração de dados cadastrais da embarcação`,
+              `[X] Alteração dados cadastrais do Proprietário (Item 0213 da NORMAM-211/DPC)`,
+              `[ ] Segunda Via de Documento de Inscrição`,
+              `[ ] Troca de Motor Propulsor`,
+              `[ ] Outros serviços: Atualização Cadastral de Domicílio e Contato`,
+              ``,
+              `DISCRIMINAÇÃO DA ALTERAÇÃO CADASTRAL SOLICITADA (ITEM 0213):`,
+              `Comunico a V. Sa. a alteração dos meus dados cadastrais e domiciliares perante o Sistema de Gerenciamento de Embarcações (SISGEMB), anexando: (1) Comprovante idôneo de novo domicílio residencial em meu nome nos termos da Lei Federal nº 7.115/1983 / Anexo 2-G; (2) Cópia do documento de identificação civil atualizado com foto e CPF; (3) Título de Inscrição de Embarcação original para fins de averbação da nova qualificação.`,
+              ``,
+              `Local e Data: ${customerCity}/${customerUf}, ${new Date().toLocaleDateString("pt-BR")}`,
+              ``,
+              `___________________________________________________________________________`,
+              `Assinatura do Requerente / Titular Cadastral (${customerName} - CPF/CNPJ: ${customerDoc})`,
+              `- NORMAM-211/DPC - ALTERAÇÃO CADASTRAL - ANEXO 2-C -`,
+            ]
+              .filter(Boolean)
+              .join("\n");
+          } else if (
+            tpl.slug === "comunicacao-despacho" ||
+            tpl.code === "COM-DESP" ||
+            tpl.code === "DESPACHO_SAIDA" ||
+            tpl.code === "AVISO_SAIDA" ||
+            tpl.id === "doc_comunicacao_despacho" ||
+            tpl.slug === "doc_comunicacao_despacho"
+          ) {
+            // NORMAM-211/DPC Anexo 4-A / Diretrizes NAVSEG - AVISO DE SAÍDA DE EMBARCAÇÃO / DESPACHO (1 página estrita)
+            const customerCity = customer?.city || "Santos";
+            const customerUf = customer?.state || "SP";
+            const customerDoc = customer?.cpf_cnpj || customer?.document || "";
+            const draft = (processData?.draft_data as any) || {};
+
+            const resolvedInscricao = vessel?.registration_number || draft?.registration_number || (vessel as any)?.tie_number || "Conforme cadastro SISGEMB";
+            const effectiveLength = draft?.vessel_length || vessel?.length || vessel?.length_overall || "10.50";
+            const formattedLength = effectiveLength ? `${effectiveLength}${String(effectiveLength).includes("m") ? "" : " m"}` : "10.50 m";
+            const vesselHullColor = (vessel as any)?.hull_color || draft?.vessel_color || "Branca";
+            const marinaOrigem = draft?.marina_origem || (vessel as any)?.marina_name || "Iate Clube / Marina Local";
+            const destinoPrevisto = draft?.destino_previsto || "Ilha das Palmas / Região Costeira Adjacente";
+            const dataSaida = new Date().toLocaleDateString("pt-BR");
+            const horaSaida = "09:00h";
+            const dataRetorno = new Date().toLocaleDateString("pt-BR");
+            const horaRetorno = "18:00h";
+            const totalEmbarcados = draft?.total_embarcados || "4 pessoas (1 comandante + 3 navegantes)";
+            const autonomiaCombustivel = draft?.autonomia_horas || "8 horas de navegação contínua";
+
+            content = [
+              `NORMAM-211/DPC - ANEXO 4-A`,
+              `AVISO DE SAÍDA DE EMBARCAÇÃO / COMUNICAÇÃO DE TRÁFEGO`,
+              `À Capitania dos Portos / Delegacia / Agência ou Administração da Marina / Iate Clube`,
+              ``,
+              `DADOS DA EMBARCAÇÃO E DO CONDUTOR HABILITADO:`,
+              `Embarcação: ${vesselName}          Inscrição Nº: ${resolvedInscricao}`,
+              `Comprimento: ${formattedLength}          Cor do Casco: ${vesselHullColor}          Classificação: Esporte e Recreio`,
+              `Comandante / Mestre: ${customerName}          CPF: ${customerDoc}`,
+              `Habilitação Náutica (CHA): Habilitado na categoria de Amador (ARA/MSA/CPA)          Tel/Celular: ${customer?.phone || "(13) 98765-4321"}`,
+              ``,
+              `PLANO DE NAVEGAÇÃO E ITINERÁRIO (DIRETRIZES NAVSEG):`,
+              `Local de Partida: ${marinaOrigem}          Data / Hora de Saída: ${dataSaida} às ${horaSaida}`,
+              `Destino / Área de Navegação: ${destinoPrevisto}          Previsão de Retorno: ${dataRetorno} às ${horaRetorno}`,
+              `Autonomia de Combustível: ${autonomiaCombustivel}          Pessoas a Bordo: ${totalEmbarcados}`,
+              ``,
+              `ROL DE NAVEGANTES A BORDO:`,
+              `1. ${customerName} (Comandante - CPF: ${customerDoc})`,
+              `2. Tripulante / Convidado 1 (Identidade / CPF regular)`,
+              `3. Passageiro / Convidado 2 (Identidade / CPF regular)`,
+              `4. Passageiro / Convidado 3 (Identidade / CPF regular)`,
+              ``,
+              `EQUIPAMENTOS DE SALVATAGEM E COMUNICAÇÃO OPERACIONAIS:`,
+              `Declaro sob responsabilidade de comandante que a embarcação está provida de rádio VHF marítimo em escuta permanente (Canais 16 e 68), coletes salva-vidas homologados classe compatível para 100% dos embarcados, boias circulares, extintores com carga válida e pirotécnicos dentro do prazo de validade, com registro prévio sincronizado no aplicativo NAVSEG da Autoridade Marítima.`,
+              ``,
+              `Local e Data: ${customerCity}/${customerUf}, ${new Date().toLocaleDateString("pt-BR")}`,
+              ``,
+              `___________________________________________________________________________`,
+              `Assinatura do Comandante / Mestre (${customerName} - CPF: ${customerDoc})`,
+              `- NORMAM-211/DPC - AVISO DE SAÍDA - ANEXO 4-A / NAVSEG -`,
+            ]
+              .filter(Boolean)
+              .join("\n");
           } else {
             // Requerimento Padrão do Interessado - Alinhado estritamente à NORMAM-211/DPC Anexo 2-C (páginas 186-187)
             const isProf = vesselCategory === "profissional" || tpl.code === "REQ-PROF";
@@ -1493,30 +2774,49 @@ function GerarDocumentoPage() {
             const servicesRaw = (processData?.draft_data as any)?.services || [];
             const procType = (processData?.process_type || "").toLowerCase();
 
-            const isTransf = procType.includes("transfer") || servicesRaw.includes("transferencia_propriedade");
-            const isInscr = procType.includes("inscri") || procType.includes("registro") || servicesRaw.includes("registro_embarcacao");
-            const isRenov = procType.includes("renov") || servicesRaw.includes("renovacao_tie");
-            const isSegVia = procType.includes("segunda") || procType.includes("2") || servicesRaw.includes("segunda_via_tie");
-            const isMotor = procType.includes("motor") || servicesRaw.includes("troca_motor");
-            const isAltCad = procType.includes("altera") || servicesRaw.includes("alteracao_dados");
+            const isReqTransfItem = tpl.slug === "req-transferencia" || tpl.code === "REQ-TRANSF" || tpl.id === "doc_req_transf";
+            const isReqRenovItem = tpl.slug === "req-renovacao-tie" || tpl.code === "REQ-RENOV" || tpl.id === "doc_req_renov";
+            const isReqSegViaItem = tpl.slug === "req-segunda-via-tie" || tpl.code === "REQ-2VIA" || tpl.id === "doc_req_segunda_via";
+            const isReqMotorItem = tpl.slug === "req-alteracao-motor" || tpl.code === "REQ-MOT" || tpl.id === "doc_termo_motor";
+            const isReqVistoriaItem = tpl.slug === "req-vistoria-naval" || tpl.code === "REQ-VIST" || tpl.id === "doc_req_vistoria";
 
-            // Extração fiel do CEP: campo dedicado, anotações ou regex no endereço
+            const isTransf = isReqTransfItem || procType.includes("transfer") || servicesRaw.includes("transferencia_propriedade");
+            const isRenov = isReqRenovItem || procType.includes("renov") || servicesRaw.includes("renovacao_tie");
+            const isSegVia = isReqSegViaItem || procType.includes("segunda") || procType.includes("2") || servicesRaw.includes("segunda_via_tie");
+            const isMotor = isReqMotorItem || procType.includes("motor") || servicesRaw.includes("troca_motor");
+            const isVistoria = isReqVistoriaItem || procType.includes("vistoria") || servicesRaw.includes("vistoria");
+            const isAltCad = procType.includes("altera") || servicesRaw.includes("alteracao_dados") || servicesRaw.includes("alteracao_cadastral");
+            const isInscr = !isTransf && !isRenov && !isSegVia && !isMotor && !isVistoria && (procType.includes("inscri") || procType.includes("registro") || servicesRaw.includes("registro_embarcacao") || (!procType.includes("cancel")));
+
+            // CEP fiel
             let resolvedCep = (customer as any)?.postal_code || (customer as any)?.cep || "";
             if (!resolvedCep && customer?.address) {
               const cepMatch = customer.address.match(/\b\d{5}-?\d{3}\b/);
               if (cepMatch) resolvedCep = cepMatch[0];
             }
-            if (!resolvedCep && (customer as any)?.notes) {
-              const cepMatchNotes = (customer as any).notes.match(/\b\d{5}-?\d{3}\b/);
-              if (cepMatchNotes) resolvedCep = cepMatchNotes[0];
-            }
 
-            // Identidade / RG fiel do cliente
+            // Identidade / RG fiel
             const resolvedRg = customer?.rg || (customer as any)?.identity_number || (customer as any)?.rg_number || "";
 
-            // Comprimento da embarcação fiel
-            const resolvedLength = (processData?.draft_data as any)?.vessel_length || vessel?.length || vessel?.length_overall || "";
-            const formattedLength = resolvedLength ? `${resolvedLength}${String(resolvedLength).includes("m") ? "" : " m"}` : "";
+            // Comprimento fiel
+            const effectiveLength = (processData?.draft_data as any)?.vessel_length || vessel?.length || vessel?.length_overall || "";
+            const formattedLength = effectiveLength ? `${effectiveLength}${String(effectiveLength).includes("m") ? "" : " m"}` : "";
+
+            // Área de Navegação fiel
+            const rawNavArea = (
+              (vessel as any)?.navigation_area ||
+              (processData?.draft_data as any)?.navigation_area ||
+              (processData?.draft_data as any)?.area_navegacao ||
+              ""
+            ).toLowerCase();
+            const isCosteira = rawNavArea.includes("costeira") || rawNavArea.includes("mar aberto - costeira");
+            const isOceanica = rawNavArea.includes("oceânica") || rawNavArea.includes("oceanica") || rawNavArea.includes("mar aberto - oceânica");
+            const isInterior = rawNavArea.includes("interior") || (!isCosteira && !isOceanica && rawNavArea.length > 0) || (!isCosteira && !isOceanica);
+
+            // Inscrição fiel
+            const resolvedInscricao = isInscr
+              ? "A designar (Inscrição Inicial)"
+              : (vessel?.registration_number || (processData?.draft_data as any)?.registration_number || (vessel as any)?.tie_number || "Em regularização");
 
             // Número do Casco fiel
             const resolvedHull = (vessel as any)?.hull_number || (vessel as any)?.chassis_number || (processData?.draft_data as any)?.vessel_hull || "";
@@ -1535,9 +2835,9 @@ function GerarDocumentoPage() {
               `TEL: ${customer?.phone || ""}    E-mail: ${customer?.email || ""}`.trim(),
               `OBS: Processo instruído via NavalDocs Pro sob o código ${processCode}`,
               ``,
-              `EMBARCAÇÃO: ${vesselName}    INSCRIÇÃO Nº: ${vessel?.registration_number || "Em regularização"}`,
+              `EMBARCAÇÃO: ${vesselName}    INSCRIÇÃO Nº: ${resolvedInscricao}`,
               `Comprimento: ${formattedLength || "Não informado"}    Nº DO CASCO: ${resolvedHull || "Não informado"}    CLASSIFICAÇÃO: ${isProf ? "Comercial" : isJet ? "Moto Aquática" : "Esporte e/ou Recreio"}`,
-              `Área de Navegação: [X] Interior   [ ] Costeira   [ ] Oceânica`,
+              `Área de Navegação: [${isInterior ? "X" : " "}] Interior   [${isCosteira ? "X" : " "}] Costeira   [${isOceanica ? "X" : " "}] Oceânica`,
               ``,
               `VEM REQUERER A V.Sa. os seguintes serviços:`,
               `[${isInscr ? "X" : " "}] Inscrição`,
@@ -1556,10 +2856,10 @@ function GerarDocumentoPage() {
               `[ ] Certidão Relativa a Situação da Embarcação`,
               `[ ] Registro de Ônus e Averbações relativos a embarcação`,
               `[ ] Cancelamento do Registro de Ônus e Averbações relativo a embarcação`,
-              `[ ] Vistoria de Arqueação`,
+              `[${isVistoria ? "X" : " "}] Vistoria de Arqueação`,
               `[ ] Vistoria de Rearqueação`,
               `[ ] Vistoria para alterar a classificação da embarcação`,
-              `[${isSegVia ? "X" : " "}] Outros serviços: ${isSegVia ? "Segunda Via de Documento Náutico (TIE/TIEM)" : "Regularização processual perante a Capitania dos Portos"}`,
+              `[${isSegVia ? "X" : isVistoria ? "X" : " "}] Outros serviços: ${isSegVia ? "Segunda Via de Documento Náutico (TIE/TIEM)" : isVistoria ? "Vistoria Inicial / Perícia Naval Regulatória" : "Regularização processual perante a Capitania dos Portos"}`,
               ``,
               `Local e Data: ${customerCity}/${customerUf}, ${new Date().toLocaleDateString("pt-BR")}`,
             ]
@@ -1568,22 +2868,178 @@ function GerarDocumentoPage() {
           }
 
           // 3. Gerar bytes do PDF estilizado com branding e assinatura adequada
+          const isAnexo2K =
+            tpl.slug === "termo-entrega-transf" ||
+            tpl.slug === "doc_decl_transf" ||
+            tpl.code === "TER-ENTR" ||
+            tpl.code === "ATPE-001" ||
+            tpl.code === "ATPE";
+
+          const isAnexo2H =
+            tpl.slug === "decl-perda-extravio" ||
+            tpl.code === "DEC-PERD" ||
+            tpl.code === "DEC-PERDA" ||
+            tpl.id === "doc_decl_perda" ||
+            tpl.slug === "doc_decl_perda";
+
+          const isAnexo2I =
+            tpl.slug === "comunicacao-transf-anexo-2i" ||
+            tpl.code === "COM-TRANSF" ||
+            tpl.code === "ANEXO-2I" ||
+            tpl.code === "ANEXO_2I" ||
+            tpl.id === "doc_comunicacao_transf" ||
+            tpl.slug === "doc_comunicacao_transf";
+
+          const isDeclRenov =
+            tpl.slug === "decl-manutencao-renov" ||
+            tpl.code === "DEC-OPER" ||
+            tpl.code === "DECL_RENOV" ||
+            tpl.code === "DEC-MANUT" ||
+            tpl.id === "doc_decl_renov" ||
+            tpl.slug === "doc_decl_renov";
+
+          const isReqTransf =
+            tpl.slug === "req-transferencia" ||
+            tpl.code === "REQ-TRANSF" ||
+            tpl.id === "doc_req_transf";
+
+          const isReqSegVia =
+            tpl.slug === "req-segunda-via-tie" ||
+            tpl.code === "REQ-2VIA" ||
+            tpl.id === "doc_req_segunda_via";
+
+          const isReqRenov =
+            tpl.slug === "req-renovacao-tie" ||
+            tpl.code === "REQ-RENOV" ||
+            tpl.id === "doc_req_renov";
+
+          const isReqMotor =
+            tpl.slug === "req-alteracao-motor" ||
+            tpl.code === "REQ-MOT" ||
+            tpl.code === "TERMO_MOTOR" ||
+            tpl.id === "doc_termo_motor" ||
+            tpl.slug === "doc_termo_motor";
+
+          const isReqVistoria =
+            tpl.slug === "req-vistoria-naval" ||
+            tpl.code === "REQ-VIST" ||
+            tpl.id === "doc_req_vistoria" ||
+            tpl.slug === "doc_req_vistoria";
+
+          const isReqJet =
+            tpl.slug === "req-moto-aquatica" ||
+            tpl.code === "REQ-JET" ||
+            tpl.code === "REQ_MOTO_AQUATICA" ||
+            tpl.id === "doc_req_moto_aquatica" ||
+            tpl.slug === "doc_req_moto_aquatica";
+
+          const isReqComercial =
+            tpl.slug === "req-comercial-prof" ||
+            tpl.code === "REQ-PROF" ||
+            tpl.id === "doc_req_comercial" ||
+            tpl.slug === "doc_req_comercial";
+
+          const isReqCha =
+            tpl.slug === "req-habilitacao-cha" ||
+            tpl.code === "REQ-CHA" ||
+            tpl.code === "REQ_CHA" ||
+            tpl.id === "doc_req_cha" ||
+            tpl.slug === "doc_req_cha" ||
+            tpl.code === "ANEXO-5-H" ||
+            tpl.code === "ANEXO_5_H";
+
+          const isReqAltCad =
+            tpl.slug === "req-alteracao-cadastral" ||
+            tpl.code === "REQ-CAD" ||
+            tpl.code === "ALT_CADASTRO" ||
+            tpl.code === "ALT_CAD" ||
+            tpl.id === "doc_req_alteracao_cadastral" ||
+            tpl.slug === "doc_req_alteracao_cadastral";
+
+          const isComDespacho =
+            tpl.slug === "comunicacao-despacho" ||
+            tpl.code === "COM-DESP" ||
+            tpl.code === "DESPACHO_SAIDA" ||
+            tpl.code === "AVISO_SAIDA" ||
+            tpl.id === "doc_comunicacao_despacho" ||
+            tpl.slug === "doc_comunicacao_despacho";
+
+          const isDeclPerdaCha =
+            tpl.slug === "decl-perda-cha" ||
+            tpl.code === "DEC-CHA" ||
+            tpl.code === "ANEXO-5-D" ||
+            tpl.code === "ANEXO_5_D" ||
+            tpl.code === "PERDA_CHA" ||
+            tpl.id === "doc_decl_perda_cha" ||
+            tpl.slug === "doc_decl_perda_cha";
+
+          const isAtestadoAra =
+            tpl.slug === "atestado-treinamento-ara" ||
+            tpl.code === "ATE-ARA" ||
+            tpl.code === "ANEXO-5-E" ||
+            tpl.code === "ANEXO_5_E" ||
+            tpl.code === "TREINAMENTO_ARA" ||
+            tpl.id === "doc_atestado_ara" ||
+            tpl.slug === "doc_atestado_ara";
+
+          const isCustomSigned =
+            isAnexo2K ||
+            isAnexo2H ||
+            isAnexo2I ||
+            isDeclRenov ||
+            isReqMotor ||
+            isReqVistoria ||
+            isReqJet ||
+            isReqComercial ||
+            isReqCha ||
+            isReqAltCad ||
+            isComDespacho ||
+            isDeclPerdaCha ||
+            isAtestadoAra;
+
           const signerInfo = tpl.slug === "proc-representacao-naval"
             ? {
-                signerName: `${customerName}\n(Outorgante)`,
-                signerRole: `CPF/CNPJ: ${customer?.cpf_cnpj || customer?.document || ""}`,
+                signerName: customerName,
+                signerRole: `Outorgante (CPF/CNPJ: ${customer?.cpf_cnpj || customer?.document || ""})`,
               }
             : tpl.slug === "decl-residencia-naval"
             ? {
                 signerName: `Assinatura do Requerente`,
                 signerRole: `(${customerName} - CPF: ${customer?.cpf_cnpj || customer?.document || ""})`,
               }
+            : isCustomSigned
+            ? {
+                signerName: "",
+                signerRole: "",
+              }
             : {
                 signerName: `Assinatura do Requerente`,
                 signerRole: `CPF/CNPJ: ${customer?.cpf_cnpj || customer?.document || ""}`,
               };
 
-          const isOfficial = tpl.slug === "req-padrao-cpes" || tpl.slug === "decl-residencia-naval" || tpl.nature === "official_form";
+          const isOfficial =
+            tpl.slug === "req-padrao-cpes" ||
+            tpl.slug === "bsade-simplificado" ||
+            tpl.code === "BSADE-001" ||
+            tpl.slug === "proc-representacao-naval" ||
+            tpl.slug === "decl-residencia-naval" ||
+            isAnexo2K ||
+            isAnexo2H ||
+            isAnexo2I ||
+            isDeclRenov ||
+            isReqTransf ||
+            isReqSegVia ||
+            isReqRenov ||
+            isReqMotor ||
+            isReqVistoria ||
+            isReqJet ||
+            isReqComercial ||
+            isReqCha ||
+            isReqAltCad ||
+            isComDespacho ||
+            isDeclPerdaCha ||
+            isAtestadoAra ||
+            tpl.nature === "official_form";
 
           const { bytes, verificationCode } = await buildBrandedDocumentPdf({
             docName: docTitle,
@@ -1596,6 +3052,7 @@ function GerarDocumentoPage() {
             signerName: signerInfo.signerName,
             signerRole: signerInfo.signerRole,
             isOfficialForm: isOfficial,
+            hideSignatureBlock: isCustomSigned,
           });
 
           // 4. Converter para Blob e fazer upload seguro para o bucket 'generated-documents'
@@ -2352,6 +3809,14 @@ function GerarDocumentoPage() {
                     ? "Declaração de residência"
                     : tpl.slug === "decl-perda-extravio"
                     ? "Declaração de perda ou extravio"
+                    : tpl.slug === "decl-manutencao-renov"
+                    ? "Declaração de manutenção e condições operacionais"
+                    : tpl.slug === "req-renovacao-tie"
+                    ? "Requerimento de renovação de TIE/TIEM"
+                    : tpl.slug === "req-alteracao-motor"
+                    ? "Requerimento de alteração de motor"
+                    : tpl.slug === "comunicacao-transf-anexo-2i"
+                    ? "Comunicação de transferência (Anexo 2-I)"
                     : tpl.name;
 
                 // Frase curta explicando finalidade
@@ -2368,6 +3833,14 @@ function GerarDocumentoPage() {
                     ? "Declaração de domicílio válida sob as penas da lei federal."
                     : tpl.slug === "decl-perda-extravio"
                     ? "Declaração formal exclusivamente para casos de documento náutico extraviado."
+                    : tpl.slug === "decl-manutencao-renov"
+                    ? "Declaração atestando integridade do casco, propulsão e salvatagem para renovação de TIE sem vistoria."
+                    : tpl.slug === "req-renovacao-tie"
+                    ? "Requerimento padronizado perante a Capitania dos Portos solicitando a renovação do TIE/TIEM."
+                    : tpl.slug === "req-alteracao-motor"
+                    ? "Requerimento oficial e termo técnico para averbação de nova propulsão no documento náutico."
+                    : tpl.slug === "comunicacao-transf-anexo-2i"
+                    ? "Comunicação oficial protocolada pelo vendedor para afastar multas e responsabilidades futuras."
                     : tpl.description;
 
                 // Situação em texto compreensível (Situações Claras)

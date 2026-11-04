@@ -162,10 +162,10 @@ export function buildOrderDocuments(
       vesselName,
       requestText: `Boletim Simplificado de Atualização de Embarcação (BSADE - NORMAM-211/DPC Anexo 2-B) para cadastro cadastral e técnico da embarcação ${vesselName}, indicando o proprietário ${customerName}, sistema de propulsão e características estruturais.`,
       observations: [
-        "NORMAM-211/DPC Anexo 2-B preenchido em 2 vias oficiais.",
-        "Embarcação sem registro prévio perante a Capitania dos Portos.",
+        "NORMAM-211/DPC Anexo 2-B (Portaria DPC/DGN/MB Nº 200/2026) preenchido em 2 vias oficiais.",
+        "Embarcação sem registro prévio perante a Capitania dos Portos (Inscrição Inicial).",
       ],
-      totalPages: 2,
+      totalPages: 1,
       compatibleWithWatermark: true,
     });
 
@@ -186,7 +186,7 @@ export function buildOrderDocuments(
     });
   }
 
-  // 2. TRANSFERÊNCIA
+  // 2. TRANSFERÊNCIA DE PROPRIEDADE
   if (activeIds.includes("transferencia")) {
     docs.push({
       id: "doc_req_transf",
@@ -195,28 +195,44 @@ export function buildOrderDocuments(
       service: "Transferência de propriedade",
       customerName,
       vesselName,
-      requestText: `Solicito a averbação de nova titularidade e a emissão do novo Título de Inscrição em decorrência da transferência de propriedade da embarcação ${vesselName}, conforme Autorização de Transferência de Propriedade (NORMAM-211/DPC, Anexo 2-M).`,
+      requestText: `Solicito a averbação de nova titularidade e a emissão do novo Título de Inscrição em decorrência da transferência de propriedade da embarcação ${vesselName}, conforme Autorização de Transferência de Propriedade (NORMAM-211/DPC, Anexo 2-K).`,
       observations: [
-        "NORMAM-211/DPC Anexo 2-C / Anexo 2-E e item 0208.",
+        "NORMAM-211/DPC Anexo 2-C (Portaria DPC/DGN/MB Nº 200/2026) e item 2.11.",
         "Requer apresentação do TIE original e qualificação de vendedor e comprador.",
+      ],
+      totalPages: 1,
+      compatibleWithWatermark: true,
+    });
+
+    docs.push({
+      id: "doc_decl_transf",
+      title: "Autorização de Transferência de Propriedade (Anexo 2-K)",
+      fileName: "Autorizacao-transferencia-anexo-2K.pdf",
+      service: "Transferência de propriedade",
+      customerName,
+      vesselName,
+      requestText: `Autorizo a transferência de propriedade da embarcação ${vesselName} ao adquirente qualificado, declarando sob as penas da lei a veracidade da transação comercial e ausência de impedimentos administrativos.`,
+      observations: [
+        "NORMAM-211/DPC Anexo 2-K oficial (páginas 202-203).",
+        "Reconhecimento de firma por autenticidade de ambas as partes ou assinatura digital Gov.br (Prata/Ouro).",
       ],
       totalPages: 2,
       compatibleWithWatermark: true,
     });
 
     docs.push({
-      id: "doc_decl_transf",
-      title: "Autorização de Transferência de Propriedade (Anexo 2-M)",
-      fileName: "Autorizacao-transferencia-anexo-2M.pdf",
+      id: "doc_comunicacao_transf",
+      title: "Comunicação de Transferência de Propriedade (Anexo 2-I)",
+      fileName: "Comunicacao-transferencia-anexo-2I.pdf",
       service: "Transferência de propriedade",
       customerName,
       vesselName,
-      requestText: `Autorizo a transferência de propriedade da embarcação ${vesselName} ao adquirente qualificado, declarando sob as penas da lei a veracidade da transação comercial e ausência de impedimentos administrativos.`,
+      requestText: `Comunico a transferência de propriedade da embarcação ${vesselName} ao novo adquirente, nos termos do Anexo 2-I da NORMAM-211/DPC.`,
       observations: [
-        "NORMAM-211/DPC Anexo 2-M oficial.",
-        "Reconhecimento de firma por autenticidade em cartório de ambas as partes ou assinatura digital qualificada.",
+        "NORMAM-211/DPC Anexo 2-I oficial (página 198).",
+        "Protocolado pelo proprietário anterior para afastar responsabilidade por infrações futuras.",
       ],
-      totalPages: 2,
+      totalPages: 1,
       compatibleWithWatermark: true,
     });
   }
@@ -225,15 +241,15 @@ export function buildOrderDocuments(
   if (activeIds.includes("renovacao")) {
     docs.push({
       id: "doc_req_renov",
-      title: "Requerimento de Renovação",
-      fileName: "Requerimento-renovacao.pdf",
+      title: "Requerimento de Renovação de TIE/TIEM",
+      fileName: "Requerimento-renovacao-tie.pdf",
       service: "Renovação de documento",
       customerName,
       vesselName,
       requestText: `Requeiro a renovação do TIE/TIEM da embarcação ${vesselName}, atestando a regularidade de seus equipamentos de salvatagem e segurança da navegação.`,
       observations: [
-        "Taxa GRU correspondente anexa ao dossiê.",
-        "Validade anterior expirada nos termos da NORMAM-211/DPC.",
+        "NORMAM-211/DPC Anexo 2-C c/c item 2.7.",
+        "Prorrogação da validade do documento náutico por 5 anos.",
       ],
       totalPages: 1,
       compatibleWithWatermark: true,
@@ -241,15 +257,15 @@ export function buildOrderDocuments(
 
     docs.push({
       id: "doc_decl_renov",
-      title: "Declaração do Interessado",
-      fileName: "Declaracao-interessado.pdf",
+      title: "Declaração de Manutenção e Condições Operacionais",
+      fileName: "Declaracao-manutencao-operacional.pdf",
       service: "Renovação de documento",
       customerName,
       vesselName,
       requestText: `Declaro que mantenho a embarcação ${vesselName} em perfeitas condições operacionais de acordo com as normas da Autoridade Marítima brasileira.`,
       observations: [
-        "Termo de vistoria assinado pelo responsável técnico quando exigido.",
-        "Documento de porte obrigatório a bordo.",
+        "NORMAM-211/DPC item 2.7 c/c Lei Federal nº 7.115/1983.",
+        "Supre a necessidade de vistoria prévia para embarcações sem alteração estrutural.",
       ],
       totalPages: 1,
       compatibleWithWatermark: true,
@@ -260,15 +276,16 @@ export function buildOrderDocuments(
   if (activeIds.includes("alteracao_motor")) {
     docs.push({
       id: "doc_termo_motor",
-      title: "Termo de Responsabilidade Técnica (Motor)",
-      fileName: "Termo-responsabilidade-motor.pdf",
+      title: "Requerimento e Termo de Alteração de Motor",
+      fileName: "Requerimento-termo-alteracao-motor.pdf",
       service: "Alteração de motor",
       customerName,
       vesselName,
       requestText: `Responsabilizo-me pelas modificações executadas no sistema de propulsão e instalação do novo motor na embarcação ${vesselName}.`,
       observations: [
-        "Nota fiscal de aquisição do novo motor validada como documento de entrada.",
-        "Anotação de Responsabilidade Técnica (ART) anexada quando aplicável.",
+        "NORMAM-211/DPC item 2.12 / 2.10 c/c Anexo 2-C [X] Troca do Motor Propulsor.",
+        "Termo de responsabilidade técnica de compatibilidade de potência com o projeto.",
+        "Nota fiscal de aquisição do novo propulsor.",
       ],
       totalPages: 2,
       compatibleWithWatermark: true,
@@ -319,10 +336,11 @@ export function buildOrderDocuments(
       service: "Vistoria",
       customerName,
       vesselName,
-      requestText: `Solicito a realização de vistoria naval na embarcação ${vesselName} para atesto das condições de habitabilidade, salvatagem e integridade do casco.`,
+      requestText: `Solicito a realização de vistoria naval na embarcação ${vesselName} para atesto das condições de habitabilidade, salvatagem, integridade do casco e arqueação nos termos da NORMAM-211/DPC, Capítulo 3 c/c Anexo 2-C.`,
       observations: [
-        "NORMAM-211/DPC Capítulo 3 e NORMAM-201/DPC.",
-        "Informar o local e endereço onde a embarcação estará disponível para os peritos.",
+        "NORMAM-211/DPC Anexo 2-C oficial c/c Capítulo 3 (Seção VIII - Vistorias e Certificação).",
+        "Página 1: Requerimento padronizado assinalando Vistoria de Arqueação / Outros Serviços.",
+        "Página 2: Agendamento formal com endereço da marina/píer, responsável local e assistência aos peritos.",
       ],
       totalPages: 2,
       compatibleWithWatermark: true,
@@ -333,15 +351,47 @@ export function buildOrderDocuments(
   if (activeIds.includes("habilitacao_cha")) {
     docs.push({
       id: "doc_req_cha",
-      title: "Requerimento de Habilitação de Amador (CHA)",
-      fileName: "Requerimento-habilitacao-cha.pdf",
+      title: "Requerimento de Amador (CHA - Anexo 5-H)",
+      fileName: "Requerimento-habilitacao-amador-anexo-5H.pdf",
       service: "Emissão / Renovação de CHA",
       customerName,
-      vesselName: vesselName || "Não aplicável (Serviço Pessoal)",
-      requestText: `Solicito a emissão/renovação da Carteira de Habilitação de Amador (CHA) em favor de ${customerName}, cumpridos os requisitos da Autoridade Marítima.`,
+      vesselName: vesselName || "Não aplicável (Serviço Pessoal de Amador)",
+      requestText: `Solicito a V. Sa. a emissão/renovação da Carteira de Habilitação de Amador (CHA) em favor de ${customerName}, tendo cumprido os requisitos regulamentados no Capítulo 5 da NORMAM-211/DPC.`,
       observations: [
-        "NORMAM-211/DPC Capítulo 5.",
-        "Acompanha atestado médico comprobatório de aptidão psicofísica.",
+        "NORMAM-211/DPC Capítulo 5 c/c Anexo 5-H (Requerimento de Amador em 2 páginas).",
+        "Acompanha atestado médico / CNH válida e comprovante de treinamento prático náutico emitido por ETN.",
+      ],
+      totalPages: 2,
+      compatibleWithWatermark: true,
+    });
+
+    docs.push({
+      id: "doc_decl_perda_cha",
+      title: "Declaração de Perda / Extravio de CHA (Anexo 5-D)",
+      fileName: "Declaracao-perda-extravio-cha-anexo-5D.pdf",
+      service: "2ª Via de CHA por Extravio",
+      customerName,
+      vesselName: vesselName || "Não aplicável (Serviço Pessoal de Amador)",
+      requestText: `Declaro sob as penas da lei (Art. 299 CP) o extravio/perda/dano da Carteira de Habilitação de Amador (CHA) de ${customerName}, requerendo a emissão de 2ª via nos termos do Anexo 5-D da NORMAM-211/DPC.`,
+      observations: [
+        "NORMAM-211/DPC Capítulo 5 c/c Anexo 5-D (Declaração formal em 1 página).",
+        "Acompanha cópia do comprovante de residência e documento de identidade.",
+      ],
+      totalPages: 1,
+      compatibleWithWatermark: true,
+    });
+
+    docs.push({
+      id: "doc_atestado_ara",
+      title: "Atestado de Treinamento para Arrais-Amador (Anexo 5-E)",
+      fileName: "Atestado-treinamento-arrais-amador-anexo-5E.pdf",
+      service: "Emissão de CHA Inicial / Arrais-Amador",
+      customerName,
+      vesselName: vesselName || "Não aplicável (Serviço Pessoal de Amador)",
+      requestText: `Atesto que o aluno ${customerName} cumpriu no mínimo 6 horas de treinamento teórico e prático em embarcação de esporte e recreio nos termos do Anexo 5-E da NORMAM-211/DPC.`,
+      observations: [
+        "NORMAM-211/DPC Capítulo 5 c/c Anexo 5-E (Atestado de Treinamento Náutico em 1 página).",
+        "Emitido por Estabelecimento de Treinamento Náutico (ETN) ou instrutor credenciado.",
       ],
       totalPages: 1,
       compatibleWithWatermark: true,
@@ -386,20 +436,24 @@ export function buildOrderDocuments(
     });
   }
 
-  // Modelos específicos por tipo de embarcação na inscrição:
+  // Modelos específicos por tipo de embarcação (Motonáutica):
   // Moto Aquática
-  if (activeIds.includes("inscricao") && explicitDocIds && explicitDocIds.includes("doc_req_moto_aquatica")) {
+  if (
+    (explicitDocIds && explicitDocIds.includes("doc_req_moto_aquatica")) ||
+    (activeIds.includes("inscricao") && explicitDocIds && explicitDocIds.includes("doc_req_moto_aquatica"))
+  ) {
     docs.push({
       id: "doc_req_moto_aquatica",
       title: "Requerimento Específico para Moto Aquática (Jet Ski)",
       fileName: "Requerimento-moto-aquatica.pdf",
-      service: "Inscrição de embarcação",
+      service: "Inscrição / Regularização de Moto Aquática",
       customerName,
       vesselName,
-      requestText: `Solicito a inscrição / cadastro da moto aquática ${vesselName} perante a Capitania dos Portos com base na NORMAM-212/DPC, Anexo 2-A.`,
+      requestText: `Solicito a inscrição / regularização da moto aquática ${vesselName} perante a Capitania dos Portos com base na NORMAM-212/DPC, Anexo 2-A.`,
       observations: [
-        "NORMAM-212/DPC Anexo 2-A oficial (Requerimento para Inscrição ou Transferência de Moto Aquática).",
-        "Dados do número de casco (HIN) e propulsão a hidrojato.",
+        "NORMAM-212/DPC Anexo 2-A oficial (Requerimento para Inscrição ou Regularização de Moto Aquática).",
+        "Página 1: Dados do casco (HIN), propulsão a hidrojato e opção do serviço assinalada.",
+        "Página 2: Termo de Responsabilidade Operacional e Salvatagem Classe V para motonáutica.",
       ],
       totalPages: 2,
       compatibleWithWatermark: true,
@@ -407,18 +461,22 @@ export function buildOrderDocuments(
   }
 
   // Embarcação Comercial / Profissional
-  if (activeIds.includes("inscricao") && explicitDocIds && explicitDocIds.includes("doc_req_comercial")) {
+  if (
+    (explicitDocIds && explicitDocIds.includes("doc_req_comercial")) ||
+    (activeIds.includes("inscricao") && explicitDocIds && explicitDocIds.includes("doc_req_comercial"))
+  ) {
     docs.push({
       id: "doc_req_comercial",
       title: "Requerimento de Embarcação Comercial / Profissional",
       fileName: "Requerimento-embarcacao-comercial.pdf",
-      service: "Inscrição de embarcação",
+      service: "Inscrição / Regularização Comercial",
       customerName,
       vesselName,
-      requestText: `Solicito a inscrição e enquadramento comercial da embarcação profissional ${vesselName} perante a Capitania dos Portos com esteio na NORMAM-201/DPC, Anexo 2-E.`,
+      requestText: `Solicito a inscrição e regularização comercial da embarcação profissional ${vesselName} perante a Capitania dos Portos com esteio na NORMAM-201/DPC, Anexo 2-E.`,
       observations: [
         "NORMAM-201/DPC Anexo 2-E oficial (Requerimento de Serviços para Regularização de Embarcações).",
-        "Exige autorização de atividade comercial e registro do armador.",
+        "Página 1: Qualificação do armador, parâmetros técnicos, atividade e serviço comercial solicitado.",
+        "Página 2: Termo de Responsabilidade do Armador (CTS, tripulação aquaviária e salvatagem profissional).",
       ],
       totalPages: 2,
       compatibleWithWatermark: true,

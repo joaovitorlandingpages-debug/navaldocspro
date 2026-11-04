@@ -30,6 +30,7 @@ export async function buildBrandedDocumentPdf(opts: {
   hideHeader?: boolean;
   hideFooter?: boolean;
   isOfficialForm?: boolean;
+  hideSignatureBlock?: boolean;
 }): Promise<{ bytes: Uint8Array; verificationCode: string }> {
   const {
     PDFDocument,
@@ -48,13 +49,13 @@ export async function buildBrandedDocumentPdf(opts: {
   // Load Liberation Sans TTF bytes (Apache 2.0 license, metric-compatible with Arial)
   // These are served as static assets from /fonts/
   const loadFontBytes = async (filename: string): Promise<Uint8Array> => {
-    if (typeof window === "undefined") {
+    if (typeof window === "undefined" && typeof process !== "undefined" && process.cwd) {
       try {
-        const fs = await import("fs");
-        const path = await import("path");
-        const localPath = path.resolve(process.cwd(), "public/fonts", filename);
-        if (fs.existsSync(localPath)) {
-          return new Uint8Array(fs.readFileSync(localPath));
+        const fsModule = await import("node:fs");
+        const pathModule = await import("node:path");
+        const localPath = pathModule.resolve(process.cwd(), "public/fonts", filename);
+        if (fsModule.existsSync(localPath)) {
+          return new Uint8Array(fsModule.readFileSync(localPath));
         }
       } catch {}
     }
@@ -942,6 +943,16 @@ export async function buildBrandedDocumentPdf(opts: {
       continue;
     }
 
+    if (
+      trimmed === "--- PAGE BREAK ---" ||
+      trimmed === "=== QUEBRA DE PÁGINA ===" ||
+      trimmed === "=== PAGE BREAK ==="
+    ) {
+      flushTwoColumnRow();
+      newPage();
+      continue;
+    }
+
     // Se estivermos entrando no bloco final de encerramento do documento,
     // garantimos que há espaço suficiente para TODO o encerramento JUNTO com a assinatura.
     if (closingStartIndex !== -1 && i === closingStartIndex) {
@@ -967,53 +978,55 @@ export async function buildBrandedDocumentPdf(opts: {
   flushTwoColumnRow();
 
   // ---------- SIGNATURE BLOCK ----------
-  ensureSpace(estimatedSignerHeight);
-  y -= 18;
-  if (signatureImg) {
-    const sw = 130;
-    const sh = (signatureImg.height / signatureImg.width) * sw;
-    page.drawImage(signatureImg, { x: LEFT, y: y - sh, width: sw, height: sh });
-    y -= sh + 4;
-  }
-  page.drawLine({
-    start: { x: LEFT, y },
-    end: { x: LEFT + 240, y },
-    thickness: 0.6,
-    color: secondary,
-  });
-  y -= 10;
-  for (const sLine of signerLines) {
-    resetPdfTextSpacing(page);
-    page.drawText(sanitize(sLine), {
-      x: LEFT,
-      y,
-      size: 9.5,
-      font: bold,
-      color: ink,
-    });
-    y -= 12;
-  }
-  if (signerSub) {
-    resetPdfTextSpacing(page);
-    page.drawText(sanitize(signerSub), {
-      x: LEFT,
-      y,
-      size: 8.5,
-      font,
-      color: muted,
+  if (!opts.hideSignatureBlock && (opts.signerName || signatureImg)) {
+    ensureSpace(estimatedSignerHeight);
+    y -= 18;
+    if (signatureImg) {
+      const sw = 130;
+      const sh = (signatureImg.height / signatureImg.width) * sw;
+      page.drawImage(signatureImg, { x: LEFT, y: y - sh, width: sw, height: sh });
+      y -= sh + 4;
+    }
+    page.drawLine({
+      start: { x: LEFT, y },
+      end: { x: LEFT + 240, y },
+      thickness: 0.6,
+      color: secondary,
     });
     y -= 10;
-  }
-  if (stampImg) {
-    const sw = 85;
-    const sh = (stampImg.height / stampImg.width) * sw;
-    page.drawImage(stampImg, {
-      x: W - LEFT - sw,
-      y: y + 10,
-      width: sw,
-      height: sh,
-      opacity: 0.92,
-    });
+    for (const sLine of signerLines) {
+      resetPdfTextSpacing(page);
+      page.drawText(sanitize(sLine), {
+        x: LEFT,
+        y,
+        size: 9.5,
+        font: bold,
+        color: ink,
+      });
+      y -= 12;
+    }
+    if (signerSub) {
+      resetPdfTextSpacing(page);
+      page.drawText(sanitize(signerSub), {
+        x: LEFT,
+        y,
+        size: 8.5,
+        font,
+        color: muted,
+      });
+      y -= 10;
+    }
+    if (stampImg) {
+      const sw = 85;
+      const sh = (stampImg.height / stampImg.width) * sw;
+      page.drawImage(stampImg, {
+        x: W - LEFT - sw,
+        y: y + 10,
+        width: sw,
+        height: sh,
+        opacity: 0.92,
+      });
+    }
   }
 
   // ---------- HEADER / FOOTER PER PAGE ----------
