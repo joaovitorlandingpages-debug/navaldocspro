@@ -40,6 +40,9 @@ import {
 } from "@/components/customers/CustomerDuplicateResolutionModal";
 import { safeString } from "@/utils/safe-string";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Badge } from "@/components/ui/badge";
+import { processDocumentForReview } from "@/services/ocr/smartDocumentService";
+import { saveReviewSession } from "@/services/ocr/reviewSessionStorage";
 import {
   Dialog,
   DialogContent,
@@ -129,6 +132,61 @@ function NovoClientePage() {
     name: string;
     cpf_cnpj: string;
   } | null>(null);
+
+  // Leitura inteligente direta por arrastar/soltar ou seleção rápida de arquivo
+  const [isQuickReading, setIsQuickReading] = useState(false);
+  const [quickReadingStage, setQuickReadingStage] = useState("");
+  const [isDragOver, setIsDragOver] = useState(false);
+  const quickFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleQuickFile = async (file: File) => {
+    if (!profile?.company_id) {
+      toast.error("Empresa não identificada. Por favor, recarregue a página.");
+      return;
+    }
+
+    setIsQuickReading(true);
+    setQuickReadingStage("Validando e enviando CNH/documento...");
+
+    try {
+      // Salva rascunho dos campos atuais antes de ir para conferência
+      if (typeof window !== "undefined" && window.sessionStorage) {
+        window.sessionStorage.setItem(
+          "ndp_customer_form_draft",
+          JSON.stringify({ formData, clientType, uploadedFiles })
+        );
+      }
+
+      const review = await processDocumentForReview({
+        file,
+        companyId: profile.company_id,
+        userId: profile.id,
+        targetEntity: "customer",
+        existingData: formData,
+        onProgress: (stage) => setQuickReadingStage(stage),
+      });
+
+      const sessionId = review.fileId || review.jobId || crypto.randomUUID();
+      saveReviewSession(sessionId, {
+        review,
+        originUrl: window.location.pathname + window.location.search,
+        targetEntity: "customer",
+        draftData: { formData, clientType, uploadedFiles },
+        companyId: profile.company_id,
+      });
+
+      toast.success("Documento lido com sucesso! Abrindo tela de conferência...");
+      navigate({ to: `/documentos/revisar/${sessionId}` as any });
+    } catch (err: any) {
+      console.error("[customers.novo] Erro na leitura automática:", err);
+      setIsQuickReading(false);
+      const isUnavailable = !err?.message || err.message.includes("indisponível") || err.message.includes("Falha");
+      const errorMsg = isUnavailable
+        ? "Leitura automática temporariamente indisponível. Você pode continuar preenchendo os dados manualmente abaixo."
+        : err.message;
+      toast.error(errorMsg);
+    }
+  };
 
   // Refs para focar nos campos ao corrigir
   const cpfInputRef = useRef<HTMLInputElement>(null);
@@ -635,50 +693,120 @@ function NovoClientePage() {
         </p>
       </div>
 
-      {/* 3. PAINEL AZUL-CLARO "PREENCHER COM DOCUMENTOS" */}
-      <div className="bg-[#EEF4FF] border border-[#D8E6FF] rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 shadow-2xs">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-white text-[#075BFF] flex items-center justify-center shrink-0 border border-blue-100 shadow-xs">
-            <FileUp className="h-6 w-6" />
-          </div>
-          <div>
-            <h2 className="text-base font-bold text-[#0B1739]">Preencher com documentos</h2>
-            <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-              Anexe os arquivos e revise os dados identificados antes de salvar.
-            </p>
-          </div>
-        </div>
+      {/* 3. PAINEL DE LEITURA INTELIGENTE DE CNH / DOCUMENTO COM DRAG & DROP */}
+      <input
+        type="file"
+        ref={quickFileInputRef}
+        accept=".pdf,.png,.jpg,.jpeg"
+        className="hidden"
+        onChange={(e) => {
+          if (e.target.files && e.target.files[0]) {
+            handleQuickFile(e.target.files[0]);
+          }
+        }}
+      />
 
-        <div className="flex flex-col items-start sm:items-end shrink-0 w-full sm:w-auto">
-          <button
-            type="button"
-            onClick={() => {
-              if (typeof window !== "undefined" && window.sessionStorage) {
-                window.sessionStorage.setItem(
-                  "ndp_customer_form_draft",
-                  JSON.stringify({ formData, clientType, uploadedFiles }),
-                );
-              }
-              navigate({
-                to: "/documentos/anexar",
-                search: {
-                  tipo: "cliente",
-                  modo: "novo",
-                  returnTo:
-                    "/customers/novo" +
-                    (typeof window !== "undefined" ? window.location.search : ""),
-                } as any,
-              });
-            }}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-[#075BFF] bg-white text-[#075BFF] hover:bg-blue-50 font-bold text-xs sm:text-sm transition-colors shadow-2xs cursor-pointer"
-          >
-            <Paperclip className="h-4 w-4 rotate-[-45deg]" />
-            <span>Anexar documentos</span>
-          </button>
-          <span className="text-[10px] text-slate-400 mt-1.5 pl-1 sm:pl-0 self-center sm:self-auto">
-            PDF, JPG ou PNG
-          </span>
-        </div>
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          setIsDragOver(true);
+        }}
+        onDragLeave={() => setIsDragOver(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setIsDragOver(false);
+          if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            handleQuickFile(e.dataTransfer.files[0]);
+          }
+        }}
+        className={`border-2 border-dashed rounded-2xl p-5 sm:p-6 mb-6 transition-all duration-200 ${
+          isDragOver
+            ? "bg-blue-100/70 border-[#075BFF] scale-[1.005]"
+            : "bg-[#EEF4FF] border-[#B8D4FF] hover:border-[#075BFF]/70"
+        } shadow-2xs`}
+      >
+        {isQuickReading ? (
+          <div className="flex flex-col items-center justify-center py-4 text-center space-y-3">
+            <div className="relative">
+              <div className="w-12 h-12 rounded-2xl bg-[#075BFF] text-white flex items-center justify-center shadow-md animate-pulse">
+                <Sparkles className="h-6 w-6" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-[#0B1739]">
+                Processando documento com inteligência artificial...
+              </h3>
+              <p className="text-xs text-slate-500 mt-1 font-medium">
+                {quickReadingStage || "Identificando tipo de documento, CPF e dados cadastrais..."}
+              </p>
+            </div>
+            <div className="w-48 bg-blue-100 rounded-full h-1.5 overflow-hidden">
+              <div className="bg-[#075BFF] h-1.5 rounded-full animate-pulse w-3/4"></div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div
+                onClick={() => quickFileInputRef.current?.click()}
+                className="w-12 h-12 rounded-xl bg-white text-[#075BFF] flex items-center justify-center shrink-0 border border-blue-200 shadow-xs cursor-pointer hover:scale-105 transition-transform"
+                title="Clique para enviar CNH ou RG"
+              >
+                <FileUp className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-bold text-[#0B1739]">
+                    Preenchimento Automático por Documento (CNH / RG)
+                  </h2>
+                  <Badge className="bg-[#075BFF] text-white text-[10px] font-bold px-2 py-0.5">
+                    Leitura IA
+                  </Badge>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                  Arraste a CNH ou RG do cliente aqui para preencher o formulário automaticamente em segundos, ou preencha os campos abaixo manualmente.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => quickFileInputRef.current?.click()}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white font-bold text-xs transition-colors shadow-2xs cursor-pointer"
+              >
+                <Sparkles className="h-4 w-4" />
+                <span>Carregar CNH / RG</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== "undefined" && window.sessionStorage) {
+                    window.sessionStorage.setItem(
+                      "ndp_customer_form_draft",
+                      JSON.stringify({ formData, clientType, uploadedFiles })
+                    );
+                  }
+                  navigate({
+                    to: "/documentos/anexar",
+                    search: {
+                      tipo: "cliente",
+                      modo: "novo",
+                      returnTo:
+                        "/customers/novo" +
+                        (typeof window !== "undefined" ? window.location.search : ""),
+                    } as any,
+                  });
+                }}
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-blue-200 bg-white hover:bg-blue-50 text-slate-700 font-semibold text-xs transition-colors cursor-pointer"
+                title="Abrir central completa de anexos"
+              >
+                <Paperclip className="h-3.5 w-3.5 text-slate-500 rotate-[-45deg]" />
+                <span className="hidden lg:inline">Mais opções</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Banner Informativo se Dados Foram Extraídos */}

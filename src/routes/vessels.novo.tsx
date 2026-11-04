@@ -29,6 +29,9 @@ import type {
 } from "@/components/vessels/VesselDocumentUploadModal";
 import { QuickCustomerModal } from "@/components/customers/QuickCustomerModal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Badge } from "@/components/ui/badge";
+import { processDocumentForReview } from "@/services/ocr/smartDocumentService";
+import { saveReviewSession } from "@/services/ocr/reviewSessionStorage";
 import {
   Dialog,
   DialogContent,
@@ -122,6 +125,71 @@ function NovaEmbarcacaoPage() {
 
   // Seção Recolhível de Dados Complementares
   const [isComplementaryOpen, setIsComplementaryOpen] = useState(false);
+
+  // Leitura inteligente direta por arrastar/soltar ou seleção rápida de TIE/TIEM
+  const [isQuickReading, setIsQuickReading] = useState(false);
+  const [quickReadingStage, setQuickReadingStage] = useState("");
+  const [isDragOver, setIsDragOver] = useState(false);
+  const quickFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleQuickFile = async (file: File) => {
+    if (!companyId) {
+      toast.error("Empresa não identificada. Por favor, recarregue a página.");
+      return;
+    }
+
+    setIsQuickReading(true);
+    setQuickReadingStage("Validando e enviando TIE/documento da embarcação...");
+
+    try {
+      // Salva rascunho dos campos atuais antes de ir para conferência
+      if (typeof window !== "undefined" && window.sessionStorage) {
+        window.sessionStorage.setItem(
+          "ndp_vessel_form_draft",
+          JSON.stringify({
+            formData,
+            selectedCustomerId,
+            uploadedFiles,
+            isComplementaryOpen,
+          })
+        );
+      }
+
+      const review = await processDocumentForReview({
+        file,
+        companyId,
+        userId: profile?.id,
+        targetEntity: "vessel",
+        existingData: formData,
+        onProgress: (stage) => setQuickReadingStage(stage),
+      });
+
+      const sessionId = review.fileId || review.jobId || crypto.randomUUID();
+      saveReviewSession(sessionId, {
+        review,
+        originUrl: window.location.pathname + window.location.search,
+        targetEntity: "vessel",
+        draftData: {
+          formData,
+          selectedCustomerId,
+          uploadedFiles,
+          isComplementaryOpen,
+        },
+        companyId,
+      });
+
+      toast.success("Documento lido com sucesso! Abrindo tela de conferência...");
+      navigate({ to: `/documentos/revisar/${sessionId}` as any });
+    } catch (err: any) {
+      console.error("[vessels.novo] Erro na leitura automática:", err);
+      setIsQuickReading(false);
+      const isUnavailable = !err?.message || err.message.includes("indisponível") || err.message.includes("Falha");
+      const errorMsg = isUnavailable
+        ? "Leitura automática temporariamente indisponível. Você pode continuar preenchendo os dados técnicos manualmente abaixo."
+        : err.message;
+      toast.error(errorMsg);
+    }
+  };
 
   // Estado do Formulário
   const [formData, setFormData] = useState({
@@ -707,49 +775,119 @@ function NovaEmbarcacaoPage() {
         </p>
       </div>
 
-      {/* 4. BLOCO 2: PAINEL AZUL-CLARO "PREENCHER COM DOCUMENTOS" */}
-      <div className="bg-[#EEF4FF] border border-[#D8E6FF] rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 shadow-2xs">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-white text-[#075BFF] flex items-center justify-center shrink-0 border border-blue-100 shadow-xs">
-            <FileUp className="h-6 w-6" />
-          </div>
-          <div>
-            <h2 className="text-base font-bold text-[#0B1739]">Preencher com documentos</h2>
-            <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-              Anexe os documentos da embarcação e revise os dados extraídos.
-            </p>
-          </div>
-        </div>
+      {/* 4. BLOCO 2: PAINEL DE LEITURA INTELIGENTE DE TIE / TIEM COM DRAG & DROP */}
+      <input
+        type="file"
+        ref={quickFileInputRef}
+        accept=".pdf,.png,.jpg,.jpeg"
+        className="hidden"
+        onChange={(e) => {
+          if (e.target.files && e.target.files[0]) {
+            handleQuickFile(e.target.files[0]);
+          }
+        }}
+      />
 
-        <div className="flex flex-col items-start sm:items-end shrink-0 w-full sm:w-auto">
-          <button
-            type="button"
-            onClick={() => {
-              if (typeof window !== "undefined" && window.sessionStorage) {
-                window.sessionStorage.setItem(
-                  "ndp_vessel_form_draft",
-                  JSON.stringify({ formData, selectedCustomerId, uploadedFiles }),
-                );
-              }
-              navigate({
-                to: "/documentos/anexar",
-                search: {
-                  tipo: "embarcacao",
-                  modo: "novo",
-                  returnTo:
-                    "/vessels/novo" + (typeof window !== "undefined" ? window.location.search : ""),
-                } as any,
-              });
-            }}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-[#075BFF] bg-white text-[#075BFF] hover:bg-blue-50 font-bold text-xs sm:text-sm transition-colors shadow-2xs cursor-pointer"
-          >
-            <Paperclip className="h-4 w-4 rotate-[-45deg]" />
-            <span>Anexar documentos</span>
-          </button>
-          <span className="text-[10px] text-slate-400 mt-1.5 pl-1 sm:pl-0 self-center sm:self-auto">
-            PDF, JPG ou PNG
-          </span>
-        </div>
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          setIsDragOver(true);
+        }}
+        onDragLeave={() => setIsDragOver(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setIsDragOver(false);
+          if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            handleQuickFile(e.dataTransfer.files[0]);
+          }
+        }}
+        className={`border-2 border-dashed rounded-2xl p-5 sm:p-6 mb-6 transition-all duration-200 ${
+          isDragOver
+            ? "bg-blue-100/70 border-[#075BFF] scale-[1.005]"
+            : "bg-[#EEF4FF] border-[#B8D4FF] hover:border-[#075BFF]/70"
+        } shadow-2xs`}
+      >
+        {isQuickReading ? (
+          <div className="flex flex-col items-center justify-center py-4 text-center space-y-3">
+            <div className="relative">
+              <div className="w-12 h-12 rounded-2xl bg-[#075BFF] text-white flex items-center justify-center shadow-md animate-pulse">
+                <Sparkles className="h-6 w-6" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-[#0B1739]">
+                Processando documento com inteligência artificial...
+              </h3>
+              <p className="text-xs text-slate-500 mt-1 font-medium">
+                {quickReadingStage || "Identificando TIE/TIEM, número de inscrição e dimensões técnicas..."}
+              </p>
+            </div>
+            <div className="w-48 bg-blue-100 rounded-full h-1.5 overflow-hidden">
+              <div className="bg-[#075BFF] h-1.5 rounded-full animate-pulse w-3/4"></div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div
+                onClick={() => quickFileInputRef.current?.click()}
+                className="w-12 h-12 rounded-xl bg-white text-[#075BFF] flex items-center justify-center shrink-0 border border-blue-200 shadow-xs cursor-pointer hover:scale-105 transition-transform"
+                title="Clique para enviar TIE, TIEM ou Nota Fiscal"
+              >
+                <FileUp className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-bold text-[#0B1739]">
+                    Preenchimento Automático por Documento (TIE / TIEM / Nota Fiscal)
+                  </h2>
+                  <Badge className="bg-[#075BFF] text-white text-[10px] font-bold px-2 py-0.5">
+                    Leitura IA
+                  </Badge>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                  Arraste o TIE, TIEM ou documento da embarcação aqui para preencher as medidas e motores em segundos, ou preencha manualmente abaixo.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => quickFileInputRef.current?.click()}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#075BFF] hover:bg-blue-600 text-white font-bold text-xs transition-colors shadow-2xs cursor-pointer"
+              >
+                <Sparkles className="h-4 w-4" />
+                <span>Carregar TIE / Documento</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== "undefined" && window.sessionStorage) {
+                    window.sessionStorage.setItem(
+                      "ndp_vessel_form_draft",
+                      JSON.stringify({ formData, selectedCustomerId, uploadedFiles, isComplementaryOpen }),
+                    );
+                  }
+                  navigate({
+                    to: "/documentos/anexar",
+                    search: {
+                      tipo: "embarcacao",
+                      modo: "novo",
+                      returnTo:
+                        "/vessels/novo" + (typeof window !== "undefined" ? window.location.search : ""),
+                    } as any,
+                  });
+                }}
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-blue-200 bg-white hover:bg-blue-50 text-slate-700 font-semibold text-xs transition-colors cursor-pointer"
+                title="Abrir central completa de anexos"
+              >
+                <Paperclip className="h-3.5 w-3.5 text-slate-500 rotate-[-45deg]" />
+                <span className="hidden lg:inline">Mais opções</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Banner Informativo se Dados Foram Extraídos */}

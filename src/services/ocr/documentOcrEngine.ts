@@ -212,7 +212,26 @@ export function buildCustomerReview(
 
     // Fallback de extração direta do rawText se o campo continuar vazio
     if (!rawVal && rawText) {
-      if (cfg.key === "bairro") {
+      if (cfg.key === "cpf_cnpj") {
+        const mCpf = rawText.match(/\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/);
+        if (mCpf) {
+          rawVal = mCpf[0];
+        } else {
+          const mCnpj = rawText.match(/\b\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}\b/);
+          if (mCnpj) rawVal = mCnpj[0];
+        }
+      } else if (cfg.key === "rg") {
+        const m = rawText.match(/(?:DOC(?:\.?|\s+)IDENTIDADE|REGISTRO\s+GERAL|RG|IDENTIDADE)[:\s\n]+([0-9A-Za-z\.\-\/\s]{5,22})/i);
+        if (m) rawVal = m[1].trim();
+      } else if (cfg.key === "birth_date") {
+        const mDate = rawText.match(/(?:NASCIMENTO|DATA\s+DE\s+NASCIMENTO|DATA\s+NASC\.?)[:\s\n]+(\d{2}[\/\.-]\d{2}[\/\.-]\d{4})/i);
+        if (mDate) rawVal = mDate[1].replace(/[\.-]/g, "/");
+      } else if (cfg.key === "name") {
+        const mName = rawText.match(/(?:NOME(?:\s+COMPLETO)?|NOME\s+DO\s+CONDUTOR|TITULAR)[:\s\n]+([A-ZÁ-Ú][A-ZÁ-Ú\s]{3,60})/i);
+        if (mName && mName[1] && !mName[1].includes("CARTEIRA") && !mName[1].includes("REPUBLICA")) {
+          rawVal = mName[1].trim();
+        }
+      } else if (cfg.key === "bairro") {
         const m = rawText.match(/(?:BAIRRO|DISTRO|NEIGHBORHOOD)[:\s\n]+([A-ZÁ-Úa-zá-ú0-9\s\-]+?)(?:\n|CIDADE|MUNIC[ÍI]PIO|CEP|ESTADO|$)/i);
         if (m) rawVal = m[1].trim();
       } else if (cfg.key === "numero") {
@@ -419,7 +438,31 @@ export function buildVesselReview(
         const m = rawText.match(/(?:N[ÚU]MERO\s+DO\s+CASCO|CASCO\s*\/\s*CHASSI|CHASSI|IDENTIFICADOR\s+DO\s+CASCO|CASCO)[:\s\n]+([A-Z0-9\-]+)/i);
         if (m && m[1]) rawVal = m[1].trim();
       } else if (cfg.key === "registration_number") {
-        const m = rawText.match(/(?:N[ÚU]MERO\s+DE\s+INSCRI[ÇC][ÃA]O|INSCRI[ÇC][ÃA]O)[:\s\n]+([0-9A-Z\-\.\/]+)/i);
+        const m = rawText.match(/(?:N[ÚU]MERO\s+DE\s+INSCRI[ÇC][ÃA]O|N[ºO\.]?\s*INSCRI[ÇC][ÃA]O|INSCRI[ÇC][ÃA]O)[:\s\n]+([0-9A-Z\-\.\/]+)/i);
+        if (m && m[1]) rawVal = m[1].trim();
+      } else if (cfg.key === "engine_serial_number") {
+        const m = rawText.match(/(?:N[ÚU]MERO\s+DE\s+S[ÉE]RIE\s+(?:DO\s+)?MOTOR|N[ºO\.]?\s*S[ÉE]RIE\s+MOTOR|S[ÉE]RIE\s+(?:DO\s+)?MOTOR|MOTOR\s+N[ºO\.]?)[:\s\n]+([A-Z0-9\-]+)/i);
+        if (m && m[1]) rawVal = m[1].trim();
+      } else if (cfg.key === "engine_power") {
+        const m = rawText.match(/(?:POT[ÊE]NCIA(?:\s+DO\s+MOTOR)?|HP|POT\.?)[:\s\n]+([0-9]+(?:\.[0-9]+)?(?:\s*(?:HP|BHP|KW|CV))?)/i);
+        if (m && m[1]) rawVal = m[1].trim();
+      } else if (cfg.key === "engine_brand") {
+        const m = rawText.match(/(?:MARCA\s+DO\s+MOTOR|FABRICANTE\s+DO\s+MOTOR|PROPULSOR)[:\s\n]+([A-ZÁ-Ú0-9\s\-]+)/i);
+        if (m && m[1]) rawVal = m[1].trim();
+      } else if (cfg.key === "length") {
+        const m = rawText.match(/(?:COMPRIMENTO\s+TOTAL|COMPRIMENTO|COMP\.?)[:\s\n]+([0-9]+[,\.][0-9]+(?:\s*M)?)/i);
+        if (m && m[1]) rawVal = m[1].trim();
+      } else if (cfg.key === "boca") {
+        const m = rawText.match(/(?:BOCA|BOCA\s+MOLDADA)[:\s\n]+([0-9]+[,\.][0-9]+(?:\s*M)?)/i);
+        if (m && m[1]) rawVal = m[1].trim();
+      } else if (cfg.key === "pontal") {
+        const m = rawText.match(/(?:PONTAL|PONTAL\s+MOLDADO)[:\s\n]+([0-9]+[,\.][0-9]+(?:\s*M)?)/i);
+        if (m && m[1]) rawVal = m[1].trim();
+      } else if (cfg.key === "capacity") {
+        const m = rawText.match(/(?:LOTA[ÇC][ÃA]O|CAPACIDADE|PASSAGEIROS)[:\s\n]+(\d+)/i);
+        if (m && m[1]) rawVal = m[1].trim();
+      } else if (cfg.key === "construction_year") {
+        const m = rawText.match(/(?:ANO\s+DE\s+CONSTRU[ÇC][ÃA]O|ANO\s+FABRICA[ÇC][ÃA]O|ANO)[:\s\n]+(19\d{2}|20\d{2})/i);
         if (m && m[1]) rawVal = m[1].trim();
       }
     }
