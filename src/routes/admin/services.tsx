@@ -38,6 +38,7 @@ import {
   FileDown
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { OfficialDocumentPreviewModal, type OfficialPreviewDocInfo } from "@/components/admin/OfficialDocumentPreviewModal";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -623,6 +624,29 @@ function AdminServicesCatalogPage() {
   // Lista local com persistência
   const [servicesData, setServicesData] = useState<NavalServiceItem[]>(getStoredNavalServices());
 
+  // Estado do Visualizador Oficial de Folha A4
+  const [previewDocInfo, setPreviewDocInfo] = useState<OfficialPreviewDocInfo | null>(null);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+
+  const handleOpenPreviewService = (service: NavalServiceItem) => {
+    setPreviewDocInfo({
+      id: service.id,
+      name: service.name,
+      serviceName: service.name,
+      officialSource: service.officialSourceUrl ? "NORMAM-211/DPC" : service.jurisdiction || "NORMAM-211/DPC",
+      jurisdiction: service.jurisdiction,
+      documentType: "official_form",
+      signersRole: "Proprietário / Requerente Legal",
+      legalPurpose: `Instrução regulamentar do serviço de ${service.name}`,
+      templates: service.fillableTemplates.map((t) => ({
+        name: t.name,
+        templateCode: t.templateCode,
+        status: t.status,
+      })),
+    });
+    setIsPreviewModalOpen(true);
+  };
+
   // Estado do Modal de Detalhes
   const [selectedService, setSelectedService] = useState<NavalServiceItem | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
@@ -1164,6 +1188,17 @@ function AdminServicesCatalogPage() {
                         <Button
                           variant="outline"
                           size="sm"
+                          onClick={() => handleOpenPreviewService(srv)}
+                          className="h-8 text-[11px] font-semibold text-[#075BFF] bg-blue-50/70 hover:bg-blue-100/70 border-blue-200 rounded-xl cursor-pointer gap-1"
+                          title="Visualizar layout oficial A4 da Marinha do Brasil"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          Prévia A4
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => handleOpenDetails(srv)}
                           className="h-8 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 border-slate-200 rounded-xl cursor-pointer"
                         >
@@ -1460,9 +1495,20 @@ function AdminServicesCatalogPage() {
                         Estilo Visual Padrão da Marinha do Brasil (NORMAM)
                       </h4>
                     </div>
-                    <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] font-bold">
-                      Padrão Oficial DPC Ativo
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => selectedService && handleOpenPreviewService(selectedService)}
+                        className="h-7 text-[11px] font-bold bg-[#075BFF] hover:bg-blue-600 text-white rounded-lg shadow-xs gap-1 cursor-pointer"
+                        title="Abrir folha de prova A4 em tamanho real"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        Abrir Folha A4 Completa
+                      </Button>
+                      <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] font-bold">
+                        Padrão Oficial DPC Ativo
+                      </Badge>
+                    </div>
                   </div>
 
                   {/* Simulação Visual do Estilo do Documento */}
@@ -1781,6 +1827,12 @@ function AdminServicesCatalogPage() {
           </DialogContent>
         </Dialog>
       )}
+      {/* 6. MODAL DO VISUALIZADOR OFICIAL DE FOLHA A4 */}
+      <OfficialDocumentPreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        documentInfo={previewDocInfo}
+      />
     </div>
   );
 }

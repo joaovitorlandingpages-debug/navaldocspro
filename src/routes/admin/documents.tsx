@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { OfficialDocumentPreviewModal, type OfficialPreviewDocInfo } from "@/components/admin/OfficialDocumentPreviewModal";
 import { useState, useMemo, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -213,6 +214,50 @@ function DocumentVault() {
   const [reqName, setReqName] = useState("");
   const [reqWhy, setReqWhy] = useState("");
   const [reqIsProtocolOnly, setReqIsProtocolOnly] = useState(false);
+
+  // Estado do Visualizador Oficial de Folha A4
+  const [previewDocInfo, setPreviewDocInfo] = useState<OfficialPreviewDocInfo | null>(null);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+
+  const handlePreviewDoc = (doc: OutputDocumentConfig) => {
+    setPreviewDocInfo({
+      id: doc.id,
+      name: doc.name,
+      serviceName: doc.serviceName,
+      officialSource: doc.officialSource,
+      documentType: doc.documentType,
+      signersRole: doc.signerRole || "Proprietário / Requerente Legal",
+      legalPurpose: doc.purpose,
+      templates: [
+        {
+          name: doc.name,
+          templateCode: `DPC_${doc.id.toUpperCase()}`,
+          status: "ready",
+        },
+      ],
+    });
+    setIsPreviewModalOpen(true);
+  };
+
+  const handlePreviewIssuedDoc = (doc: DocumentWithRelations) => {
+    setPreviewDocInfo({
+      id: doc.id,
+      name: doc.name,
+      serviceName: doc.processes?.title || "Processo Náutico",
+      officialSource: "NORMAM-211/DPC",
+      documentType: "official_form",
+      signersRole: "Proprietário / Requerente Legal",
+      legalPurpose: `Homologação pericial do documento ${doc.name}`,
+      templates: [
+        {
+          name: doc.name,
+          templateCode: `EMITIDO_${doc.id.substring(0, 8)}`,
+          status: "ready",
+        },
+      ],
+    });
+    setIsPreviewModalOpen(true);
+  };
 
   // Modal Novo Documento no Catálogo Geral
   const [isNewDocModalOpen, setIsNewDocModalOpen] = useState(false);
@@ -977,6 +1022,17 @@ function DocumentVault() {
                         <Button
                           variant="outline"
                           size="sm"
+                          onClick={() => handlePreviewDoc(doc)}
+                          className="h-8 rounded-xl text-xs font-semibold text-[#075BFF] bg-blue-50/70 hover:bg-blue-100/70 border-blue-200 gap-1 cursor-pointer"
+                          title={`Visualizar layout oficial A4 de ${doc.name}`}
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          Prévia A4
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => handleOpenEditDoc(doc)}
                           className="h-8 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-100 gap-1 border-slate-200 cursor-pointer"
                           title={`Editar dados de ${doc.name}`}
@@ -1219,8 +1275,19 @@ function DocumentVault() {
                                 <Button
                                   variant="outline"
                                   size="sm"
+                                  onClick={() => handlePreviewIssuedDoc(doc)}
+                                  className="h-8 px-2.5 text-xs font-bold text-[#075BFF] border-blue-200 bg-blue-50/50 hover:bg-blue-100/70 rounded-xl cursor-pointer"
+                                  title="Visualizar layout oficial A4 retificado"
+                                >
+                                  <Eye className="h-3.5 w-3.5 mr-1" />
+                                  Prévia A4
+                                </Button>
+
+                                <Button
+                                  variant="outline"
+                                  size="sm"
                                   onClick={() => handleOpenRepairModal(doc)}
-                                  className="h-8 px-2.5 text-xs font-bold text-amber-700 border-amber-200 bg-amber-50/50 hover:bg-amber-100/70 rounded-xl"
+                                  className="h-8 px-2.5 text-xs font-bold text-amber-700 border-amber-200 bg-amber-50/50 hover:bg-amber-100/70 rounded-xl cursor-pointer"
                                   title="Reparo técnico manual sem reiniciar processo"
                                 >
                                   <Wrench className="h-3.5 w-3.5 mr-1" />
@@ -2386,6 +2453,12 @@ function DocumentVault() {
         </Dialog>
 
       </div>
+      {/* MODAL DO VISUALIZADOR OFICIAL DE FOLHA A4 */}
+      <OfficialDocumentPreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        documentInfo={previewDocInfo}
+      />
     </div>
   );
 }
