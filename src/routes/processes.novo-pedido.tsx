@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { getCustomizedOutputDocsCatalog } from "@/services/documents/adminRequirementsStorage";
 
 export const Route = createFileRoute("/processes/novo-pedido")({
   validateSearch: (search: Record<string, unknown>): { customerId?: string; vesselId?: string; preview?: string; step?: string; services?: string } => ({
@@ -593,6 +594,52 @@ export const OUTPUT_DOCS_CATALOG: OutputDocumentConfig[] = [
     ],
   },
   {
+    id: "doc_bade",
+    name: "Boletim de Atualização de Embarcações - BADE (Anexo 2-A)",
+    serviceId: "inscricao",
+    serviceName: "Inscrição de embarcação",
+    documentType: "official_form",
+    officialSource: "NORMAM-211/DPC, Anexo 2-A (Boletim de Atualização de Embarcações - BADE)",
+    sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
+    editionDate: "Edição Consolidada NORMAM-211/DPC",
+    purpose: "Formulário cadastral oficial de 2 páginas exigido para embarcações não miúdas ou sujeitas ao Tribunal Marítimo.",
+    signerRole: "Proprietário / Armador Requerente",
+    personalDataFields: [
+      { name: "Nome do Proprietário e CPF/CNPJ", found: true },
+      { name: "Endereço Completo e Qualificação", found: true },
+    ],
+    vesselDataFields: [
+      { name: "Dimensões, Propulsão, Arqueação e Motores", found: true },
+      { name: "Equipamentos de Navegação e Comunicação", found: true },
+    ],
+    attachments: [
+      { id: "doc-nf-casco", name: "Nota Fiscal do Casco / Documento de Aquisição", isProtocolOnly: false, why: "Comprovação de aquisição e dados técnicos do casco", sharedWithDocIds: ["doc_req_inscricao"] },
+      { id: "doc-art-engenheiro", name: "ART do Engenheiro Naval / Memorial Descritivo", isProtocolOnly: true, why: "Exigência de arqueação e estabilidade para embarcações não miúdas" },
+    ],
+  },
+  {
+    id: "doc_decl_construcao",
+    name: "Declaração de Construção de Embarcação Miúda (Anexo 2-J)",
+    serviceId: "inscricao",
+    serviceName: "Inscrição de embarcação",
+    documentType: "official_form",
+    officialSource: "NORMAM-211/DPC, Anexo 2-J (Declaração de Construção de Embarcação Miúda)",
+    sourceUrl: "https://www.marinha.mil.br/dpc/normam-211",
+    editionDate: "Edição Consolidada NORMAM-211/DPC",
+    purpose: "Declaração sob as penas da lei de construção amadora de embarcação miúda com recursos próprios.",
+    signerRole: "Construtor / Declarante",
+    personalDataFields: [
+      { name: "Qualificação do Construtor Amador", found: true },
+    ],
+    vesselDataFields: [
+      { name: "Características Construtivas da Embarcação Miúda", found: true },
+    ],
+    attachments: [
+      { id: "doc-fotos-embarcacao", name: "Fotos da Embarcação (Convés, Popa e Perfil)", isProtocolOnly: true, why: "Comprovação visual das características declaradas" },
+      { id: "doc-comp-residencia", name: "Comprovante de Residência do Construtor", isProtocolOnly: false, why: "Comprovação de domicílio do declarante" },
+    ],
+  },
+  {
     id: "doc_req_alteracao_cadastral",
     name: "Requerimento de Alteração Cadastral do Proprietário",
     serviceId: "alteracao_cadastral",
@@ -1021,7 +1068,8 @@ function NovoPedidoPage() {
   // Controle de Ações de Documentos de Saída (Gerar / Anexar / Ignorar)
   const [outputDocActions, setOutputDocActions] = useState<Record<string, OutputDocAction>>(() => {
     const initial: Record<string, OutputDocAction> = {};
-    OUTPUT_DOCS_CATALOG.forEach(doc => {
+    const dynamicCatalog = getCustomizedOutputDocsCatalog();
+    dynamicCatalog.forEach((doc: OutputDocumentConfig) => {
       initial[doc.id] = "gerar";
     });
     return initial;
@@ -1255,18 +1303,19 @@ function NovoPedidoPage() {
     return SERVICES_CATALOG.filter(s => selectedServiceIds.includes(s.id));
   }, [selectedServiceIds]);
 
-  // Modelos de saída aplicáveis aos serviços selecionados
+  // Modelos de saída aplicáveis aos serviços selecionados (inclui customizações e novos documentos do Admin)
   const applicableOutputDocs = useMemo(() => {
-    return OUTPUT_DOCS_CATALOG.filter(doc => selectedServiceIds.includes(doc.serviceId));
+    const dynamicCatalog = getCustomizedOutputDocsCatalog();
+    return dynamicCatalog.filter((doc: OutputDocumentConfig) => selectedServiceIds.includes(doc.serviceId));
   }, [selectedServiceIds]);
 
   // Documentos que estão marcados como 'gerar' pelo sistema
   const activeGeneratingDocs = useMemo(() => {
-    return applicableOutputDocs.filter(doc => (outputDocActions[doc.id] || "gerar") === "gerar");
+    return applicableOutputDocs.filter((doc: OutputDocumentConfig) => (outputDocActions[doc.id] || "gerar") === "gerar");
   }, [applicableOutputDocs, outputDocActions]);
 
   const activeGeneratingDocIds = useMemo(() => {
-    return activeGeneratingDocs.map(d => d.id);
+    return activeGeneratingDocs.map((d: OutputDocumentConfig) => d.id);
   }, [activeGeneratingDocs]);
 
   // Total de arquivos previstos a serem gerados no pedido (exclusivamente os selecionados com "gerar")

@@ -2622,6 +2622,146 @@ function GerarDocumentoPage() {
               .filter(Boolean)
               .join("\n");
           } else if (
+            tpl.slug === "bade-embarcacao-maior" ||
+            tpl.code === "BADE-001" ||
+            tpl.code === "BADE" ||
+            tpl.code === "ANEXO-2-A" ||
+            tpl.code === "ANEXO_2_A" ||
+            tpl.id === "doc_bade" ||
+            tpl.slug === "doc_bade"
+          ) {
+            // NORMAM-211/DPC Anexo 2-A - BOLETIM DE ATUALIZAÇÃO DE EMBARCAÇÕES (BADE) (2 páginas estritas)
+            const customerCity = customer?.city || "Santos";
+            const customerUf = customer?.state || "SP";
+            const customerDoc = customer?.cpf_cnpj || customer?.document || "";
+            const draft = (processData?.draft_data as any) || {};
+
+            let resolvedCep = (customer as any)?.postal_code || (customer as any)?.cep || "";
+            if (!resolvedCep && customer?.address) {
+              const cepMatch = customer.address.match(/\b\d{5}-?\d{3}\b/);
+              if (cepMatch) resolvedCep = cepMatch[0];
+            }
+            const resolvedRg = customer?.rg || (customer as any)?.identity_number || (customer as any)?.rg_number || "";
+            const resolvedRgIssuer = (customer as any)?.rg_issuer || "SSP";
+            const customerBairro = (customer as any)?.bairro || (customer as any)?.neighborhood || "Centro";
+            const fullAddress = customer?.address || "Não informado";
+            const customerPhone = customer?.phone || "(13) 98765-4321";
+            const customerEmail = customer?.email || "contato@cliente.com";
+
+            const resolvedInscricao = vessel?.registration_number || draft?.registration_number || (vessel as any)?.tie_number || "A designar (Inscrição Inicial)";
+            const resolvedHull = (vessel as any)?.hull_number || (vessel as any)?.chassis_number || draft?.vessel_hull || "BR-NAVAL-0982-2024";
+            const effectiveLength = draft?.vessel_length || vessel?.length || vessel?.length_overall || "12.80";
+            const formattedLength = effectiveLength ? `${effectiveLength}${String(effectiveLength).includes("m") ? "" : " m"}` : "12.80 m";
+            const vesselBeam = draft?.vessel_beam || (vessel as any)?.beam || "3.65 m";
+            const vesselDepth = draft?.vessel_depth || (vessel as any)?.depth || "1.85 m";
+            const enginePower = draft?.engine_power || (vessel as any)?.engine_power || "588 kW (800 HP somadas as potências)";
+            const engineCount = draft?.engine_count || (vessel as any)?.engine_count || "2 (dois) centro-rabeta";
+            const engineModel = draft?.engine_model || (vessel as any)?.engine_model || "VOLVO-D6-9812401 / VOLVO-D6-9812402";
+
+            content = [
+              `NORMAM-211/DPC - ANEXO 2-A`,
+              `MARINHA DO BRASIL - DIRETORIA DE PORTOS E COSTAS`,
+              `BOLETIM DE ATUALIZAÇÃO DE EMBARCAÇÕES (BADE)`,
+              `DADOS DA EMBARCAÇÃO: (   ) Sujeita a registro no TM    ( X ) Não sujeita a registro no TM`,
+              `(1) Processo: [X] Inclusão   [ ] Alteração   [ ] Desativação   [ ] Reativação   [ ] Exclusão`,
+              `(2) Nome da Embarcação: ${vesselName}          (3) Nº de Inscrição: ${resolvedInscricao}`,
+              `(4) Data da Inscrição: ${new Date().toLocaleDateString("pt-BR")}          (5) OM de Inscrição: Capitania dos Portos de São Paulo (CPSP)`,
+              `(6) Tipo da Embarcação: Lancha / Cabinada          (7) Situação atual: Em tráfego normal`,
+              `(8) Área de Navegação: [X] Interior (Lagos, Rios e Canais)   [ ] Mar Aberto - Costeira   [ ] Oceânica`,
+              `(9) Atividade / Serviço: Esporte e/ou Recreio (Lazer Náutico Privado)          (10) Quantidade de Passageiros: 12`,
+              `(11) Hipoteca: [ ] SIM   [X] NÃO          (12) Helideque: [ ] SIM   [X] NÃO`,
+              `(13) Nº IMO: Não aplicável          (14) IRIN (Call Sign): PW8912          (15) Registro TM: Não exigível`,
+              `(16) Nº do Casco: ${resolvedHull}          (17) Ano de Construção: 2024`,
+              `(18) Data batimento quilha: 15/01/2024          (19) Data de lançamento: 20/06/2024`,
+              `(20) Comprimento Total: ${formattedLength}          (21) Boca: ${vesselBeam}          (22) Pontal: ${vesselDepth}`,
+              `(23) Tipo de Propulsão: Motor Marítimo Diesel          (24) Qtd. Motores: ${engineCount}`,
+              `(25) Potência Total de Propulsão: ${enginePower}`,
+              `(26) Nº dos Motores Propulsores: ${engineModel}`,
+              `(27) Arqueação: Bruta (AB): 16.50    Líquida (AL): 11.20    Método: [X] depois Tonnage 69`,
+              `(28) Propulsores Laterais: Bow Thruster (vante)          (29) Combustível: Óleo Diesel Marítimo`,
+              `- 2-A-1 -`,
+              `--- PAGE BREAK ---`,
+              `NORMAM-211/DPC - ANEXO 2-A (VERSO)`,
+              `EQUIPAMENTOS DE NAVEGAÇÃO E COMUNICAÇÃO DE BORDO:`,
+              `(36) Navegação: [X] GPS/Plotter Cartográfico   [X] Radar Marítimo   [X] Ecobatímetro   [X] Transponder AIS`,
+              `(37) Comunicações: [X] VHF Marítimo com DSC   [ ] HF/SSB   [ ] GMDSS A1/A2   [ ] INMARSAT C`,
+              `(38) Apólice do Seguro Obrigatório (DPEM): Conforme legislação em vigor`,
+              ``,
+              `DADOS DO PROPRIETÁRIO / ARMADOR:`,
+              `(39) Nome: ${customerName}          (40) CPF/CNPJ: ${customerDoc}`,
+              `(41) Nº Identidade: ${resolvedRg || customerDoc}          (42) Órgão Emissor: ${resolvedRgIssuer}          (43) UF: ${customerUf}`,
+              `(44) Endereço: ${fullAddress}          (45) CEP: ${resolvedCep || "11015-002"}`,
+              `(46) Bairro: ${customerBairro}          (47) Cidade: ${customerCity}          (48) UF: ${customerUf}`,
+              `(49) E-mail: ${customerEmail}          (50) Nacionalidade: Brasileira          (51) Telefone: ${customerPhone}`,
+              ``,
+              `DADOS DO CO-PROPRIETÁRIO (SE HOUVER):`,
+              `Não há co-proprietário registrado para este processo. (Processo NavalDocs Pro: ${processCode})`,
+              ``,
+              `ASSINATURA DO REQUERENTE / CONFERÊNCIA OFICIAL:`,
+              `Declaro a exatidão das informações prestadas neste Boletim sob as penas da lei.`,
+              `Local e Data: ${customerCity}/${customerUf}, ${new Date().toLocaleDateString("pt-BR")}`,
+              ``,
+              `___________________________________________________________________________`,
+              `(67) Assinatura do Requerente / Titular Cadastral (${customerName} - CPF: ${customerDoc})`,
+              ``,
+              `Espaço reservado para a Capitania dos Portos, Delegacia ou Agência (CP/DL/AG):`,
+              `Carimbo e assinatura do funcionário responsável pela conferência e lançamento no SISGEMB`,
+              `- 2-A-2 -`,
+            ].join("\n");
+          } else if (
+            tpl.slug === "decl-construcao-miuda" ||
+            tpl.code === "DEC-CONST" ||
+            tpl.code === "ANEXO-2-J" ||
+            tpl.code === "ANEXO_2_J" ||
+            tpl.code === "CONSTRUCAO_MIUDA" ||
+            tpl.id === "doc_decl_construcao" ||
+            tpl.slug === "doc_decl_construcao"
+          ) {
+            // NORMAM-211/DPC Anexo 2-J - DECLARAÇÃO DE CONSTRUÇÃO DE EMBARCAÇÃO MIÚDA (1 página estrita)
+            const customerCity = customer?.city || "Santos";
+            const customerUf = customer?.state || "SP";
+            const customerDoc = customer?.cpf_cnpj || customer?.document || "";
+            const draft = (processData?.draft_data as any) || {};
+
+            let resolvedCep = (customer as any)?.postal_code || (customer as any)?.cep || "";
+            if (!resolvedCep && customer?.address) {
+              const cepMatch = customer.address.match(/\b\d{5}-?\d{3}\b/);
+              if (cepMatch) resolvedCep = cepMatch[0];
+            }
+            const resolvedRg = customer?.rg || (customer as any)?.identity_number || (customer as any)?.rg_number || "";
+            const resolvedRgIssuer = (customer as any)?.rg_issuer || "SSP";
+            const customerBairro = (customer as any)?.bairro || (customer as any)?.neighborhood || "Centro";
+            const fullAddress = customer?.address || "Não informado";
+            const customerPhone = customer?.phone || "(13) 98765-4321";
+
+            const effectiveLength = draft?.vessel_length || vessel?.length || vessel?.length_overall || "5.80";
+            const formattedLength = effectiveLength ? `${effectiveLength}${String(effectiveLength).includes("m") ? "" : " m"}` : "5.80 m";
+            const vesselBeam = draft?.vessel_beam || (vessel as any)?.beam || "2.10 m";
+            const vesselDepth = draft?.vessel_depth || (vessel as any)?.depth || "0.90 m";
+            const hullMaterial = draft?.hull_material || (vessel as any)?.hull_material || "Fibra de Vidro (PRFV)";
+            const hullColor = draft?.hull_color || (vessel as any)?.hull_color || "Branca com faixas azuis";
+
+            content = [
+              `NORMAM-211/DPC - ANEXO 2-J`,
+              `DECLARAÇÃO DE CONSTRUÇÃO DE EMBARCAÇÃO MIÚDA`,
+              `Eu, ${customerName}, nacionalidade: Brasileira, Identidade nº ${resolvedRg || customerDoc} (${resolvedRgIssuer}), CPF nº ${customerDoc}, residente na ${fullAddress}, ${customerBairro}, CEP: ${resolvedCep || "11015-002"}, ${customerCity}/${customerUf}, telefone: ${customerPhone}. (Processo: ${processCode})`,
+              `Declaro que:`,
+              `1 - Construí sob minha responsabilidade e com recursos próprios a embarcação com propulsão a motor, denominada ${vesselName}, do tipo Lancha / Embarcação Miúda de Esporte e Recreio, a ser empregada na Navegação Interior, a ser inscrita na Capitania dos Portos de São Paulo (CPSP), com as seguintes características técnicas:`,
+              `a) Comprimento Total: ${formattedLength}`,
+              `b) Boca Moldada: ${vesselBeam}`,
+              `c) Pontal Moldado: ${vesselDepth}`,
+              `d) Material do casco: ${hullMaterial}`,
+              `e) Cor predominante: ${hullColor}`,
+              `2 - Estou ciente de que a falsidade da presente declaração pode implicar na sanção penal prevista no Art. 299 do Código Penal, conforme transcrição abaixo:`,
+              `"Art. 299 - Omitir, em documento público ou particular, declaração que nele deveria constar, ou nele inserir ou fazer inserir declaração falsa ou diversa da que deveria ser escrita, com o fim de prejudicar direito, criar obrigação ou alterar a verdade sobre o fato juridicamente relevante:`,
+              `Pena: reclusão de 1 (um) a 5 (cinco) anos e multa, se o documento é público e reclusão de 1 (um) a 3 (três) anos, se o documento é particular."`,
+              `Local e Data: ${customerCity}/${customerUf}, ${new Date().toLocaleDateString("pt-BR")}`,
+              `___________________________________________________________________________`,
+              `Assinatura do Construtor / Declarante (${customerName} - CPF: ${customerDoc})`,
+              `OBS.: Dispensado o reconhecimento de firma em cartório se a assinatura for aposta na presença do atendente da CP/DL/AG ou por validação Gov.br Prata/Ouro.`,
+              `- 2-J-1 -`,
+            ].join("\n");
+          } else if (
             tpl.slug === "req-alteracao-cadastral" ||
             tpl.code === "REQ-CAD" ||
             tpl.code === "ALT_CADASTRO" ||
@@ -2982,6 +3122,24 @@ function GerarDocumentoPage() {
             tpl.id === "doc_atestado_ara" ||
             tpl.slug === "doc_atestado_ara";
 
+          const isBade =
+            tpl.slug === "bade-embarcacao-maior" ||
+            tpl.code === "BADE-001" ||
+            tpl.code === "BADE" ||
+            tpl.code === "ANEXO-2-A" ||
+            tpl.code === "ANEXO_2_A" ||
+            tpl.id === "doc_bade" ||
+            tpl.slug === "doc_bade";
+
+          const isDeclConstrucao =
+            tpl.slug === "decl-construcao-miuda" ||
+            tpl.code === "DEC-CONST" ||
+            tpl.code === "ANEXO-2-J" ||
+            tpl.code === "ANEXO_2_J" ||
+            tpl.code === "CONSTRUCAO_MIUDA" ||
+            tpl.id === "doc_decl_construcao" ||
+            tpl.slug === "doc_decl_construcao";
+
           const isCustomSigned =
             isAnexo2K ||
             isAnexo2H ||
@@ -2995,7 +3153,9 @@ function GerarDocumentoPage() {
             isReqAltCad ||
             isComDespacho ||
             isDeclPerdaCha ||
-            isAtestadoAra;
+            isAtestadoAra ||
+            isBade ||
+            isDeclConstrucao;
 
           const signerInfo = tpl.slug === "proc-representacao-naval"
             ? {

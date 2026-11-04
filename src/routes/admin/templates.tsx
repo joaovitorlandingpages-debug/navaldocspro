@@ -20,6 +20,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DocumentRequirementsManager } from "@/components/admin/templates/DocumentRequirementsManager";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -232,7 +233,8 @@ function AdminDocumentTemplatesPage() {
   const navigate = useNavigate();
   const { profile, loading: authLoading, isGlobalAdmin, isAdmin } = useAuth();
 
-  // Estados de pesquisa e filtros
+  // Aba ativa e estados de pesquisa e filtros
+  const [activeTab, setActiveTab] = useState<string>("documents_requirements");
   const [searchTerm, setSearchTerm] = useState<string>(searchParams.q || "");
   const [serviceFilter, setServiceFilter] = useState<string>(searchParams.service || "all");
   const [categoryFilter, setCategoryFilter] = useState<string>(searchParams.category || "all");
@@ -390,22 +392,48 @@ function AdminDocumentTemplatesPage() {
             </Badge>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Prepare, mapeie e homologue os formulários que o sistema preencherá na geração de processos náuticos.
+            Gestão dos documentos oficiais da Marinha do Brasil, requisitos de anexos necessários e mapeamento de tags para geração dos processos náuticos.
           </p>
-        </div>
-
-        <div className="flex items-center gap-2.5 shrink-0">
-          <Button
-            onClick={() => setIsCreateOpen(true)}
-            className="h-9 px-4 text-xs font-bold bg-[#075BFF] hover:bg-blue-600 text-white rounded-xl shadow-xs"
-          >
-            <Plus className="h-4 w-4 mr-1.5" />
-            Criar modelo
-          </Button>
         </div>
       </div>
 
-      {/* 2. BARRA DE PESQUISA & FILTROS */}
+      {/* 2. NAVEGAÇÃO DE ABAS */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6">
+        <TabsList className="bg-slate-100/80 p-1 rounded-2xl h-11 border border-slate-200/80">
+          <TabsTrigger
+            value="documents_requirements"
+            className="rounded-xl px-4 py-2 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-[#075BFF] data-[state=active]:shadow-2xs flex items-center gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Documentos Oficiais & Requisitos de Anexos
+          </TabsTrigger>
+          <TabsTrigger
+            value="template_tags"
+            className="rounded-xl px-4 py-2 text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-[#075BFF] data-[state=active]:shadow-2xs flex items-center gap-2"
+          >
+            <Code2 className="h-4 w-4" />
+            Mapeamento de Tags & Variáveis
+          </TabsTrigger>
+        </TabsList>
+
+        {/* ABA 1: DOCUMENTOS OFICIAIS & REQUISITOS DE ANEXOS */}
+        <TabsContent value="documents_requirements" className="focus-visible:ring-0 mt-0">
+          <DocumentRequirementsManager />
+        </TabsContent>
+
+        {/* ABA 2: MAPEAMENTO DE TAGS & VARIÁVEIS */}
+        <TabsContent value="template_tags" className="focus-visible:ring-0 mt-0 space-y-6">
+          <div className="flex justify-end">
+            <Button
+              onClick={() => setIsCreateOpen(true)}
+              className="h-9 px-4 text-xs font-bold bg-[#075BFF] hover:bg-blue-600 text-white rounded-xl shadow-xs"
+            >
+              <Plus className="h-4 w-4 mr-1.5" />
+              Criar modelo de tag
+            </Button>
+          </div>
+
+          {/* BARRA DE PESQUISA & FILTROS */}
       <div className="bg-white border border-slate-200/90 rounded-2xl p-3 shadow-2xs space-y-3">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
           {/* Busca */}
@@ -622,6 +650,8 @@ function AdminDocumentTemplatesPage() {
           </div>
         </Card>
       )}
+        </TabsContent>
+      </Tabs>
 
       {/* 4. MODAL DE DETALHES COMPLETOS DO MODELO */}
       {selectedTemplate && (

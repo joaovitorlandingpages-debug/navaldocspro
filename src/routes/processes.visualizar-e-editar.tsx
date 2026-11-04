@@ -483,6 +483,50 @@ export function buildOrderDocuments(
     });
   }
 
+  // BADE - Anexo 2-A (Embarcação não miúda ou sujeita ao TM)
+  if (
+    (explicitDocIds && explicitDocIds.includes("doc_bade")) ||
+    (activeIds.includes("inscricao") && explicitDocIds && explicitDocIds.includes("doc_bade"))
+  ) {
+    docs.push({
+      id: "doc_bade",
+      title: "Boletim de Atualização de Embarcações - BADE (Anexo 2-A)",
+      fileName: "BADE-anexo-2A.pdf",
+      service: "Inscrição / Atualização de Embarcação Maior",
+      customerName,
+      vesselName,
+      requestText: `Boletim de Atualização de Embarcações (BADE - NORMAM-211/DPC Anexo 2-A) para cadastro e registro no SISGEMB da embarcação ${vesselName}, indicando o proprietário ${customerName}, arqueação, sistema propulsor e equipamentos de navegação.`,
+      observations: [
+        "NORMAM-211/DPC Anexo 2-A (Portaria DPC/DGN/MB Nº 200/2026) preenchido em 2 páginas oficiais.",
+        "Obrigatório para embarcações com comprimento igual ou superior a 12 metros ou sujeitas ao Tribunal Marítimo.",
+      ],
+      totalPages: 2,
+      compatibleWithWatermark: true,
+    });
+  }
+
+  // Declaração de Construção de Embarcação Miúda - Anexo 2-J
+  if (
+    (explicitDocIds && explicitDocIds.includes("doc_decl_construcao")) ||
+    (activeIds.includes("inscricao") && explicitDocIds && explicitDocIds.includes("doc_decl_construcao"))
+  ) {
+    docs.push({
+      id: "doc_decl_construcao",
+      title: "Declaração de Construção de Embarcação Miúda (Anexo 2-J)",
+      fileName: "Declaracao-construcao-miuda-anexo-2J.pdf",
+      service: "Inscrição de Embarcação Miúda",
+      customerName,
+      vesselName,
+      requestText: `Declaro sob as penas da lei (Art. 299 do Código Penal) que construí com recursos próprios a embarcação miúda ${vesselName} com as características técnicas declaradas perante a Capitania dos Portos.`,
+      observations: [
+        "NORMAM-211/DPC Anexo 2-J (Declaração de Construção Amadora em 1 página).",
+        "Acompanha memorial descritivo simplificado e fotos da embarcação.",
+      ],
+      totalPages: 1,
+      compatibleWithWatermark: true,
+    });
+  }
+
   // Fallback caso não caia em nenhum dos conhecidos
   if (docs.length === 0) {
     docs.push({
