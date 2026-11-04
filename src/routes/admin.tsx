@@ -36,7 +36,8 @@ import {
   Layers,
   LogOut,
   FolderOpen,
-  DollarSign
+  DollarSign,
+  Compass
 } from "lucide-react";
 import { useState, useEffect, useMemo, Component, ErrorInfo, ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -114,6 +115,7 @@ function AdminLayout() {
     { name: "Sugestões e suporte", icon: MessageSquare, path: "/admin/sugestoes" },
     { name: "Catálogo de serviços", icon: FolderOpen, path: "/admin/services" },
     { name: "Modelos de documentos", icon: FileText, path: "/admin/templates" },
+    { name: "Engenharia & Documentos", icon: Compass, path: "/admin/documents" },
     { name: "Notificações", icon: Bell, path: "/admin/notifications" },
     { name: "Configurações", icon: Sliders, path: "/admin/settings" },
   ], []);

@@ -543,3 +543,4 @@ export function resetDynamicServicesToDefaults(): DynamicNavalService[] {
   }
   return DEFAULT_SERVICES_CATALOG;
 }
+

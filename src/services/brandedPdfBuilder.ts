@@ -49,7 +49,7 @@ export async function buildBrandedDocumentPdf(opts: {
   // Load Liberation Sans TTF bytes (Apache 2.0 license, metric-compatible with Arial)
   // These are served as static assets from /fonts/
   const loadFontBytes = async (filename: string): Promise<Uint8Array> => {
-    if (typeof window === "undefined" && typeof process !== "undefined" && process.cwd) {
+    if (typeof process !== "undefined" && process.cwd) {
       try {
         const fsModule = await import("node:fs");
         const pathModule = await import("node:path");
@@ -59,7 +59,9 @@ export async function buildBrandedDocumentPdf(opts: {
         }
       } catch {}
     }
-    const base = typeof window !== "undefined" ? window.location.origin : "http://localhost:5174";
+    const base = typeof window !== "undefined" && (window as any).location?.origin 
+      ? (window as any).location.origin 
+      : "http://localhost:5174";
     const res = await fetch(`${base}/fonts/${filename}`);
     if (!res.ok) throw new Error(`Font fetch failed: ${filename} (${res.status})`);
     return new Uint8Array(await res.arrayBuffer());
@@ -132,7 +134,9 @@ export async function buildBrandedDocumentPdf(opts: {
   const resolveLogoUrl = (): string | null => {
     if (effectiveLogoMode === "none") return null;
     if (effectiveLogoMode === "navaldocs") {
-      const base = typeof window !== "undefined" ? window.location.origin : "http://localhost:5174";
+      const base = (typeof window !== "undefined" && (window as any).location?.origin) 
+        ? (window as any).location.origin 
+        : "http://localhost:5174";
       return `${base}/navaldocs-logo.png`;
     }
     // company
@@ -151,7 +155,9 @@ export async function buildBrandedDocumentPdf(opts: {
     ? opts.watermarkOptions?.logoUrl ||
       b?.watermark_url ||
       (effectiveLogoMode === "company" ? b?.logo_primary_url : null) ||
-      (typeof window !== "undefined" ? `${window.location.origin}/navaldocs-logo.png` : null)
+      ((typeof window !== "undefined" && (window as any).location?.origin) 
+        ? `${(window as any).location.origin}/navaldocs-logo.png` 
+        : null)
     : null;
 
   const [logoImg, watermarkImg, rawWatermarkImg, signatureImg, stampImg] = await Promise.all([
