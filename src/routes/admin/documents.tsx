@@ -222,6 +222,15 @@ function DocumentVault() {
   const [newDocPurpose, setNewDocPurpose] = useState("");
   const [newDocSignerRole, setNewDocSignerRole] = useState("Proprietário Requerente");
 
+  // Modal Editar Documento Existente
+  const [isEditDocModalOpen, setIsEditDocModalOpen] = useState(false);
+  const [editingDocId, setEditingDocId] = useState<string | null>(null);
+  const [editDocName, setEditDocName] = useState("");
+  const [editDocServiceId, setEditDocServiceId] = useState("inscricao");
+  const [editDocOfficialSource, setEditDocOfficialSource] = useState("");
+  const [editDocPurpose, setEditDocPurpose] = useState("");
+  const [editDocSignerRole, setEditDocSignerRole] = useState("Proprietário Requerente");
+
   // Carregar dados no mount
   useEffect(() => {
     setDocsCatalog(getCustomizedOutputDocsCatalog());
@@ -436,6 +445,66 @@ function DocumentVault() {
     const def = resetOutputDocsCatalogToDefaults();
     setDocsCatalog(def);
     toast.success("Catálogo restaurado para os padrões oficiais da NORMAM-211/DPC!");
+  };
+
+  const handleOpenEditDoc = (doc: OutputDocumentConfig) => {
+    setEditingDocId(doc.id);
+    setEditDocName(doc.name);
+    setEditDocServiceId(doc.serviceId);
+    setEditDocOfficialSource(doc.officialSource);
+    setEditDocPurpose(doc.purpose);
+    setEditDocSignerRole(doc.signerRole || "Proprietário Requerente");
+    setIsEditDocModalOpen(true);
+  };
+
+  const handleSaveEditDoc = () => {
+    if (!editingDocId || !editDocName.trim()) {
+      toast.error("O nome do documento é obrigatório.");
+      return;
+    }
+
+    const serviceLabels: Record<string, string> = {
+      inscricao: "Inscrição de embarcação",
+      transferencia: "Transferência de propriedade",
+      renovacao: "Renovação de documento",
+      segunda_via: "Segunda via de documento",
+      vistoria: "Vistoria",
+      laudo_engenharia: "Laudo técnico pericial",
+      alteracao_cadastral: "Alteração Cadastral",
+      despacho_porto: "Despacho de Saída / Entrada",
+      habilitacao_cha: "Habilitação náutica (CHA)",
+    };
+
+    const updatedCatalog = docsCatalog.map((doc) => {
+      if (doc.id === editingDocId) {
+        return {
+          ...doc,
+          name: editDocName.trim(),
+          serviceId: editDocServiceId,
+          serviceName: serviceLabels[editDocServiceId] || doc.serviceName,
+          officialSource: editDocOfficialSource.trim() || doc.officialSource,
+          purpose: editDocPurpose.trim() || doc.purpose,
+          signerRole: editDocSignerRole.trim() || doc.signerRole,
+        };
+      }
+      return doc;
+    });
+
+    setDocsCatalog(updatedCatalog);
+    saveCustomizedOutputDocsCatalog(updatedCatalog);
+    setIsEditDocModalOpen(false);
+    toast.success(`Documento "${editDocName.trim()}" atualizado com sucesso!`);
+  };
+
+  const handleDeleteDoc = (docId: string, docName: string) => {
+    if (!confirm(`Tem certeza que deseja excluir o documento "${docName}" do catálogo? Esta ação removerá o documento dos fluxos de geração.`)) {
+      return;
+    }
+
+    const updatedCatalog = docsCatalog.filter((doc) => doc.id !== docId);
+    setDocsCatalog(updatedCatalog);
+    saveCustomizedOutputDocsCatalog(updatedCatalog);
+    toast.success(`Documento "${docName}" excluído do catálogo.`);
   };
 
   // OPERAÇÕES DE REPARO MANUAL
@@ -904,14 +973,37 @@ function DocumentVault() {
                         </p>
                       </div>
 
-                      <Button
-                        size="sm"
-                        onClick={() => handleOpenAddRequirement(doc.id)}
-                        className="h-8 rounded-xl text-xs font-bold bg-[#075BFF] hover:bg-blue-600 text-white gap-1.5 shadow-2xs shrink-0 cursor-pointer"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                        Adicionar Anexo Necessário
-                      </Button>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenEditDoc(doc)}
+                          className="h-8 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-100 gap-1 border-slate-200 cursor-pointer"
+                          title={`Editar dados de ${doc.name}`}
+                        >
+                          <Edit3 className="h-3.5 w-3.5 text-slate-500" />
+                          Editar
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteDoc(doc.id, doc.name)}
+                          className="h-8 w-8 p-0 text-slate-400 hover:text-red-600 hover:bg-red-50 border-slate-200 hover:border-red-200 rounded-xl cursor-pointer"
+                          title={`Excluir documento ${doc.name} do catálogo`}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          onClick={() => handleOpenAddRequirement(doc.id)}
+                          className="h-8 rounded-xl text-xs font-bold bg-[#075BFF] hover:bg-blue-600 text-white gap-1.5 shadow-2xs shrink-0 cursor-pointer"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          Adicionar Anexo Necessário
+                        </Button>
+                      </div>
                     </CardHeader>
 
                     <CardContent className="p-4 space-y-3">
@@ -1965,6 +2057,102 @@ function DocumentVault() {
                 className="h-9 rounded-xl text-xs font-bold bg-[#075BFF] hover:bg-blue-600 text-white cursor-pointer"
               >
                 Cadastrar Documento
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* MODAL: EDITAR DOCUMENTO DO CATÁLOGO */}
+        {/* ========================================================= */}
+        <Dialog open={isEditDocModalOpen} onOpenChange={setIsEditDocModalOpen}>
+          <DialogContent className="sm:max-w-[500px] p-6 rounded-2xl bg-white">
+            <DialogHeader>
+              <DialogTitle className="text-base font-bold text-[#0B1739]">
+                Editar Documento Oficial do Catálogo
+              </DialogTitle>
+              <DialogDescription className="text-xs text-slate-500">
+                Altere o nome, fonte regulamentar da Marinha e finalidade jurídica deste documento.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3 py-2">
+              <div>
+                <Label className="text-xs font-semibold text-slate-700">Nome Oficial do Documento *</Label>
+                <Input
+                  value={editDocName}
+                  onChange={(e) => setEditDocName(e.target.value)}
+                  placeholder="Nome oficial do formulário"
+                  className="mt-1 h-9 text-xs rounded-xl"
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs font-semibold text-slate-700">Serviço Náutico Vinculado</Label>
+                <Select value={editDocServiceId} onValueChange={setEditDocServiceId}>
+                  <SelectTrigger className="mt-1 h-9 text-xs rounded-xl">
+                    <SelectValue placeholder="Selecione o serviço" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl text-xs">
+                    <SelectItem value="inscricao">Inscrição de embarcação</SelectItem>
+                    <SelectItem value="transferencia">Transferência</SelectItem>
+                    <SelectItem value="renovacao">Renovação</SelectItem>
+                    <SelectItem value="segunda_via">Segunda via</SelectItem>
+                    <SelectItem value="alteracao_motor">Alteração de motor</SelectItem>
+                    <SelectItem value="vistoria">Vistoria</SelectItem>
+                    <SelectItem value="laudo_engenharia">Laudo técnico pericial</SelectItem>
+                    <SelectItem value="alteracao_cadastral">Alteração Cadastral</SelectItem>
+                    <SelectItem value="despacho_porto">Despacho de Saída</SelectItem>
+                    <SelectItem value="habilitacao_cha">Habilitação náutica (CHA)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-xs font-semibold text-slate-700">Fonte Oficial / Portaria da Marinha</Label>
+                <Input
+                  value={editDocOfficialSource}
+                  onChange={(e) => setEditDocOfficialSource(e.target.value)}
+                  placeholder="Ex: NORMAM-211/DPC, Anexo 2-C"
+                  className="mt-1 h-9 text-xs rounded-xl"
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs font-semibold text-slate-700">Papel do Signatário Requerente</Label>
+                <Input
+                  value={editDocSignerRole}
+                  onChange={(e) => setEditDocSignerRole(e.target.value)}
+                  placeholder="Ex: Proprietário Requerente ou Procurador"
+                  className="mt-1 h-9 text-xs rounded-xl"
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs font-semibold text-slate-700">Finalidade / Objetivo Legal</Label>
+                <Textarea
+                  value={editDocPurpose}
+                  onChange={(e) => setEditDocPurpose(e.target.value)}
+                  placeholder="Finalidade do documento perante a Autoridade Marítima."
+                  className="mt-1 text-xs rounded-xl min-h-[70px]"
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditDocModalOpen(false)}
+                className="h-9 rounded-xl text-xs cursor-pointer"
+              >
+                Cancelar
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSaveEditDoc}
+                className="h-9 rounded-xl text-xs font-bold bg-[#075BFF] hover:bg-blue-600 text-white cursor-pointer"
+              >
+                Salvar Alterações
               </Button>
             </DialogFooter>
           </DialogContent>

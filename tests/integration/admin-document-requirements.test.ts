@@ -192,5 +192,43 @@ describe("Gestão de Documentos Oficiais e Requisitos de Anexos no Admin (NORMAM
     const check = getCustomizedOutputDocsCatalog();
     expect(check.length).toBe(OUTPUT_DOCS_CATALOG.length);
   });
+
+  it("deve permitir editar os dados de um documento existente no catálogo", () => {
+    const catalog = getCustomizedOutputDocsCatalog();
+    const targetDoc = catalog[0];
+
+    const updatedCatalog = catalog.map((doc) => {
+      if (doc.id === targetDoc.id) {
+        return {
+          ...doc,
+          name: "Documento Editado pelo Engenheiro",
+          purpose: "Nova finalidade regulamentar atualizada perante a DPC.",
+          officialSource: "Portaria MB 2026/Rev 2",
+        };
+      }
+      return doc;
+    });
+
+    saveCustomizedOutputDocsCatalog(updatedCatalog);
+
+    const reloaded = getCustomizedOutputDocsCatalog();
+    const updated = reloaded.find((d) => d.id === targetDoc.id);
+    expect(updated?.name).toBe("Documento Editado pelo Engenheiro");
+    expect(updated?.purpose).toBe("Nova finalidade regulamentar atualizada perante a DPC.");
+    expect(updated?.officialSource).toBe("Portaria MB 2026/Rev 2");
+  });
+
+  it("deve permitir excluir um documento do catálogo e persistir a remoção", () => {
+    const catalog = getCustomizedOutputDocsCatalog();
+    const countBefore = catalog.length;
+    const docToDelete = catalog[0];
+
+    const updatedCatalog = catalog.filter((doc) => doc.id !== docToDelete.id);
+    saveCustomizedOutputDocsCatalog(updatedCatalog);
+
+    const reloaded = getCustomizedOutputDocsCatalog();
+    expect(reloaded.length).toBe(countBefore - 1);
+    expect(reloaded.some((d) => d.id === docToDelete.id)).toBe(false);
+  });
 });
 

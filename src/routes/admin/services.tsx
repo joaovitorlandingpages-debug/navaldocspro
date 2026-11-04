@@ -851,6 +851,38 @@ function AdminServicesCatalogPage() {
     setIsEditOpen(false);
   };
 
+  // EXCLUIR SERVIÇO DO CATÁLOGO
+  const handleDeleteService = (serviceId: string, serviceName: string) => {
+    if (!confirm(`Tem certeza que deseja excluir o serviço "${serviceName}" do catálogo? Ele deixará de aparecer para abertura de novos pedidos.`)) {
+      return;
+    }
+
+    const updatedList = servicesData.filter((s) => s.id !== serviceId);
+    setServicesData(updatedList);
+    saveNavalServices(updatedList);
+
+    if (selectedService?.id === serviceId) {
+      setSelectedService(null);
+      setIsEditOpen(false);
+      setIsDetailsOpen(false);
+    }
+
+    // Registra log no Supabase
+    supabase.from("activity_logs").insert({
+      company_id: profile?.company_id || "00000000-0000-0000-0000-000000000000",
+      action: "delete_naval_service",
+      module: "services_catalog",
+      description: `Serviço [${serviceName}] excluído do catálogo por ${profile?.email || "admin"}.`,
+      metadata: {
+        service_id: serviceId,
+        service_name: serviceName,
+        timestamp: new Date().toISOString(),
+      },
+    }).then(() => {});
+
+    toast.success(`Serviço "${serviceName}" excluído do catálogo.`);
+  };
+
   // Restaurar padrões de fábrica
   const handleResetCatalog = () => {
     if (!confirm("Deseja restaurar todos os 16 serviços para os padrões oficiais da NORMAM-211/201?")) return;
@@ -1145,6 +1177,16 @@ function AdminServicesCatalogPage() {
                         >
                           <Edit className="h-3.5 w-3.5 mr-1" />
                           Editar
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteService(srv.id, srv.name)}
+                          className="h-8 w-8 p-0 text-slate-400 hover:text-red-600 hover:bg-red-50 border-slate-200 hover:border-red-200 rounded-xl cursor-pointer"
+                          title={`Excluir serviço ${srv.name}`}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                     </td>
@@ -1702,9 +1744,21 @@ function AdminServicesCatalogPage() {
             </Tabs>
 
             <DialogFooter className="border-t border-slate-100 pt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <span className="text-[11px] text-slate-500">
-                Alterações são salvas instantaneamente no catálogo e sincronizadas nos fluxos de pedido.
-              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => selectedService && handleDeleteService(selectedService.id, selectedService.name)}
+                  className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 rounded-xl cursor-pointer"
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-1" />
+                  Excluir Serviço
+                </Button>
+                <span className="text-[11px] text-slate-500 hidden sm:inline">
+                  Salvo instantaneamente no catálogo.
+                </span>
+              </div>
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"

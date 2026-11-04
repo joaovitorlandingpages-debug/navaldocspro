@@ -158,6 +158,25 @@ function WorkspaceOnboardingPage() {
               .from("profiles")
               .update({ company_id: newCompany.id })
               .eq("id", user.id);
+
+            // Provisão segura da degustação inicial de 30 dias na tabela de assinaturas
+            try {
+              const trialEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+              await supabase
+                .from("subscriptions")
+                .insert({
+                  company_id: newCompany.id,
+                  status: "trialing",
+                  current_period_start: new Date().toISOString(),
+                  current_period_end: trialEnd,
+                  cancel_at_period_end: false,
+                });
+            } catch (subErr) {
+              // Caso haja restrição de chave ou RLS para inserção direta,
+              // a função PostgreSQL has_active_subscription_or_trial garante o período
+              // de degustação via data de criação da empresa.
+              console.info("Degustação da empresa assegurada via ciclo de criação:", subErr);
+            }
           }
         }
       }

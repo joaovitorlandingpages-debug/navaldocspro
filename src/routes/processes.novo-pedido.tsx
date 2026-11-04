@@ -57,22 +57,62 @@ interface ServiceItem {
 }
 
 export function getEffectiveServicesCatalog(): ServiceItem[] {
+  const iconMap: Record<string, any> = {
+    Ship,
+    ArrowLeftRight,
+    FileText,
+    Wrench,
+    Search,
+    FileCheck,
+    Award,
+    FileSpreadsheet,
+    UserCheck,
+    Anchor,
+  };
+
   try {
+    // 1. Tenta carregar do catálogo do Super Admin v2 (com todas as edições e 16 serviços)
+    if (typeof localStorage !== "undefined") {
+      const adminRaw = localStorage.getItem("navaldocs_admin_services_catalog_v2");
+      if (adminRaw) {
+        const adminServices = JSON.parse(adminRaw);
+        if (Array.isArray(adminServices) && adminServices.length > 0) {
+          return adminServices
+            .filter((s: any) => s.status !== "archived")
+            .map((s: any) => {
+              const cat = s.categories?.[0] || "esporte_recreio";
+              const mappedCat: "maritimo" | "pessoal" | "tecnico" =
+                cat === "profissional" ? "tecnico" : "maritimo";
+              const requiresVessel =
+                !s.slug?.includes("cha") && !s.slug?.includes("alteracao-cadastral");
+
+              let icon = Ship;
+              if (s.slug?.includes("transf")) icon = ArrowLeftRight;
+              else if (s.slug?.includes("renov")) icon = FileText;
+              else if (s.slug?.includes("motor")) icon = Wrench;
+              else if (s.slug?.includes("vistoria") || s.slug?.includes("arqueacao")) icon = Search;
+              else if (s.slug?.includes("2via")) icon = FileCheck;
+              else if (s.slug?.includes("cha")) icon = Award;
+              else if (s.slug?.includes("laudo") || s.slug?.includes("estabilidade")) icon = FileSpreadsheet;
+              else if (s.slug?.includes("cadastral")) icon = UserCheck;
+              else if (s.slug?.includes("despacho")) icon = Anchor;
+
+              return {
+                id: s.slug || s.id,
+                name: s.name,
+                shortName: s.name.split("—")[0].trim() || s.name,
+                description: s.description,
+                icon,
+                requiresVessel,
+                category: mappedCat,
+              };
+            });
+        }
+      }
+    }
+
     const dynamic = getActiveServicesCatalog();
     if (dynamic && dynamic.length > 0) {
-      const iconMap: Record<string, any> = {
-        Ship,
-        ArrowLeftRight,
-        FileText,
-        Wrench,
-        Search,
-        FileCheck,
-        Award,
-        FileSpreadsheet,
-        UserCheck,
-        Anchor,
-      };
-
       return dynamic.map((d) => ({
         id: d.id,
         name: d.name,
@@ -178,6 +218,60 @@ const SERVICES_CATALOG: ServiceItem[] = [
     shortName: "Despacho",
     description: "Comunicação de tráfego e autorização na Capitania.",
     icon: Anchor,
+    requiresVessel: true,
+    category: "maritimo",
+  },
+  {
+    id: "serv_inscr_motoaquatica",
+    name: "Inscrição de Moto Aquática (Jet Ski)",
+    shortName: "Inscrição Jet Ski",
+    description: "Inscrição de moto aquática no SISGEMB da Capitania dos Portos.",
+    icon: Ship,
+    requiresVessel: true,
+    category: "maritimo",
+  },
+  {
+    id: "serv_transf_motoaquatica",
+    name: "Transferência de Moto Aquática",
+    shortName: "Transferência Jet Ski",
+    description: "Mudança de titularidade de moto aquática entre proprietários.",
+    icon: ArrowLeftRight,
+    requiresVessel: true,
+    category: "maritimo",
+  },
+  {
+    id: "serv_renov_motoaquatica",
+    name: "Renovação de TIEM (Moto Aquática)",
+    shortName: "Renovação Jet Ski",
+    description: "Renovação periódica do Título de Inscrição da Embarcação Miúda.",
+    icon: FileText,
+    requiresVessel: true,
+    category: "maritimo",
+  },
+  {
+    id: "serv_2via_motoaquatica",
+    name: "Segunda Via TIEM (Moto Aquática)",
+    shortName: "Segunda Via Jet Ski",
+    description: "Emissão de 2ª via por motivo de perda ou extravio.",
+    icon: FileCheck,
+    requiresVessel: true,
+    category: "maritimo",
+  },
+  {
+    id: "serv_inscr_comercial",
+    name: "Inscrição Comercial / NORMAM-201",
+    shortName: "Inscrição Comercial",
+    description: "Inscrição e arqueação de embarcações comerciais e de passageiros.",
+    icon: Ship,
+    requiresVessel: true,
+    category: "maritimo",
+  },
+  {
+    id: "serv_transf_comercial",
+    name: "Transferência Comercial / NORMAM-201",
+    shortName: "Transferência Comercial",
+    description: "Transferência de propriedade de embarcação comercial ou de pesca.",
+    icon: ArrowLeftRight,
     requiresVessel: true,
     category: "maritimo",
   },
@@ -952,7 +1046,8 @@ export function getDynamicOrderRequirements(
 
   // Se nenhum serviço dos acima, mas há serviços selecionados
   if (reqs.length === 0 && serviceIds.length > 0) {
-    const firstServ = SERVICES_CATALOG.find(s => s.id === serviceIds[0]);
+    const effectiveList = getEffectiveServicesCatalog();
+    const firstServ = effectiveList.find(s => s.id === serviceIds[0]) || SERVICES_CATALOG.find(s => s.id === serviceIds[0]);
     reqs.push({
       id: `doc-${serviceIds[0]}`,
       name: `Documentação para ${firstServ?.shortName || "Serviço"}`,
@@ -1332,15 +1427,49 @@ function NovoPedidoPage() {
     }
   }, [currentVessel, selectedCustomerId, transferData.vendedorId]);
 
+  // Escuta atualizações reativas do catálogo de serviços náuticos do Super Admin
+  const [servicesCatalogRevision, setServicesCatalogRevision] = useState(0);
+  useEffect(() => {
+    const handleUpdate = () => setServicesCatalogRevision((c) => c + 1);
+    if (typeof window !== "undefined") {
+      window.addEventListener("navaldocs_services_updated", handleUpdate);
+      window.addEventListener("navaldocs_services_catalog_updated", handleUpdate);
+      return () => {
+        window.removeEventListener("navaldocs_services_updated", handleUpdate);
+        window.removeEventListener("navaldocs_services_catalog_updated", handleUpdate);
+      };
+    }
+  }, []);
+
+  const dynamicServicesList = useMemo(() => {
+    return getEffectiveServicesCatalog();
+  }, [servicesCatalogRevision]);
+
   // Serviços selecionados completos
   const selectedServices = useMemo(() => {
-    return SERVICES_CATALOG.filter(s => selectedServiceIds.includes(s.id));
-  }, [selectedServiceIds]);
+    return dynamicServicesList.filter(s => selectedServiceIds.includes(s.id));
+  }, [dynamicServicesList, selectedServiceIds]);
 
   // Modelos de saída aplicáveis aos serviços selecionados (inclui customizações e novos documentos do Admin)
   const applicableOutputDocs = useMemo(() => {
     const dynamicCatalog = getCustomizedOutputDocsCatalog();
-    return dynamicCatalog.filter((doc: OutputDocumentConfig) => selectedServiceIds.includes(doc.serviceId));
+    return dynamicCatalog.filter((doc: OutputDocumentConfig) => {
+      return selectedServiceIds.some(id => {
+        if (id === doc.serviceId) return true;
+        if (id.includes(doc.serviceId)) return true;
+        if (doc.serviceId === "inscricao" && id.includes("inscr")) return true;
+        if (doc.serviceId === "transferencia" && id.includes("transf")) return true;
+        if (doc.serviceId === "renovacao" && id.includes("renov")) return true;
+        if (doc.serviceId === "segunda_via" && (id.includes("2via") || id.includes("segunda_via"))) return true;
+        if (doc.serviceId === "alteracao_motor" && id.includes("motor")) return true;
+        if (doc.serviceId === "vistoria" && id.includes("vistoria")) return true;
+        if (doc.serviceId === "habilitacao_cha" && id.includes("cha")) return true;
+        if (doc.serviceId === "alteracao_cadastral" && id.includes("cadastral")) return true;
+        if (doc.serviceId === "despacho_porto" && id.includes("despacho")) return true;
+        if (doc.serviceId === "laudo_engenharia" && (id.includes("laudo") || id.includes("estabilidade"))) return true;
+        return false;
+      });
+    });
   }, [selectedServiceIds]);
 
   // Documentos que estão marcados como 'gerar' pelo sistema
@@ -1380,20 +1509,20 @@ function NovoPedidoPage() {
   // Lista de serviços visíveis considerando a busca e o botão "Ver todos os serviços"
   const visibleServices = useMemo(() => {
     const term = serviceSearchTerm.trim().toLowerCase();
-    let list = SERVICES_CATALOG;
+    let list = dynamicServicesList;
 
     if (!showAllServices && !term) {
-      list = SERVICES_CATALOG.slice(0, 6);
+      list = dynamicServicesList.slice(0, 8);
     }
 
     if (term) {
-      list = SERVICES_CATALOG.filter(
+      list = dynamicServicesList.filter(
         s => s.name.toLowerCase().includes(term) || s.description.toLowerCase().includes(term)
       );
     }
 
     return list;
-  }, [serviceSearchTerm, showAllServices]);
+  }, [dynamicServicesList, serviceSearchTerm, showAllServices]);
 
   // Ação "Salvar e sair" da etapa 2
   const handleSaveAndExit = () => {

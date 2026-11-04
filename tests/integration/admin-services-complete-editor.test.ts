@@ -173,5 +173,19 @@ describe("Catálogo Administrativo de Serviços Náuticos & Super Editor com Sel
       expect(reloaded.fillableTemplates.length).toBe(initialTplCount + 1);
       expect(reloaded.fillableTemplates.some((t) => t.templateCode === "DECL_RES_01")).toBe(true);
     });
+
+    it("deve permitir excluir um serviço do catálogo e refletir a exclusão na persistência", () => {
+      const initialServices = getStoredNavalServices();
+      const countBefore = initialServices.length;
+      const serviceToDelete = initialServices[0];
+
+      const remainingServices = initialServices.filter((s) => s.id !== serviceToDelete.id);
+      saveNavalServices(remainingServices);
+
+      const reloaded = getStoredNavalServices();
+      expect(reloaded.length).toBe(countBefore - 1);
+      expect(reloaded.some((s) => s.id === serviceToDelete.id)).toBe(false);
+    });
   });
 });
+

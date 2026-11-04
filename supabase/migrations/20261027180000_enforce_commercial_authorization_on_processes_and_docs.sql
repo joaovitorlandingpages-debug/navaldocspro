@@ -41,12 +41,13 @@ SET search_path = public
 AS $$
 DECLARE
   v_sub RECORD;
+  v_company RECORD;
 BEGIN
   IF p_company_id IS NULL THEN
     RETURN FALSE;
   END IF;
 
-  -- Consulta registro de faturamento oficial da empresa
+  -- 1. Consulta registro de faturamento oficial da empresa na tabela subscriptions
   SELECT 
     status,
     current_period_end
@@ -70,6 +71,23 @@ BEGIN
 
     -- Status 'pending', 'past_due', 'canceled' não concedem acesso
     RETURN FALSE;
+  END IF;
+
+  -- 2. Resiliência de Onboarding / Degustação:
+  -- Se ainda não houver registro em subscriptions, autoriza empresas em período de teste inicial
+  -- (criadas há menos de 30 dias) ou cadastradas como piloto / demonstração
+  SELECT created_at, is_pilot, is_demo 
+  INTO v_company 
+  FROM public.companies 
+  WHERE id = p_company_id;
+
+  IF FOUND THEN
+    IF COALESCE(v_company.is_pilot, false) = TRUE OR COALESCE(v_company.is_demo, false) = TRUE THEN
+      RETURN TRUE;
+    END IF;
+    IF v_company.created_at IS NOT NULL AND v_company.created_at > (now() - INTERVAL '30 days') THEN
+      RETURN TRUE;
+    END IF;
   END IF;
 
   RETURN FALSE;
