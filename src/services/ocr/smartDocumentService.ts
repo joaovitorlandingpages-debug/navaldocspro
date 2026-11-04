@@ -169,6 +169,16 @@ export async function processDocumentForReview(
 
   if (invokeRes.error) {
     console.error("[SmartDocumentService] Edge function invoke error:", invokeRes.error);
+    // Atualiza imediatamente o ocr_jobs para failed para não ficar preso em processing/pending
+    await supabase
+      .from("ocr_jobs")
+      .update({
+        status: "failed",
+        error_message: invokeRes.error.message || "Falha na comunicação com a Edge Function de OCR",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", ocrJobId);
+
     throw new Error(
       "Leitura automática temporariamente indisponível. Você pode preencher os dados manualmente.",
     );
@@ -179,6 +189,15 @@ export async function processDocumentForReview(
       "[SmartDocumentService] Erro retornado pela Edge Function:",
       invokeRes.data.error,
     );
+    await supabase
+      .from("ocr_jobs")
+      .update({
+        status: "failed",
+        error_message: typeof invokeRes.data.error === "string" ? invokeRes.data.error : JSON.stringify(invokeRes.data.error),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", ocrJobId);
+
     const errObj = invokeRes.data.error;
     if (errObj === "unreadable_document" || errObj?.error === "unreadable_document") {
       throw new Error(

@@ -1,10 +1,12 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Activity, AlertTriangle, CheckCircle2, Clock, FileText, Zap,
-  ShieldCheck, RefreshCw, Database, ScanText, FileSignature,
+  ShieldCheck, RefreshCw, RotateCcw, Database, ScanText, FileSignature,
   Archive, TrendingUp, Users
 } from "lucide-react";
 
@@ -50,6 +52,57 @@ function SystemHealthDashboard() {
   });
 
   // Diagnóstico seguro de integração Stripe e Edge Functions
+  const [isReconcilingOcr, setIsReconcilingOcr] = useState(false);
+
+  const handleReconcileOcrQueue = async () => {
+    setIsReconcilingOcr(true);
+    const toastId = toast.loading("Reconciliando jobs presos e higienizando fila de OCR...");
+    try {
+      const now = new Date();
+      const stuckCutoff = new Date(now.getTime() - 10 * 60_000).toISOString();
+      const orphanCutoff = new Date(now.getTime() - 60 * 60_000).toISOString();
+
+      // 1. Destrava jobs em processing há mais de 10 minutos
+      const { data: stuckHealed } = await supabase
+        .from("ocr_jobs")
+        .update({
+          status: "failed",
+          error_message: "Finalizado por timeout de processamento (> 10min) pela governança do admin.",
+          updated_at: now.toISOString(),
+        })
+        .eq("status", "processing")
+        .lt("updated_at", stuckCutoff)
+        .select("id");
+
+      // 2. Limpa pendentes órfãos antigos (> 1h)
+      const { data: pendingsCleaned } = await supabase
+        .from("ocr_jobs")
+        .update({
+          status: "cancelled",
+          error_message: "Cancelado pelo administrador (job pendente órfão de teste).",
+          updated_at: now.toISOString(),
+        })
+        .eq("status", "pending")
+        .lt("created_at", orphanCutoff)
+        .select("id");
+
+      const countStuck = stuckHealed?.length || 0;
+      const countPend = pendingsCleaned?.length || 0;
+
+      toast.dismiss(toastId);
+      toast.success(
+        `Fila reconciliada! ${countStuck} job(s) destravado(s) e ${countPend} pendência(s) antiga(s) cancelada(s).`
+      );
+      await refetch();
+    } catch (err: any) {
+      console.error("[SystemHealth] Erro ao reconciliar:", err);
+      toast.dismiss(toastId);
+      toast.error("Erro ao reconciliar fila: " + (err.message || "falha de conexão"));
+    } finally {
+      setIsReconcilingOcr(false);
+    }
+  };
+
   const { data: stripeDiag, refetch: refetchStripe } = useQuery({
     queryKey: ["system-health-stripe-diagnostic"],
     queryFn: async () => {
@@ -127,9 +180,20 @@ function SystemHealthDashboard() {
                   a.severity === "critical" ? "text-rose-600" :
                   a.severity === "warning" ? "text-amber-600" : "text-slate-500"
                 }`} />
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="font-bold text-navy text-sm">{a.title}</p>
                   <p className="text-xs text-slate-600">{a.detail}</p>
+                  {a.id === "ocr-stuck" && (
+                    <button
+                      type="button"
+                      onClick={handleReconcileOcrQueue}
+                      disabled={isReconcilingOcr}
+                      className="mt-2.5 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition-colors shadow-2xs cursor-pointer disabled:opacity-50"
+                    >
+                      <RotateCcw className={`h-3.5 w-3.5 ${isReconcilingOcr ? "animate-spin" : ""}`} />
+                      <span>{isReconcilingOcr ? "Reconciliando..." : "Destravar e Reconciliar Fila Agora"}</span>
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -252,8 +316,19 @@ function SystemHealthDashboard() {
                 Taxa de sucesso: {data?.ocr?.completed ? `${Math.round(((data.ocr.completed - (data.ocr.failed || 0)) / data.ocr.completed) * 100)}%` : "100%"}
               </p>
             </div>
-            <div className="pt-2 border-t border-slate-100 text-[10px] text-slate-400">
-              Fila atual: {(data?.ocr?.pending || 0) + (data?.ocr?.processing || 0)} em espera
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
+              <span>Fila atual: {(data?.ocr?.pending || 0) + (data?.ocr?.processing || 0)} em espera</span>
+              {((data?.ocr?.pending || 0) + (data?.ocr?.processing || 0)) > 0 && (
+                <button
+                  type="button"
+                  onClick={handleReconcileOcrQueue}
+                  disabled={isReconcilingOcr}
+                  className="font-bold text-[#075BFF] hover:underline cursor-pointer"
+                  title="Destravar e limpar fila de jobs antigos"
+                >
+                  {isReconcilingOcr ? "Limpando..." : "Limpar Fila"}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -315,6 +390,21 @@ async function fetchSnapshot(): Promise<Snapshot> {
   const now = new Date();
   const since24h = new Date(now.getTime() - 24 * 3600_000).toISOString();
   const stuckCutoff = new Date(now.getTime() - 10 * 60_000).toISOString();
+
+  // Auto-heal de governança: finaliza jobs presos em processing há mais de 10 minutos
+  try {
+    await supabase
+      .from("ocr_jobs")
+      .update({
+        status: "failed",
+        error_message: "Finalizado automaticamente por timeout (> 10min) pelo serviço de governança.",
+        updated_at: now.toISOString(),
+      })
+      .eq("status", "processing")
+      .lt("updated_at", stuckCutoff);
+  } catch (healErr) {
+    console.warn("[SystemHealth] Falha no auto-heal silencioso:", healErr);
+  }
 
   const [
     ocrPending, ocrProcessing, ocrCompleted, ocrFailed, ocrAvg, ocrStuck,
